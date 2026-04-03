@@ -29,7 +29,7 @@ const tabs: { mode: Mode; icon: string; label: React.ReactNode; ariaLabel: strin
         <R b="問題" r="もんだい" />ドリル
       </>
     ),
-    ariaLabel: "問題ドリル（500問）",
+    ariaLabel: "問題ドリル",
   },
   {
     mode: "calc",

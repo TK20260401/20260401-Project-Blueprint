@@ -24,9 +24,6 @@ export default function Home() {
           IT<ruby>パスポート<rp>(</rp><rt>ぱすぽーと</rt><rp>)</rp></ruby>
           <ruby>試験<rp>(</rp><rt>しけん</rt><rp>)</rp></ruby>
           <ruby>対策<rp>(</rp><rt>たいさく</rt><rp>)</rp></ruby>アプリ
-          <span className="ml-2 inline-block bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-            500<ruby>問<rp>(</rp><rt>もん</rt><rp>)</rp></ruby>
-          </span>
         </p>
       </header>
 

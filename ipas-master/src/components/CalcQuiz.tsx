@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import {
   allQuestions,
-  batches,
+  generateBatches,
   allCategories,
   getQuestionsByCategory,
   type Question,
@@ -25,6 +25,7 @@ interface CalcQuizProps {
 export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
   const { data: session } = useSession();
   const [filterMode, setFilterMode] = useState<FilterMode>("batch");
+  const [batchSize, setBatchSize] = useState(30);
   const [batchIndex, setBatchIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<QuestionCategory>("企業活動");
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -34,11 +35,27 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
   const [shuffled, setShuffled] = useState(false);
   const [skippedIndices, setSkippedIndices] = useState<Set<number>>(new Set());
   const [showSkippedList, setShowSkippedList] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // タイマー（カウントアップ）
+  useEffect(() => {
+    timerRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  const formatTime = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const currentBatches = useMemo(() => generateBatches(batchSize), [batchSize]);
 
   const pool = useMemo(() => {
     let qs: Question[];
     if (filterMode === "batch") {
-      qs = batches[batchIndex].questions;
+      qs = currentBatches[batchIndex]?.questions ?? currentBatches[0].questions;
     } else {
       qs = getQuestionsByCategory(selectedCategory);
     }
@@ -51,7 +68,7 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
       return copy;
     }
     return qs;
-  }, [filterMode, batchIndex, selectedCategory, shuffled]);
+  }, [filterMode, batchIndex, batchSize, selectedCategory, shuffled, currentBatches]);
 
   const currentQ = pool[questionIndex] ?? pool[0];
 
@@ -67,10 +84,18 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
     setSkippedIndices(new Set());
     setShowSkippedList(false);
     setReviewMode(false);
+    setElapsedSeconds(0);
   }, [resetQuiz]);
 
   const changeBatch = (idx: number) => {
     setBatchIndex(idx);
+    setFilterMode("batch");
+    resetAll();
+  };
+
+  const changeBatchSize = (size: number) => {
+    setBatchSize(size);
+    setBatchIndex(0);
     setFilterMode("batch");
     resetAll();
   };
@@ -144,21 +169,24 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
   return (
     <div className="space-y-4 sm:space-y-5">
       <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-800 text-center">
-        ITパスポート <R b="問題" r="もんだい" />ドリル（500<R b="問" r="もん" />）
+        ITパスポート <R b="問題" r="もんだい" />ドリル
       </h2>
 
       {/* フィルタモード切り替え */}
       <div className="flex flex-wrap justify-center gap-2">
-        <button
-          onClick={() => { setFilterMode("batch"); resetAll(); }}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
-            filterMode === "batch"
-              ? "bg-emerald-700 text-white shadow"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          100<R b="問" r="もん" /><R b="単位" r="たんい" />
-        </button>
+        {[30, 50, 100].map((size) => (
+          <button
+            key={size}
+            onClick={() => changeBatchSize(size)}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+              filterMode === "batch" && batchSize === size
+                ? "bg-emerald-700 text-white shadow"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            {size}<R b="問" r="もん" /><R b="単位" r="たんい" />
+          </button>
+        ))}
         <button
           onClick={() => { setFilterMode("category"); resetAll(); }}
           className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
@@ -185,7 +213,7 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
       {/* バッチ or カテゴリ選択 — 横スクロール対応 */}
       <div className="tab-scroll justify-center" role="group" aria-label="出題範囲の選択">
         {filterMode === "batch"
-          ? batches.map((b, i) => (
+          ? currentBatches.map((b, i) => (
               <button
                 key={i}
                 onClick={() => changeBatch(i)}
@@ -213,7 +241,7 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
             ))}
       </div>
 
-      {/* スコア + 進捗 */}
+      {/* スコア + 進捗 + タイマー */}
       <div className="flex flex-wrap gap-2 justify-center text-xs sm:text-sm">
         <span className="bg-emerald-100 rounded-lg px-3 py-1.5 font-bold text-emerald-800">
           {stats.correct}/{stats.total} ({pct}%)
@@ -223,6 +251,9 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
         </span>
         <span className="bg-blue-100 rounded-lg px-3 py-1.5 font-bold text-blue-800">
           {questionIndex + 1} / {pool.length}
+        </span>
+        <span className="bg-purple-100 rounded-lg px-3 py-1.5 font-bold text-purple-800">
+          {formatTime(elapsedSeconds)}
         </span>
       </div>
 

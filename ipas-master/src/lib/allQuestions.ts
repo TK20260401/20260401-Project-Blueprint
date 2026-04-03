@@ -17,13 +17,30 @@ export const allQuestions: Question[] = [
 ];
 
 // 100問単位のバッチ
-export const batches: { label: string; questions: Question[] }[] = [
+export const batches100: { label: string; questions: Question[] }[] = [
   { label: "第1回（1〜100）", questions: batch1 },
   { label: "第2回（101〜200）", questions: batch2 },
   { label: "第3回（201〜300）", questions: batch3 },
   { label: "第4回（301〜400）", questions: batch4 },
   { label: "第5回（401〜500）", questions: batch5 },
 ];
+
+// 後方互換
+export const batches = batches100;
+
+// N問単位のバッチを動的生成
+export function generateBatches(size: number): { label: string; questions: Question[] }[] {
+  const result: { label: string; questions: Question[] }[] = [];
+  for (let i = 0; i < allQuestions.length; i += size) {
+    const start = i + 1;
+    const end = Math.min(i + size, allQuestions.length);
+    result.push({
+      label: `${start}〜${end}`,
+      questions: allQuestions.slice(i, i + size),
+    });
+  }
+  return result;
+}
 
 // カテゴリでフィルタ
 export function getQuestionsByCategory(category: QuestionCategory): Question[] {
