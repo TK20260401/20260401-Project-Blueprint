@@ -32,6 +32,8 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
   const [state, setState] = useState<QuizState>("answering");
   const [stats, setStats] = useState({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
   const [shuffled, setShuffled] = useState(false);
+  const [skippedIndices, setSkippedIndices] = useState<Set<number>>(new Set());
+  const [showSkippedList, setShowSkippedList] = useState(false);
 
   const pool = useMemo(() => {
     let qs: Question[];
@@ -62,6 +64,9 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
   const resetAll = useCallback(() => {
     resetQuiz(0);
     setStats({ total: 0, correct: 0, streak: 0, bestStreak: 0 });
+    setSkippedIndices(new Set());
+    setShowSkippedList(false);
+    setReviewMode(false);
   }, [resetQuiz]);
 
   const changeBatch = (idx: number) => {
@@ -82,18 +87,24 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
       setStats((p) => ({ ...p, total: p.total + 1, streak: 0 }));
       onAnswer?.(currentQ.category, false);
       recordToServer(currentQ.id, currentQ.category, false);
-      return;
+    } else {
+      const isCorrect = selectedIndex === currentQ.correctIndex;
+      setState("answered");
+      setStats((p) => ({
+        total: p.total + 1,
+        correct: p.correct + (isCorrect ? 1 : 0),
+        streak: isCorrect ? p.streak + 1 : 0,
+        bestStreak: isCorrect ? Math.max(p.bestStreak, p.streak + 1) : p.bestStreak,
+      }));
+      onAnswer?.(currentQ.category, isCorrect);
+      recordToServer(currentQ.id, currentQ.category, isCorrect);
     }
-    const isCorrect = selectedIndex === currentQ.correctIndex;
-    setState("answered");
-    setStats((p) => ({
-      total: p.total + 1,
-      correct: p.correct + (isCorrect ? 1 : 0),
-      streak: isCorrect ? p.streak + 1 : 0,
-      bestStreak: isCorrect ? Math.max(p.bestStreak, p.streak + 1) : p.bestStreak,
-    }));
-    onAnswer?.(currentQ.category, isCorrect);
-    recordToServer(currentQ.id, currentQ.category, isCorrect);
+    // スキップ済みから削除
+    setSkippedIndices((prev) => {
+      const next = new Set(prev);
+      next.delete(questionIndex);
+      return next;
+    });
   };
 
   const recordToServer = (questionId: number, category: string, isCorrect: boolean) => {
@@ -106,12 +117,25 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
   };
 
   const nextQuestion = () => {
+    if (state === "answering") {
+      setSkippedIndices((prev) => new Set(prev).add(questionIndex));
+    }
     const next = questionIndex + 1;
     if (next < pool.length) {
       setQuestionIndex(next);
       setSelectedIndex(null);
       setState("answering");
     }
+  };
+
+  const [reviewMode, setReviewMode] = useState(false);
+
+  const jumpToQuestion = (idx: number) => {
+    setReviewMode(true);
+    setQuestionIndex(idx);
+    setSelectedIndex(null);
+    setState("answering");
+    setShowSkippedList(false);
   };
 
   const isLastQuestion = questionIndex >= pool.length - 1;
@@ -287,12 +311,85 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
           </div>
         )}
 
-        <div className="px-4 sm:px-5 pb-4 sm:pb-5 flex justify-center gap-3">
-          {isLastQuestion && state === "answered" ? (
-            <div className="text-center">
+        <div className="px-4 sm:px-5 pb-4 sm:pb-5 flex flex-col items-center gap-3">
+          {/* レビューモード: スキップ問題を回答中 */}
+          {reviewMode ? (
+            <div className="flex flex-col items-center gap-3 w-full">
+              <div className="flex justify-center gap-3">
+                <button
+                  onClick={submitAnswer}
+                  disabled={state === "answered"}
+                  className={`px-6 sm:px-8 py-3 rounded-xl font-bold text-base sm:text-lg transition-all shadow-lg ${
+                    state === "answered"
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-emerald-700 text-white hover:bg-emerald-800 active:scale-95"
+                  }`}
+                >
+                  <R b="回答" r="かいとう" />する
+                </button>
+              </div>
+              {state === "answered" && (
+                <button
+                  onClick={() => {
+                    if (skippedIndices.size > 0) {
+                      setReviewMode(false);
+                      setQuestionIndex(pool.length - 1);
+                      setState("answered");
+                      setShowSkippedList(true);
+                    } else {
+                      setReviewMode(false);
+                      setQuestionIndex(pool.length - 1);
+                      setState("answered");
+                    }
+                  }}
+                  className="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold text-sm
+                             hover:bg-orange-600 active:scale-95 transition-all shadow"
+                >
+                  {skippedIndices.size > 0
+                    ? <>スキップ<R b="一覧" r="いちらん" />に<R b="戻" r="もど" />る（<R b="残" r="のこ" />り{skippedIndices.size}<R b="問" r="もん" />）</>
+                    : <><R b="結果" r="けっか" /><R b="画面" r="がめん" />に<R b="戻" r="もど" />る</>
+                  }
+                </button>
+              )}
+            </div>
+          ) : (isLastQuestion && state === "answered") || (isLastQuestion && skippedIndices.size > 0 && state === "answered") ? (
+            <div className="text-center w-full">
               <p className="text-lg font-bold text-emerald-800 mb-3">
                 <R b="完了" r="かんりょう" />！ {stats.correct}/{stats.total}（{pct}%）
               </p>
+
+              {skippedIndices.size > 0 && (
+                <div className="mb-4">
+                  <button
+                    onClick={() => setShowSkippedList((p) => !p)}
+                    className="px-4 py-2 bg-orange-500 text-white rounded-xl font-bold text-sm
+                               hover:bg-orange-600 active:scale-95 transition-all shadow"
+                  >
+                    スキップした<R b="問題" r="もんだい" />（{skippedIndices.size}<R b="問" r="もん" />）
+                    {showSkippedList ? " ▲" : " ▼"}
+                  </button>
+
+                  {showSkippedList && (
+                    <div className="mt-3 bg-orange-50 border-2 border-orange-200 rounded-xl p-3 max-h-60 overflow-y-auto">
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {Array.from(skippedIndices)
+                          .sort((a, b) => a - b)
+                          .map((idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => jumpToQuestion(idx)}
+                              className="px-3 py-2 bg-white border-2 border-orange-300 rounded-lg text-sm font-bold
+                                         text-orange-800 hover:bg-orange-100 active:scale-95 transition-all"
+                            >
+                              Q{pool[idx].id}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <button
                 onClick={resetAll}
                 className="px-6 sm:px-8 py-3 bg-amber-600 text-white rounded-xl font-bold text-base sm:text-lg
@@ -302,7 +399,7 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
               </button>
             </div>
           ) : (
-            <>
+            <div className="flex justify-center gap-3">
               <button
                 onClick={submitAnswer}
                 disabled={state === "answered"}
@@ -314,7 +411,7 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
               >
                 <R b="回答" r="かいとう" />する
               </button>
-              {!isLastQuestion && (
+              {!isLastQuestion ? (
                 <button
                   onClick={nextQuestion}
                   className="px-6 sm:px-8 py-3 bg-sky-600 text-white rounded-xl font-bold text-base sm:text-lg
@@ -322,8 +419,20 @@ export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
                 >
                   <R b="次" r="つぎ" />の<R b="問" r="もん" />い
                 </button>
-              )}
-            </>
+              ) : state === "answering" ? (
+                <button
+                  onClick={() => {
+                    setSkippedIndices((prev) => new Set(prev).add(questionIndex));
+                    setState("answered");
+                    setShowSkippedList(true);
+                  }}
+                  className="px-6 sm:px-8 py-3 bg-sky-600 text-white rounded-xl font-bold text-base sm:text-lg
+                             hover:bg-sky-700 active:scale-95 transition-all shadow-lg"
+                >
+                  スキップ
+                </button>
+              ) : null}
+            </div>
           )}
         </div>
       </div>
