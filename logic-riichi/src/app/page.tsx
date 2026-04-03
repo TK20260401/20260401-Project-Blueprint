@@ -1,13 +1,15 @@
 import { GameContainer } from "@/components/GameContainer";
 import { QRCodeSection } from "@/components/QRCodeSection";
 import AuthButton from "@/components/AuthButton";
+import VisitorCounter from "@/components/VisitorCounter";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 py-6 sm:py-8 px-3 sm:px-4">
       <header className="mb-6 sm:mb-8">
-        {/* ログインボタン（右上） */}
-        <div className="flex justify-end max-w-3xl mx-auto mb-3">
+        {/* ログインボタン + 訪問者数（右上） */}
+        <div className="flex items-center justify-end gap-3 max-w-3xl mx-auto mb-3">
+          <VisitorCounter />
           <AuthButton />
         </div>
         <div className="text-center">
