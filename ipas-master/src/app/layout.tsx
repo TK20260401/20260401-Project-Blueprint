@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import SessionProvider from "@/components/SessionProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           メインコンテンツへスキップ
         </a>
-        {children}
+        <SessionProvider>{children}</SessionProvider>
       </body>
     </html>
   );

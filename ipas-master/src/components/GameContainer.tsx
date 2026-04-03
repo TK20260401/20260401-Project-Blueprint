@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import BreakEvenSimulator from "./BreakEvenSimulator";
 import TermFlash from "./TermFlash";
 import BinaryConverter from "./BinaryConverter";
 import CalcQuiz from "./CalcQuiz";
+import LearningDashboard from "./LearningDashboard";
 
 function R({ b, r }: { b: string; r: string }) {
   return (
@@ -17,7 +18,7 @@ function R({ b, r }: { b: string; r: string }) {
   );
 }
 
-type Mode = "quiz" | "calc" | "terms" | "binary";
+type Mode = "quiz" | "calc" | "terms" | "binary" | "dashboard";
 
 const tabs: { mode: Mode; icon: string; label: React.ReactNode; ariaLabel: string }[] = [
   {
@@ -60,10 +61,29 @@ const tabs: { mode: Mode; icon: string; label: React.ReactNode; ariaLabel: strin
     ),
     ariaLabel: "2進数変換ツール",
   },
+  {
+    mode: "dashboard",
+    icon: "📈",
+    label: (
+      <>
+        <R b="学習" r="がくしゅう" /><R b="履歴" r="りれき" />
+      </>
+    ),
+    ariaLabel: "学習履歴ダッシュボード",
+  },
 ];
 
 export default function GameContainer() {
   const [mode, setMode] = useState<Mode>("quiz");
+  const categoryResultsRef = useRef(new Map<string, { correct: number; total: number }>());
+
+  const handleAnswer = useCallback((category: string, isCorrect: boolean) => {
+    const map = categoryResultsRef.current;
+    const entry = map.get(category) ?? { correct: 0, total: 0 };
+    entry.total++;
+    if (isCorrect) entry.correct++;
+    map.set(category, entry);
+  }, []);
 
   return (
     <div>
@@ -71,7 +91,7 @@ export default function GameContainer() {
       <nav
         role="tablist"
         aria-label="学習モード切り替え"
-        className="tab-scroll mb-4 sm:mb-6"
+        className="tab-scroll mb-4 sm:mb-6 justify-center"
       >
         {tabs.map((tab) => (
           <button
@@ -99,10 +119,13 @@ export default function GameContainer() {
         role="tabpanel"
         className="bg-white rounded-2xl shadow-xl p-3 sm:p-5 md:p-8"
       >
-        {mode === "quiz" && <CalcQuiz />}
+        {mode === "quiz" && <CalcQuiz onAnswer={handleAnswer} />}
         {mode === "calc" && <BreakEvenSimulator />}
         {mode === "terms" && <TermFlash />}
         {mode === "binary" && <BinaryConverter />}
+        {mode === "dashboard" && (
+          <LearningDashboard localStats={{ categoryResults: categoryResultsRef.current }} />
+        )}
       </div>
     </div>
   );

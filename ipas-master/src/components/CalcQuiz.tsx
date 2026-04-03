@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import {
   allQuestions,
   batches,
@@ -17,7 +18,12 @@ function R({ b, r }: { b: string; r: string }) {
 type QuizState = "answering" | "answered";
 type FilterMode = "batch" | "category";
 
-export default function CalcQuiz() {
+interface CalcQuizProps {
+  onAnswer?: (category: string, isCorrect: boolean) => void;
+}
+
+export default function CalcQuiz({ onAnswer }: CalcQuizProps) {
+  const { data: session } = useSession();
   const [filterMode, setFilterMode] = useState<FilterMode>("batch");
   const [batchIndex, setBatchIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<QuestionCategory>("企業活動");
@@ -74,6 +80,8 @@ export default function CalcQuiz() {
     if (selectedIndex === null) {
       setState("answered");
       setStats((p) => ({ ...p, total: p.total + 1, streak: 0 }));
+      onAnswer?.(currentQ.category, false);
+      recordToServer(currentQ.id, currentQ.category, false);
       return;
     }
     const isCorrect = selectedIndex === currentQ.correctIndex;
@@ -84,6 +92,17 @@ export default function CalcQuiz() {
       streak: isCorrect ? p.streak + 1 : 0,
       bestStreak: isCorrect ? Math.max(p.bestStreak, p.streak + 1) : p.bestStreak,
     }));
+    onAnswer?.(currentQ.category, isCorrect);
+    recordToServer(currentQ.id, currentQ.category, isCorrect);
+  };
+
+  const recordToServer = (questionId: number, category: string, isCorrect: boolean) => {
+    if (!session?.user) return;
+    fetch("/api/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ questionId, category, isCorrect }),
+    }).catch(() => {});
   };
 
   const nextQuestion = () => {
@@ -269,15 +288,7 @@ export default function CalcQuiz() {
         )}
 
         <div className="px-4 sm:px-5 pb-4 sm:pb-5 flex justify-center gap-3">
-          {state === "answering" ? (
-            <button
-              onClick={submitAnswer}
-              className="px-6 sm:px-8 py-3 bg-emerald-700 text-white rounded-xl font-bold text-base sm:text-lg
-                         hover:bg-emerald-800 active:scale-95 transition-all shadow-lg"
-            >
-              <R b="回答" r="かいとう" />する
-            </button>
-          ) : isLastQuestion ? (
+          {isLastQuestion && state === "answered" ? (
             <div className="text-center">
               <p className="text-lg font-bold text-emerald-800 mb-3">
                 <R b="完了" r="かんりょう" />！ {stats.correct}/{stats.total}（{pct}%）
@@ -291,13 +302,28 @@ export default function CalcQuiz() {
               </button>
             </div>
           ) : (
-            <button
-              onClick={nextQuestion}
-              className="px-6 sm:px-8 py-3 bg-emerald-700 text-white rounded-xl font-bold text-base sm:text-lg
-                         hover:bg-emerald-800 active:scale-95 transition-all shadow-lg"
-            >
-              <R b="次" r="つぎ" />の<R b="問題" r="もんだい" />
-            </button>
+            <>
+              <button
+                onClick={submitAnswer}
+                disabled={state === "answered"}
+                className={`px-6 sm:px-8 py-3 rounded-xl font-bold text-base sm:text-lg transition-all shadow-lg ${
+                  state === "answered"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-emerald-700 text-white hover:bg-emerald-800 active:scale-95"
+                }`}
+              >
+                <R b="回答" r="かいとう" />する
+              </button>
+              {!isLastQuestion && (
+                <button
+                  onClick={nextQuestion}
+                  className="px-6 sm:px-8 py-3 bg-sky-600 text-white rounded-xl font-bold text-base sm:text-lg
+                             hover:bg-sky-700 active:scale-95 transition-all shadow-lg"
+                >
+                  <R b="次" r="つぎ" />の<R b="問" r="もん" />い
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
