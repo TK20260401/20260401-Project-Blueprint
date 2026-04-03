@@ -1,9 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// ビルド時（SSG）は環境変数が空の場合がある。ランタイムでのみ接続する。
+export const supabase = supabaseUrl
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : (null as unknown as ReturnType<typeof createClient>);
 
 // ブラウザセッションID（タブごとに一意）
 let sessionId: string | null = null;
@@ -27,6 +30,7 @@ export async function saveScore(params: {
   isCorrect: boolean;
   timeLeft?: number;
 }) {
+  if (!supabase) return;
   const { error } = await supabase.from("scores").insert({
     difficulty: params.difficulty,
     quiz_type: params.quizType,
@@ -39,6 +43,7 @@ export async function saveScore(params: {
 
 // セッションの得点集計を取得
 export async function getSessionStats() {
+  if (!supabase) return null;
   const { data, error } = await supabase
     .from("scores")
     .select("*")
