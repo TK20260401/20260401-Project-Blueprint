@@ -280,7 +280,7 @@ Phase 4: 深化（予定）
 | 2026-04-03 | Zensho-Algo | MVP | 疑似言語エディタ+トレース表+ステップ実行、サンプル4本（合計・最大値・偶数合計・バブルソート）、Vercelデプロイ |
 | 2026-04-06 | Asset-Management | v1 | 備品管理台帳 初期構築、Supabase DB（assets/inventory_checks/activity_logs）、認証（メール/パスワード）、RLS権限設定、ダッシュボード、サンプルデータ表示、レスポンシブ対応、Vercelデプロイ |
 | 2026-04-06 | Report-Hub | v1 | 日報・週報・月報 統合レポート初期構築、Supabase DB（5テーブル）、認証、日報登録フォーム（動的追加）、日報編集機能、ダッシュボード集計、レスポンシブ対応、Vercelデプロイ |
-| 2026-04-06 | ROI-Simulator | v1 | 収益計画シミュレーション（即時ROI計算+Rechartsグラフ）、KGI/KPI管理、ベーシック認証、RLS完全遮断+SECURITY DEFINER、全DB操作API経由、レスポンシブ対応 |
+| 2026-04-06 | ROI-Simulator | v1 | 収益計画シミュレーション（即時ROI計算+Rechartsグラフ）、KGI/KPI管理、ベーシック認証、RLS完全遮断+SECURITY DEFINER、全DB操作API経由、ヘルプ+ツールチップ、AIチャット、印刷/PDF出力、業界別プリセット7種、比較機能（最大4プラン）、レスポンシブ対応 |
 
 ## インフラ
 
