@@ -15,6 +15,7 @@
 | [Zensho-Algo](https://github.com/TK20260401/zensho-algo) | 全商情報処理検定 プログラミング部門 アルゴリズム・トレーナー | https://zensho-algo.vercel.app | MVP |
 | [Asset-Management](./asset-management-ledger/) | 備品管理台帳（備品CRUD・QRコード・棚卸し・更新推奨アラート） | https://asset-management-ledger.vercel.app | v1 |
 | [Report-Hub](./report-hub/) | 日報・週報・月報 統合レポート（工数削減トラッカー・ナレッジベース） | https://report-hub-one.vercel.app | v1 |
+| [ROI-Simulator](./roi-simulator/) | 収益計画シミュレーション・KGI/KPI管理（即時ROI計算・グラフ） | https://roi-simulator-delta.vercel.app | v1 |
 | [todo-app](./todo-app/) | シンプルTODO Webアプリ（HTML/CSS/JS） | — | v1 |
 | [Blueprint](./20260401-Project-Blueprint%201st/) | プロジェクト設計書・構想ドキュメント | — | — |
 
@@ -279,6 +280,7 @@ Phase 4: 深化（予定）
 | 2026-04-03 | Zensho-Algo | MVP | 疑似言語エディタ+トレース表+ステップ実行、サンプル4本（合計・最大値・偶数合計・バブルソート）、Vercelデプロイ |
 | 2026-04-06 | Asset-Management | v1 | 備品管理台帳 初期構築、Supabase DB（assets/inventory_checks/activity_logs）、認証（メール/パスワード）、RLS権限設定、ダッシュボード、サンプルデータ表示、レスポンシブ対応、Vercelデプロイ |
 | 2026-04-06 | Report-Hub | v1 | 日報・週報・月報 統合レポート初期構築、Supabase DB（5テーブル）、認証、日報登録フォーム（動的追加）、日報編集機能、ダッシュボード集計、レスポンシブ対応、Vercelデプロイ |
+| 2026-04-06 | ROI-Simulator | v1 | 収益計画シミュレーション（即時ROI計算+Rechartsグラフ）、KGI/KPI管理、ベーシック認証、RLS完全遮断+SECURITY DEFINER、全DB操作API経由、レスポンシブ対応 |
 
 ## インフラ
 
@@ -288,12 +290,14 @@ Phase 4: 深化（予定）
 | Vercel | logic-riichi | Logic-Riichiのホスティング・CI/CD |
 | Vercel | asset-management-ledger | 備品管理台帳のホスティング・CI/CD |
 | Vercel | report-hub | Report Hubのホスティング・CI/CD |
+| Vercel | roi-simulator | ROI Simulatorのホスティング・CI/CD |
 | Supabase | TK20260401's Project | 認証・スコアDB・訪問者DB（PostgreSQL + RLS + Auth） |
 | GitHub | TK20260401/20260401-Project-Blueprint | 統合リポジトリ |
 | GitHub | TK20260401/ipas-master | IPAS-Master単体リポジトリ |
 | GitHub | TK20260401/zensho-algo | Zensho-Algo単体リポジトリ |
 | GitHub | TK20260401/asset-management-ledger | 備品管理台帳単体リポジトリ |
 | GitHub | TK20260401/report-hub | Report Hub単体リポジトリ |
+| GitHub | TK20260401/roi-simulator | ROI Simulator単体リポジトリ |
 
 ## 環境構築（2026-04-01実施）
 
@@ -372,6 +376,9 @@ cd asset-management-ledger && npm install && npm run dev
 
 # Report-Hub（.env.localにSupabase認証情報が必要）
 cd report-hub && npm install && npm run dev
+
+# ROI-Simulator（.env.localにSupabase認証情報+BASIC_AUTH設定が必要）
+cd roi-simulator && npm install && npm run dev
 ```
 
 ## ライセンス
