@@ -13,6 +13,7 @@
 | [IPAS-Master](./ipas-master/) | ITパスポート試験対策アプリ（500問ドリル・シミュレーター・用語フラッシュ・認証・学習履歴） | https://ipas-master.vercel.app | v9 |
 | [Logic-Riichi](./logic-riichi/) | 麻雀アルゴリズム学習アプリ（待ち牌クイズ・コード実装問題・認証・統計） | https://logic-riichi.vercel.app | v30 |
 | [Zensho-Algo](https://github.com/TK20260401/zensho-algo) | 全商情報処理検定 プログラミング部門 アルゴリズム・トレーナー | https://zensho-algo.vercel.app | MVP |
+| [Asset-Management](./asset-management-ledger/) | 備品管理台帳（備品CRUD・QRコード・棚卸し・更新推奨アラート） | https://asset-management-ledger.vercel.app | v1 |
 | [todo-app](./todo-app/) | シンプルTODO Webアプリ（HTML/CSS/JS） | — | v1 |
 | [Blueprint](./20260401-Project-Blueprint%201st/) | プロジェクト設計書・構想ドキュメント | — | — |
 
@@ -136,6 +137,37 @@ Phase 4: 深化（予定）
 | TypeScript | 5.x | 型安全 |
 | Vercel | — | ホスティング |
 
+## Asset-Management-Ledger — 備品管理台帳
+
+| 機能 | 内容 |
+| --- | --- |
+| 備品一覧 | ダッシュボード（全備品数・使用中・修理中・更新推奨の集計カード）＋テーブル/カード表示 |
+| 認証 | Supabase Auth（メール/パスワード）、未認証→ログインリダイレクト |
+| 権限管理 | RLSで管理者（`t_kikuchi@snafty.io`）のみ編集可、他ユーザーは閲覧のみ |
+| 更新推奨アラート | 購入日＋耐用年数から自動算出、バッジ表示 |
+| 操作ログ | `activity_logs` テーブルで全操作を記録・蓄積 |
+| レスポンシブ | PC: テーブル表示 / モバイル・タブレット: カードリスト表示 |
+
+### 技術スタック
+
+| Technology | Version | Purpose |
+| --- | --- | --- |
+| Next.js (App Router) | 16.2.2 | フレームワーク |
+| React | 19.x | UI構築 |
+| Tailwind CSS | 4.x | スタイリング |
+| Supabase | 2.x | 認証・DB（PostgreSQL + RLS + Auth） |
+| TypeScript | 5.x | 型安全 |
+| Vercel | — | ホスティング |
+
+### DBテーブル
+
+| テーブル | 用途 |
+| --- | --- |
+| `assets` | 備品マスター（備品ID、品名、カテゴリ、ステータス等） |
+| `inventory_checks` | 棚卸し記録 |
+| `activity_logs` | 操作ログ（誰がいつ何をしたか） |
+| `assets_with_renewal` | 更新推奨フラグ付きビュー（自動算出） |
+
 ## 共通設計方針
 
 ### 教育メソッド
@@ -184,6 +216,11 @@ Phase 4: 深化（予定）
 │   ├── src/app/
 │   ├── src/components/
 │   └── package.json
+├── asset-management-ledger/           ← 備品管理台帳（v1）
+│   ├── src/app/
+│   ├── src/lib/
+│   ├── docs/
+│   └── package.json
 └── todo-app/                          ← シンプルTODOアプリ
     ├── index.html
     ├── styles.css
@@ -201,6 +238,7 @@ Phase 4: 深化（予定）
 | 2026-04-03 | IPAS-Master | v5-v9 | 500問拡充、UD/QRコード、GitHub OAuth認証、Supabase学習履歴、レーダーチャート（3系統/14分野）、訪問者カウンター、30/50/100問モード、タイマー、スキップ復帰、シャッフルデフォルトON |
 | 2026-04-03 | Logic-Riichi | v29-v30 | Supabase Auth認証UI、訪問者カウンター、学習履歴、レーダーチャート、ユーザーランキング |
 | 2026-04-03 | Zensho-Algo | MVP | 疑似言語エディタ+トレース表+ステップ実行、サンプル4本（合計・最大値・偶数合計・バブルソート）、Vercelデプロイ |
+| 2026-04-06 | Asset-Management | v1 | 備品管理台帳 初期構築、Supabase DB（assets/inventory_checks/activity_logs）、認証（メール/パスワード）、RLS権限設定、ダッシュボード、サンプルデータ表示、レスポンシブ対応、Vercelデプロイ |
 
 ## インフラ
 
@@ -208,10 +246,12 @@ Phase 4: 深化（予定）
 | --- | --- | --- |
 | Vercel | ipas-master | IPAS-Masterのホスティング・CI/CD |
 | Vercel | logic-riichi | Logic-Riichiのホスティング・CI/CD |
+| Vercel | asset-management-ledger | 備品管理台帳のホスティング・CI/CD |
 | Supabase | TK20260401's Project | 認証・スコアDB・訪問者DB（PostgreSQL + RLS + Auth） |
 | GitHub | TK20260401/20260401-Project-Blueprint | 統合リポジトリ |
 | GitHub | TK20260401/ipas-master | IPAS-Master単体リポジトリ |
 | GitHub | TK20260401/zensho-algo | Zensho-Algo単体リポジトリ |
+| GitHub | TK20260401/asset-management-ledger | 備品管理台帳単体リポジトリ |
 
 ## 環境構築（2026-04-01実施）
 
@@ -284,6 +324,9 @@ cd logic-riichi && npm install && npm run dev
 
 # Zensho-Algo
 cd zensho-algo && npm install && npm run dev
+
+# Asset-Management-Ledger（.env.localにSupabase認証情報が必要）
+cd asset-management-ledger && npm install && npm run dev
 ```
 
 ## ライセンス
