@@ -77,7 +77,33 @@
 
 ---
 
-### 4. 統合リポジトリ（20260401-Project-Blueprint）更新
+### 4. ROI Simulator — 新規構築
+
+| 項目 | 内容 |
+| --- | --- |
+| 本番URL | <https://roi-simulator-delta.vercel.app> |
+| GitHub | <https://github.com/TK20260401/roi-simulator> |
+
+**実装内容:**
+- 要件定義書作成（ヒアリング2回）→ ワイヤーフレーム → タスクリスト
+- Next.js 16 + TypeScript + Tailwind CSS + Recharts + Supabase
+- シミュレーション画面: 12入力項目→即時ROI計算（useMemo）→折れ線+棒グラフ
+- シミュレーション保存・一覧・詳細表示
+- KGI/KPI管理（階層CRUD）
+- ダッシュボード（統計+最近のシミュレーション）
+- ベーシック認証（ID: admin / PW: 20260406）
+- セキュリティ強化: RLS完全遮断 + SECURITY DEFINER + 全DB操作API経由
+- RLS検証: anonでSELECT→0件確認済み
+- Step 1: ヘルプページ + 全入力項目にツールチップ
+- Step 2: AIチャットアシスタント（Claude API連携、フローティングUI）
+- Step 3: 印刷/PDF出力（A4横、コスト内訳テーブル+前提条件+Confidential）
+- Step 4: 業界別プリセット7テンプレート（コールセンター/製造/小売/金融/自治体）
+- Step 5: シミュレーション比較機能（最大4プラン横並び、テーブル+グラフ）
+- Claude APIキー設定完了、AIチャット稼働中
+
+---
+
+### 5. 統合リポジトリ（20260401-Project-Blueprint）更新
 
 - README.md に Asset-Management / Report-Hub / AI Strategy Agent を追加
 - プロジェクト一覧・機能・技術スタック・DB・リポジトリ構成・開発履歴・インフラ・Getting Started
@@ -99,6 +125,7 @@
 | asset-management-ledger | <https://github.com/TK20260401/asset-management-ledger> | v1 デプロイ済み |
 | report-hub | <https://github.com/TK20260401/report-hub> | v1 デプロイ済み |
 | ai-strategy-agent | <https://github.com/TK20260401/ai-strategy-agent> | v1 デプロイ済み |
+| roi-simulator | <https://github.com/TK20260401/roi-simulator> | v1 デプロイ済み（Step 1-5完了） |
 
 ## 本日の本番URL一覧
 
@@ -107,6 +134,7 @@
 | 備品管理台帳 | <https://asset-management-ledger.vercel.app> |
 | Report Hub | <https://report-hub-one.vercel.app> |
 | AI Strategy Agent | <https://ai-strategy-agent.vercel.app> |
+| ROI Simulator | <https://roi-simulator-delta.vercel.app> |
 | IPAS-Master | <https://ipas-master.vercel.app> |
 | Logic-Riichi | <https://logic-riichi.vercel.app> |
 | Zensho-Algo | <https://zensho-algo.vercel.app> |
@@ -117,3 +145,5 @@
 2. **Next.js 16では`middleware.ts`が`proxy.ts`にリネームされている**（関数名も`proxy`に変更）
 3. **統合リポジトリに追加する際、独立した.gitを持つディレクトリは.gitを削除してからgit add**
 4. **Supabase RLSの`auth.jwt() ->> 'email'`でメールベースの権限制御が可能**
+5. **SECURITY DEFINER関数を使えば、anon keyでもサーバーAPIルート経由で安全にDB操作可能**
+6. **APIキーはチャット履歴に残さない** — 環境変数設定後はキーを無効化→再発行が推奨
