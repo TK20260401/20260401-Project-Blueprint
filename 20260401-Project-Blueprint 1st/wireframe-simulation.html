@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ワイヤーフレーム — 収益計画シミュレーション</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+
+  /* レイアウト */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #e5e5e5; padding: 20px 12px; flex-shrink: 0; }
+  .sidebar h1 { font-size: 16px; color: #7c3aed; padding: 0 8px 20px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 13px; color: #666; margin-bottom: 2px; cursor: pointer; }
+  .nav-item.active { background: #f3e8ff; color: #7c3aed; font-weight: 600; }
+  .nav-item:hover { background: #f9fafb; }
+  .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: 0.4; }
+  .nav-item.active .nav-dot { opacity: 1; }
+  .sidebar-bottom { margin-top: auto; border-top: 1px solid #e5e5e5; padding-top: 12px; }
+
+  .main { flex: 1; padding: 32px 40px; overflow-y: auto; }
+  .page-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .page-desc { font-size: 13px; color: #999; margin-bottom: 24px; }
+
+  /* 2カラムレイアウト */
+  .two-col { display: grid; grid-template-columns: 380px 1fr; gap: 24px; }
+
+  /* 入力パネル */
+  .input-panel { background: #fff; border-radius: 12px; border: 1px solid #e5e5e5; padding: 24px; }
+  .input-panel h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #7c3aed; color: #7c3aed; }
+  .input-section { margin-bottom: 20px; }
+  .input-section h4 { font-size: 12px; font-weight: 600; color: #666; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .input-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .input-label { font-size: 12px; color: #555; flex: 1; }
+  .input-field { width: 120px; height: 32px; border: 1px solid #ddd; border-radius: 6px; padding: 0 10px; font-size: 13px; text-align: right; background: #fafafa; }
+  .input-unit { font-size: 11px; color: #999; width: 45px; text-align: left; margin-left: 6px; }
+  .input-slider { width: 120px; height: 6px; border-radius: 3px; background: #e5e5e5; position: relative; }
+  .input-slider::after { content: ''; position: absolute; left: 0; top: 0; width: 60%; height: 100%; background: #7c3aed; border-radius: 3px; }
+  .input-slider-thumb { position: absolute; right: 36%; top: -5px; width: 16px; height: 16px; border-radius: 50%; background: #7c3aed; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+  /* 結果パネル */
+  .result-panel { display: flex; flex-direction: column; gap: 20px; }
+
+  /* KPIカード */
+  .kpi-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi-card { background: #fff; border-radius: 12px; border: 1px solid #e5e5e5; padding: 16px; }
+  .kpi-card-label { font-size: 11px; color: #999; margin-bottom: 4px; }
+  .kpi-card-value { font-size: 24px; font-weight: 700; }
+  .kpi-card-value.blue { color: #2563eb; }
+  .kpi-card-value.green { color: #16a34a; }
+  .kpi-card-value.purple { color: #7c3aed; }
+  .kpi-card-value.orange { color: #ea580c; }
+  .kpi-card-sub { font-size: 10px; color: #aaa; margin-top: 2px; }
+
+  /* グラフエリア */
+  .graph-area { background: #fff; border-radius: 12px; border: 1px solid #e5e5e5; padding: 20px; flex: 1; }
+  .graph-area h4 { font-size: 13px; font-weight: 600; margin-bottom: 16px; }
+  .graph-placeholder { width: 100%; height: 200px; border-radius: 8px; position: relative; overflow: hidden; }
+
+  /* 折れ線グラフ（SVG） */
+  .line-graph { width: 100%; height: 100%; }
+
+  /* 棒グラフ */
+  .bar-graph { display: flex; align-items: flex-end; gap: 12px; height: 160px; padding: 0 20px; }
+  .bar-group { flex: 1; display: flex; gap: 4px; align-items: flex-end; }
+  .bar { flex: 1; border-radius: 4px 4px 0 0; min-width: 20px; position: relative; }
+  .bar.before { background: #e5e5e5; }
+  .bar.after { background: #7c3aed; }
+  .bar-label { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #999; white-space: nowrap; }
+  .bar-value { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #666; white-space: nowrap; }
+
+  /* 2グラフ横並び */
+  .graphs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex: 1; }
+
+  /* ボタン */
+  .btn-primary { background: #7c3aed; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-outline { background: #fff; color: #666; border: 1px solid #ddd; border-radius: 8px; padding: 10px 24px; font-size: 13px; cursor: pointer; }
+  .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+
+  /* 注釈バナー */
+  .wireframe-banner { background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 10px 16px; font-size: 12px; color: #92400e; margin-bottom: 20px; }
+
+  /* レスポンシブ */
+  @media (max-width: 1024px) {
+    .two-col { grid-template-columns: 1fr; }
+    .kpi-cards { grid-template-columns: repeat(2, 1fr); }
+    .graphs-row { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- サイドバー -->
+  <div class="sidebar">
+    <h1>AI Strategy Agent</h1>
+    <div class="nav-item"><div class="nav-dot"></div> ダッシュボード</div>
+    <div class="nav-item active"><div class="nav-dot"></div> シミュレーション</div>
+    <div class="nav-item"><div class="nav-dot"></div> 提案書作成</div>
+    <div class="nav-item"><div class="nav-dot"></div> KGI/KPI管理</div>
+    <div class="nav-item"><div class="nav-dot"></div> 履歴</div>
+    <div class="nav-item"><div class="nav-dot"></div> 分析</div>
+    <div class="sidebar-bottom">
+      <div class="nav-item"><div class="nav-dot"></div> ログアウト</div>
+    </div>
+  </div>
+
+  <!-- メインコンテンツ -->
+  <div class="main">
+    <div class="wireframe-banner">
+      ワイヤーフレーム（設計図） — 実装前のレイアウト確認用です。数値はサンプルです。
+    </div>
+
+    <div class="page-title">収益計画シミュレーション</div>
+    <div class="page-desc">コスト項目を入力すると、ROI・回収期間・年間効果額がリアルタイムで更新されます</div>
+
+    <!-- KPI結果カード（上部） -->
+    <div class="kpi-cards" style="margin-bottom: 20px;">
+      <div class="kpi-card">
+        <div class="kpi-card-label">月間コスト削減額</div>
+        <div class="kpi-card-value blue">¥1,250万</div>
+        <div class="kpi-card-sub">現状比 -42%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-label">年間効果額</div>
+        <div class="kpi-card-value green">¥1.5億</div>
+        <div class="kpi-card-sub">12ヶ月換算</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-label">ROI</div>
+        <div class="kpi-card-value purple">320%</div>
+        <div class="kpi-card-sub">投資対効果</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-card-label">投資回収期間</div>
+        <div class="kpi-card-value orange">4.8ヶ月</div>
+        <div class="kpi-card-sub">初期投資 ¥6,000万</div>
+      </div>
+    </div>
+
+    <!-- 2カラム: 入力 + グラフ -->
+    <div class="two-col">
+      <!-- 左: 入力パネル -->
+      <div class="input-panel">
+        <h3>コスト入力</h3>
+
+        <div class="input-section">
+          <h4>現状コスト</h4>
+          <div class="input-row">
+            <span class="input-label">オペレーター人材コスト</span>
+            <input class="input-field" value="2,000" readonly>
+            <span class="input-unit">万円/月</span>
+          </div>
+          <div class="input-row">
+            <span class="input-label">人月コスト</span>
+            <input class="input-field" value="80" readonly>
+            <span class="input-unit">万円/人月</span>
+          </div>
+          <div class="input-row">
+            <span class="input-label">月間コール件数</span>
+            <input class="input-field" value="15,000" readonly>
+            <span class="input-unit">件/月</span>
+          </div>
+          <div class="input-row">
+            <span class="input-label">1コール平均時間</span>
+            <input class="input-field" value="8" readonly>
+            <span class="input-unit">分</span>
+          </div>
+          <div class="input-row">
+            <span class="input-label">現行システム運用費</span>
+            <input class="input-field" value="300" readonly>
+            <span class="input-unit">万円/月</span>
+          </div>
+          <div class="input-row">
+            <span class="input-label">新人教育費用</span>
+            <input class="input-field" value="500" readonly>
+            <span class="input-unit">万円/年</span>
+          </div>
+          <div class="input-row">
+            <span class="input-label">その他の費用</span>
+            <input class="input-field" value="100" readonly>
+            <span class="input-unit">万円/月</span>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <h4>AI導入コスト</h4>
+          <div class="input-row">
+            <span class="input-label">初期費用（一括）</span>
+            <input class="input-field" value="6,000" readonly>
+            <span class="input-unit">万円</span>
+          </div>
+          <div class="input-row">
+            <span class="input-label">月額費用</span>
+            <input class="input-field" value="200" readonly>
+            <span class="input-unit">万円/月</span>
+          </div>
+        </div>
+
+        <div class="input-section">
+          <h4>削減見込み</h4>
+          <div class="input-row">
+            <span class="input-label">AI自動化率</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="input-slider" style="position:relative;">
+                <div class="input-slider-thumb"></div>
+              </div>
+              <span style="font-size:14px;font-weight:700;color:#7c3aed;">60%</span>
+            </div>
+          </div>
+          <div class="input-row" style="margin-top:12px;">
+            <span class="input-label">人員削減見込み</span>
+            <input class="input-field" value="12" readonly>
+            <span class="input-unit">人</span>
+          </div>
+          <div class="input-row">
+            <span class="input-label">教育コスト削減率</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="input-slider" style="position:relative;">
+                <div class="input-slider-thumb"></div>
+              </div>
+              <span style="font-size:14px;font-weight:700;color:#7c3aed;">60%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-outline">リセット</button>
+          <button class="btn-primary">保存する</button>
+        </div>
+      </div>
+
+      <!-- 右: グラフパネル -->
+      <div class="result-panel">
+        <div class="graphs-row">
+          <!-- 折れ線グラフ: 投資回収 -->
+          <div class="graph-area">
+            <h4>投資回収シミュレーション</h4>
+            <div class="graph-placeholder">
+              <svg viewBox="0 0 400 180" class="line-graph">
+                <!-- グリッド -->
+                <line x1="40" y1="10" x2="40" y2="155" stroke="#eee" stroke-width="1"/>
+                <line x1="40" y1="155" x2="390" y2="155" stroke="#ddd" stroke-width="1"/>
+                <line x1="40" y1="120" x2="390" y2="120" stroke="#f5f5f5" stroke-width="1"/>
+                <line x1="40" y1="85" x2="390" y2="85" stroke="#f5f5f5" stroke-width="1"/>
+                <line x1="40" y1="50" x2="390" y2="50" stroke="#f5f5f5" stroke-width="1"/>
+
+                <!-- Y軸ラベル -->
+                <text x="35" y="158" text-anchor="end" font-size="8" fill="#999">0</text>
+                <text x="35" y="123" text-anchor="end" font-size="8" fill="#999">5,000万</text>
+                <text x="35" y="88" text-anchor="end" font-size="8" fill="#999">1億</text>
+                <text x="35" y="53" text-anchor="end" font-size="8" fill="#999">1.5億</text>
+
+                <!-- X軸ラベル -->
+                <text x="70" y="170" text-anchor="middle" font-size="8" fill="#999">1月</text>
+                <text x="128" y="170" text-anchor="middle" font-size="8" fill="#999">3月</text>
+                <text x="186" y="170" text-anchor="middle" font-size="8" fill="#999">5月</text>
+                <text x="244" y="170" text-anchor="middle" font-size="8" fill="#999">7月</text>
+                <text x="302" y="170" text-anchor="middle" font-size="8" fill="#999">9月</text>
+                <text x="360" y="170" text-anchor="middle" font-size="8" fill="#999">12月</text>
+
+                <!-- 投資額（赤線） -->
+                <polyline points="40,85 70,83 99,81 128,79 157,77 186,75 215,73 244,71 273,69 302,67 331,65 360,63" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3"/>
+
+                <!-- 累積削減額（紫線） -->
+                <polyline points="40,155 70,143 99,131 128,119 157,107 186,95 215,83 244,71 273,59 302,47 331,35 360,23" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+
+                <!-- 交差ポイント -->
+                <circle cx="230" cy="76" r="5" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+                <text x="230" y="68" text-anchor="middle" font-size="9" fill="#7c3aed" font-weight="bold">回収完了</text>
+                <text x="230" y="92" text-anchor="middle" font-size="8" fill="#999">4.8ヶ月</text>
+
+                <!-- 凡例 -->
+                <line x1="260" y1="15" x2="280" y2="15" stroke="#7c3aed" stroke-width="2"/>
+                <text x="283" y="18" font-size="8" fill="#666">累積コスト削減額</text>
+                <line x1="260" y1="27" x2="280" y2="27" stroke="#ef4444" stroke-width="2" stroke-dasharray="4,3"/>
+                <text x="283" y="30" font-size="8" fill="#666">累積投資額</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 棒グラフ: 月次比較 -->
+          <div class="graph-area">
+            <h4>月次コスト比較（導入前 vs 導入後）</h4>
+            <div class="graph-placeholder" style="padding-bottom:24px;">
+              <div class="bar-graph">
+                <div class="bar-group">
+                  <div class="bar before" style="height:130px;">
+                    <div class="bar-value">2,000</div>
+                    <div class="bar-label">人件費</div>
+                  </div>
+                  <div class="bar after" style="height:52px;">
+                    <div class="bar-value">800</div>
+                  </div>
+                </div>
+                <div class="bar-group">
+                  <div class="bar before" style="height:50px;">
+                    <div class="bar-value">300</div>
+                    <div class="bar-label">システム</div>
+                  </div>
+                  <div class="bar after" style="height:35px;">
+                    <div class="bar-value">200</div>
+                  </div>
+                </div>
+                <div class="bar-group">
+                  <div class="bar before" style="height:30px;">
+                    <div class="bar-value">500</div>
+                    <div class="bar-label">教育費</div>
+                  </div>
+                  <div class="bar after" style="height:12px;">
+                    <div class="bar-value">200</div>
+                  </div>
+                </div>
+                <div class="bar-group">
+                  <div class="bar before" style="height:20px;">
+                    <div class="bar-value">100</div>
+                    <div class="bar-label">その他</div>
+                  </div>
+                  <div class="bar after" style="height:10px;">
+                    <div class="bar-value">50</div>
+                  </div>
+                </div>
+              </div>
+              <!-- 凡例 -->
+              <div style="display:flex;gap:16px;justify-content:center;margin-top:28px;">
+                <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#666;">
+                  <div style="width:10px;height:10px;border-radius:2px;background:#e5e5e5;"></div> 導入前
+                </div>
+                <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:#666;">
+                  <div style="width:10px;height:10px;border-radius:2px;background:#7c3aed;"></div> 導入後
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- コスト内訳サマリー -->
+        <div class="graph-area">
+          <h4>コスト削減内訳</h4>
+          <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px;">
+            <div style="text-align:center; padding:12px; background:#f9fafb; border-radius:8px;">
+              <div style="font-size:11px; color:#999;">現状月間コスト</div>
+              <div style="font-size:20px; font-weight:700; color:#333;">¥2,942万</div>
+            </div>
+            <div style="text-align:center; padding:12px; background:#f0fdf4; border-radius:8px;">
+              <div style="font-size:11px; color:#999;">導入後月間コスト</div>
+              <div style="font-size:20px; font-weight:700; color:#16a34a;">¥1,692万</div>
+            </div>
+            <div style="text-align:center; padding:12px; background:#faf5ff; border-radius:8px;">
+              <div style="font-size:11px; color:#999;">月間削減額</div>
+              <div style="font-size:20px; font-weight:700; color:#7c3aed;">¥1,250万</div>
+              <div style="font-size:10px; color:#7c3aed;">-42.5%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
