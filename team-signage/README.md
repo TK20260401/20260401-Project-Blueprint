@@ -75,8 +75,8 @@ Google Spreadsheet（3シート）
 
 | ドキュメント | URL |
 | --- | --- |
-| ワイヤーフレーム（表側/裏側） | デプロイ後に追記 |
-| モックアップ（インタラクティブ） | デプロイ後に追記 |
+| ワイヤーフレーム（表側/裏側） | https://team-signage.vercel.app/docs/wireframe.html |
+| モックアップ（インタラクティブ） | https://team-signage.vercel.app/docs/mockup.html |
 
 ## 技術スタック
 
