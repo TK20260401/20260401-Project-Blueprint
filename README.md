@@ -16,6 +16,7 @@
 | [Asset-Management](./asset-management-ledger/) | 備品管理台帳（備品CRUD・QRコード・棚卸し・更新推奨アラート） | https://asset-management-ledger.vercel.app | v1 |
 | [Report-Hub](./report-hub/) | 日報・週報・月報 統合レポート（工数削減トラッカー・ナレッジベース） | https://report-hub-one.vercel.app | v1 |
 | [ROI-Simulator](./roi-simulator/) | 収益計画シミュレーション・KGI/KPI管理（即時ROI計算・グラフ） | https://roi-simulator-delta.vercel.app | v1 |
+| [Otetsudai-Bank](./otetsudai-bank/) | お手伝い×マネー教育アプリ（家族認証・タスク管理・ウォレット・貯蓄目標） | — | v0.1 |
 | [todo-app](./todo-app/) | シンプルTODO Webアプリ（HTML/CSS/JS） | — | v1 |
 | [Blueprint](./20260401-Project-Blueprint%201st/) | プロジェクト設計書・構想ドキュメント | — | — |
 
@@ -204,6 +205,41 @@ Phase 4: 深化（予定）
 | `efficiency_actions` | 工数削減アクション（削減時間記録） |
 | `knowledge_notes` | 定性的気づき・暗黙知（タグ・共有フラグ） |
 
+## Otetsudai-Bank — お手伝い×マネー教育
+
+| 機能 | 内容 |
+| --- | --- |
+| ログイン | 家族選択→メンバー選択→PIN認証（PINなしも可）、ロール別ルーティング |
+| 親ダッシュボード | 承認待ちタスク一覧（承認/却下）、子ども別残高・貯蓄率、週間統計 |
+| タスク管理 | CRUD（タスク名・説明・報酬額・繰り返し設定・担当子ども指定）、有効/無効切替 |
+| 子どもダッシュボード | 貯金箱UI（つかえるお金/ちょきん分離）、貯蓄目標プログレスバー |
+| おてつだい実行 | アクティブタスク一覧→「できた！」で完了申請 |
+| ウォレット | 報酬を分配比率で「つかえるお金」「ちょきん」に自動振り分け |
+| 取引履歴 | 獲得・使用の履歴をタブ切替で確認 |
+
+### 技術スタック
+
+| Technology | Version | Purpose |
+| --- | --- | --- |
+| Next.js (App Router) | 16.2.2 | フレームワーク |
+| React | 19.2.4 | UI構築 |
+| Tailwind CSS | 4.x | スタイリング |
+| shadcn/ui | 4.1.2 | UIコンポーネント |
+| Supabase | 2.x | DB（PostgreSQL）・認証 |
+| TypeScript | 5.x | 型安全 |
+| Vercel | — | ホスティング |
+
+### DBテーブル
+
+| テーブル | 用途 |
+| --- | --- |
+| `otetsudai_families` | 家族マスター |
+| `otetsudai_users` | ユーザー（parent/child、PIN認証） |
+| `otetsudai_tasks` | お手伝いタスク定義 |
+| `otetsudai_task_logs` | タスク完了ログ（pending→approved/rejected） |
+| `otetsudai_wallets` | 子ども別ウォレット（spending/saving残高・分配比率） |
+| `otetsudai_transactions` | 取引履歴（earn/spend/save） |
+
 ## 共通設計方針
 
 ### 教育メソッド
@@ -262,6 +298,12 @@ Phase 4: 深化（予定）
 │   ├── src/lib/
 │   ├── docs/
 │   └── package.json
+├── otetsudai-bank/                    ← お手伝い×マネー教育アプリ（v0.1）
+│   ├── app/
+│   ├── components/
+│   ├── lib/
+│   ├── docs/
+│   └── package.json
 └── todo-app/                          ← シンプルTODOアプリ
     ├── index.html
     ├── styles.css
@@ -282,6 +324,7 @@ Phase 4: 深化（予定）
 | 2026-04-06 | Asset-Management | v1 | 備品管理台帳 初期構築、Supabase DB（assets/inventory_checks/activity_logs）、認証（メール/パスワード）、RLS権限設定、ダッシュボード、サンプルデータ表示、レスポンシブ対応、Vercelデプロイ |
 | 2026-04-06 | Report-Hub | v1 | 日報・週報・月報 統合レポート初期構築、Supabase DB（5テーブル）、認証、日報登録フォーム（動的追加）、日報編集機能、ダッシュボード集計、レスポンシブ対応、Vercelデプロイ |
 | 2026-04-06 | ROI-Simulator | v1 | 収益計画シミュレーション（即時ROI計算+Rechartsグラフ）、KGI/KPI管理、ベーシック認証、RLS完全遮断+SECURITY DEFINER、全DB操作API経由、ヘルプ+ツールチップ、AIチャット、印刷/PDF出力、業界別プリセット7種、比較機能（最大4プラン）、レスポンシブ対応 |
+| 2026-04-07 | Otetsudai-Bank | v0.1 | お手伝い×マネー教育アプリ初期構築、Supabase DB（families/users/tasks/task_logs/wallets/transactions 6テーブル）、家族→メンバー→PIN認証、親ダッシュボード（承認/却下・子ども残高・週間統計）、タスク管理CRUD（報酬額・繰り返し・担当設定）、子どもダッシュボード（貯金箱UI・貯蓄目標プログレス・おてつだい実行・取引履歴）、ウォレット自動分配（spending/saving）、shadcn/ui、レスポンシブ対応 |
 
 ## インフラ
 
@@ -299,6 +342,7 @@ Phase 4: 深化（予定）
 | GitHub | TK20260401/asset-management-ledger | 備品管理台帳単体リポジトリ |
 | GitHub | TK20260401/report-hub | Report Hub単体リポジトリ |
 | GitHub | TK20260401/roi-simulator | ROI Simulator単体リポジトリ |
+| Supabase | otetsudai_* テーブル群 | お手伝いバンク DB（families/users/tasks/wallets/transactions） |
 
 ## 環境構築（2026-04-01実施）
 
@@ -380,6 +424,9 @@ cd report-hub && npm install && npm run dev
 
 # ROI-Simulator（.env.localにSupabase認証情報+BASIC_AUTH設定が必要）
 cd roi-simulator && npm install && npm run dev
+
+# Otetsudai-Bank（.env.localにSupabase認証情報が必要）
+cd otetsudai-bank && npm install && npm run dev
 ```
 
 ## ライセンス
