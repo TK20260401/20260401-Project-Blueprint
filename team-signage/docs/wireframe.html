@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Signage v1 — ワイヤーフレーム文書</title>
+<style>
+  :root {
+    --front-border: #8b5cf6;
+    --front-bg: #f5f3ff;
+    --front-header: #7c3aed;
+    --back-border: #10b981;
+    --back-bg: #ecfdf5;
+    --back-header: #059669;
+    --arrow-color: #f97316;
+    --api-blue: #dbeafe;
+    --api-blue-border: #3b82f6;
+    --db-green: #d1fae5;
+    --db-green-border: #10b981;
+    --gas-yellow: #fef9c3;
+    --gas-yellow-border: #eab308;
+    --browser-purple: #ede9fe;
+    --browser-purple-border: #8b5cf6;
+    --status-blue: #3b82f6;
+    --status-red: #ef4444;
+    --status-navy: #1e3a5f;
+    --status-gray: #9ca3af;
+    --status-purple: #8b5cf6;
+    --status-darkred: #991b1b;
+    --bar-green: #22c55e;
+    --bar-yellow: #eab308;
+    --bar-red: #ef4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+  }
+
+  /* ── Sticky Nav ── */
+  .sticky-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #1e1b4b;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 10px 32px;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .sticky-nav a {
+    color: #c4b5fd;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color .15s;
+  }
+  .sticky-nav a:hover { color: #fff; }
+  .sticky-nav .brand {
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+    margin-right: 16px;
+    letter-spacing: .5px;
+  }
+
+  /* ── Dark Header ── */
+  .page-header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    color: #fff;
+    padding: 48px 32px 36px;
+  }
+  .page-header h1 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .page-header .subtitle {
+    font-size: 16px;
+    color: #a5b4fc;
+    margin-bottom: 24px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 13px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid;
+    display: inline-block;
+  }
+
+  /* ── Main Container ── */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin-bottom: 56px;
+  }
+  .section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    border-left: 5px solid var(--front-border);
+    padding-left: 14px;
+    margin-bottom: 24px;
+  }
+  .section-desc {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 20px;
+    max-width: 800px;
+  }
+
+  /* ── Split Panels ── */
+  .split-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .panel {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid;
+  }
+  .panel-front {
+    border-color: var(--front-border);
+    background: #fff;
+  }
+  .panel-back {
+    border-color: var(--back-border);
+    background: var(--back-bg);
+  }
+  .panel-header {
+    padding: 12px 20px;
+    font-weight: 700;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-front .panel-header {
+    background: var(--front-bg);
+    color: var(--front-header);
+    border-bottom: 2px solid var(--front-border);
+  }
+  .panel-back .panel-header {
+    background: #d1fae5;
+    color: var(--back-header);
+    border-bottom: 2px solid var(--back-border);
+  }
+  .panel-body {
+    padding: 20px;
+  }
+
+  /* ── Wireframe Boxes ── */
+  .wire-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+    background: #fff;
+    position: relative;
+  }
+  .wire-box.highlighted {
+    border-color: var(--front-border);
+    border-style: solid;
+  }
+  .wire-box-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+  }
+
+  /* ── Member Card ── */
+  .member-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+    margin-bottom: 8px;
+  }
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e0e7ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #6366f1;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .member-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .member-name {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .member-memo {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .member-time {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .badge-zaiseki { background: var(--status-blue); }
+  .badge-gaishutu { background: var(--status-red); }
+  .badge-kaigi { background: var(--status-navy); }
+  .badge-yasumi { background: #fff; color: var(--status-gray); border: 2px solid var(--status-gray); }
+  .badge-sekkyaku { background: var(--status-purple); }
+  .badge-kuruma { background: var(--status-darkred); border-radius: 4px; }
+
+  /* ── Calendar ── */
+  .cal-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .cal-header div {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    padding: 4px;
+  }
+  .cal-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+  .cal-cell {
+    text-align: center;
+    font-size: 12px;
+    padding: 6px 4px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+  }
+  .cal-cell.today {
+    background: #7c3aed;
+    color: #fff;
+    font-weight: 700;
+    border-color: #7c3aed;
+  }
+  .cal-cell.tomorrow {
+    background: #ede9fe;
+    color: #5b21b6;
+    font-weight: 600;
+    border-color: #a78bfa;
+  }
+
+  /* ── Schedule List ── */
+  .sched-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-left: 4px solid #e2e8f0;
+    margin-bottom: 6px;
+    font-size: 13px;
+    background: #fff;
+    border-radius: 0 6px 6px 0;
+  }
+  .sched-item.today-item { border-left-color: #7c3aed; background: #f5f3ff; }
+  .sched-item.tomorrow-item { border-left-color: #a78bfa; background: #faf5ff; }
+  .sched-date {
+    font-weight: 700;
+    font-size: 12px;
+    color: #64748b;
+    min-width: 80px;
+  }
+  .sched-name {
+    font-weight: 600;
+    min-width: 72px;
+  }
+  .sched-content {
+    color: #475569;
+    flex: 1;
+  }
+
+  /* ── Capacity Bars ── */
+  .cap-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: #fff;
+  }
+  .cap-project {
+    font-weight: 600;
+    font-size: 14px;
+    min-width: 130px;
+  }
+  .cap-members {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .chip {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #e0e7ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #4f46e5;
+  }
+  .bar-track {
+    flex: 1;
+    height: 18px;
+    background: #f1f5f9;
+    border-radius: 9px;
+    overflow: hidden;
+    position: relative;
+    min-width: 100px;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 9px;
+    transition: width .3s;
+  }
+  .bar-fill.green { background: var(--bar-green); }
+  .bar-fill.yellow { background: var(--bar-yellow); }
+  .bar-fill.red { background: var(--bar-red); }
+  .bar-label {
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* ── Flow / Architecture Boxes ── */
+  .flow-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 2px solid;
+  }
+  .flow-db { background: var(--db-green); border-color: var(--db-green-border); color: #065f46; }
+  .flow-gas { background: var(--gas-yellow); border-color: var(--gas-yellow-border); color: #854d0e; }
+  .flow-api { background: var(--api-blue); border-color: var(--api-blue-border); color: #1e40af; }
+  .flow-browser { background: var(--browser-purple); border-color: var(--browser-purple-border); color: #5b21b6; }
+
+  .flow-arrow {
+    display: inline-flex;
+    align-items: center;
+    color: var(--arrow-color);
+    font-size: 22px;
+    font-weight: 900;
+    padding: 0 4px;
+  }
+  .flow-arrow-label {
+    font-size: 10px;
+    color: var(--arrow-color);
+    font-weight: 600;
+    text-align: center;
+    display: block;
+    line-height: 1.1;
+  }
+  .flow-arrow-wrap {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .arch-flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 20px;
+  }
+
+  /* ── Back-side Specifics ── */
+  .back-box {
+    border: 2px solid var(--back-border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+    background: #fff;
+  }
+  .back-box-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--back-header);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .back-note {
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.6;
+  }
+
+  /* ── Data Schema Table ── */
+  .schema-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+  .schema-table th {
+    background: #f1f5f9;
+    padding: 8px 12px;
+    text-align: left;
+    font-weight: 700;
+    border: 1px solid #cbd5e1;
+    font-size: 12px;
+  }
+  .schema-table td {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    font-size: 12px;
+  }
+  .schema-table tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+  .schema-table code {
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: "SF Mono", "Fira Code", monospace;
+  }
+
+  /* ── Code Block ── */
+  .code-block {
+    background: #1e293b;
+    color: #e2e8f0;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-family: "SF Mono", "Fira Code", monospace;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin-bottom: 14px;
+  }
+  .code-block .kw { color: #c084fc; }
+  .code-block .fn { color: #67e8f9; }
+  .code-block .str { color: #86efac; }
+  .code-block .cm { color: #64748b; }
+
+  /* ── Summary Card ── */
+  .summary-card {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .summary-stat {
+    flex: 1;
+    padding: 14px;
+    border-radius: 8px;
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+  }
+  .summary-stat .val {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1e293b;
+  }
+  .summary-stat .label {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  /* ── Auth Note ── */
+  .auth-note {
+    background: #fffbeb;
+    border: 2px solid #fbbf24;
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-size: 13px;
+    color: #92400e;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .auth-note .icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  /* ── Footer ── */
+  .page-footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 13px;
+    color: #94a3b8;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 48px;
+  }
+
+  /* ── Full-width panel ── */
+  .full-panel {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #6366f1;
+    background: #fff;
+    margin-bottom: 24px;
+  }
+  .full-panel .panel-header {
+    background: #eef2ff;
+    color: #4338ca;
+    border-bottom: 2px solid #6366f1;
+  }
+  .full-panel .panel-body {
+    padding: 24px;
+  }
+
+  /* ── Interval Badge ── */
+  .interval-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fbbf24;
+    margin-left: 4px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .split-panels { grid-template-columns: 1fr; }
+    .arch-flow { flex-direction: column; }
+    .summary-card { flex-direction: column; }
+  }
+
+  /* ── Header date bar wireframe ── */
+  .date-bar {
+    background: #1e293b;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+
+  /* ── Grid for member cards ── */
+  .members-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* ── Status legend inside front panel ── */
+  .status-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  /* ── Annotation ── */
+  .annotation {
+    font-size: 11px;
+    color: #94a3b8;
+    font-style: italic;
+    margin-top: 6px;
+  }
+
+  /* ── Color rules table ── */
+  .color-rules {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .color-rule {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* ── Section divider ── */
+  .section-divider {
+    height: 2px;
+    background: linear-gradient(to right, var(--front-border), transparent);
+    margin: 40px 0;
+    border: none;
+  }
+
+  /* ── Today / Tomorrow highlight wireframe ── */
+  .highlight-today {
+    background: #f5f3ff;
+    border: 2px solid #7c3aed;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-weight: 700;
+    color: #5b21b6;
+    font-size: 13px;
+  }
+  .highlight-tomorrow {
+    background: #faf5ff;
+    border: 2px dashed #a78bfa;
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-weight: 600;
+    color: #7c3aed;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!--  STICKY NAVIGATION                                            -->
+<!-- ============================================================ -->
+<nav class="sticky-nav">
+  <span class="brand">Team Signage</span>
+  <a href="#sec-arch">全体構成</a>
+  <a href="#sec-status">1. 在席管理</a>
+  <a href="#sec-calendar">2. 労務管理</a>
+  <a href="#sec-capacity">3. キャパシティ</a>
+  <a href="#sec-schema">データスキーマ</a>
+  <a href="#sec-auth">認証</a>
+</nav>
+
+<!-- ============================================================ -->
+<!--  PAGE HEADER + LEGEND                                         -->
+<!-- ============================================================ -->
+<header class="page-header">
+  <h1>Team Signage v1 ワイヤーフレーム</h1>
+  <p class="subtitle">小規模チーム (10-20名) 向けデジタルサイネージ表示システム</p>
+  <div class="legend">
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:var(--front-bg);border-color:var(--front-border);"></span>
+      表側（サイネージ表示）
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:var(--back-bg);border-color:var(--back-border);"></span>
+      裏側（データ・API）
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:var(--gas-yellow);border-color:var(--gas-yellow-border);"></span>
+      GAS Web App
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:var(--db-green);border-color:var(--db-green-border);"></span>
+      Google Spreadsheet
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:var(--api-blue);border-color:var(--api-blue-border);"></span>
+      API / JSON
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:var(--browser-purple);border-color:var(--browser-purple-border);"></span>
+      ブラウザ / サイネージ
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#fff;border-color:var(--arrow-color);"></span>
+      データフロー (矢印)
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!--  OVERALL ARCHITECTURE                                         -->
+<!-- ============================================================ -->
+<section class="section" id="sec-arch">
+  <h2 class="section-title">全体アーキテクチャ</h2>
+  <p class="section-desc">
+    サイネージ端末のブラウザからGAS Web Appを定期ポーリングし、
+    Google Spreadsheetに格納されたデータをJSON形式で取得・表示します。
+    認証不要のパブリック公開APIを使用し、シンプルな構成を実現します。
+  </p>
+
+  <div class="full-panel">
+    <div class="panel-header">システム構成図 (表側 + 裏側)</div>
+    <div class="panel-body">
+      <div class="arch-flow">
+        <div class="flow-box flow-browser">
+          <span>&#x1f5a5;</span>
+          サイネージ<br>ブラウザ
+        </div>
+        <div class="flow-arrow-wrap">
+          <span class="flow-arrow">&larr;</span>
+          <span class="flow-arrow-label">JSON<br>レスポンス</span>
+        </div>
+        <div class="flow-box flow-api">
+          <span>&#x1f4e1;</span>
+          fetch() / XHR<br>定期ポーリング
+        </div>
+        <div class="flow-arrow-wrap">
+          <span class="flow-arrow">&larr;</span>
+          <span class="flow-arrow-label">HTTP GET</span>
+        </div>
+        <div class="flow-box flow-gas">
+          <span>&#x2699;</span>
+          GAS Web App<br>doGet()
+        </div>
+        <div class="flow-arrow-wrap">
+          <span class="flow-arrow">&larr;</span>
+          <span class="flow-arrow-label">SpreadsheetApp<br>.getValues()</span>
+        </div>
+        <div class="flow-box flow-db">
+          <span>&#x1f4ca;</span>
+          Google<br>Spreadsheet
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:16px;">
+        <div style="display:inline-flex;gap:24px;flex-wrap:wrap;justify-content:center;">
+          <div style="text-align:center;font-size:12px;color:#64748b;">
+            <strong style="color:#1e293b;">在席管理</strong><br>
+            ポーリング: <span class="interval-badge">30-60秒</span>
+          </div>
+          <div style="text-align:center;font-size:12px;color:#64748b;">
+            <strong style="color:#1e293b;">営業カレンダー</strong><br>
+            ポーリング: <span class="interval-badge">5分</span>
+          </div>
+          <div style="text-align:center;font-size:12px;color:#64748b;">
+            <strong style="color:#1e293b;">キャパシティ</strong><br>
+            ポーリング: <span class="interval-badge">10分</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!--  1. 在席管理（ステータスボード）                                 -->
+<!-- ============================================================ -->
+<section class="section" id="sec-status">
+  <h2 class="section-title">1. 在席管理（ステータスボード）</h2>
+  <p class="section-desc">
+    チームメンバー10-20名の在席状況をリアルタイムに表示。
+    各メンバーのステータス・メモ・最終更新時刻を一目で確認できるボードです。
+  </p>
+
+  <div class="split-panels">
+    <!-- ── FRONT SIDE ── -->
+    <div class="panel panel-front">
+      <div class="panel-header">
+        <span>&#x1f5a5;</span> 表側 ― サイネージ表示
+      </div>
+      <div class="panel-body">
+
+        <!-- Date / Time Header -->
+        <div class="wire-box highlighted">
+          <div class="wire-box-label">ヘッダーバー（日時表示）</div>
+          <div class="date-bar">2023年 1月10日 火 09:00</div>
+          <div class="annotation">* 現在日時をリアルタイム更新</div>
+        </div>
+
+        <!-- Status Legend -->
+        <div class="wire-box">
+          <div class="wire-box-label">ステータス凡例</div>
+          <div class="color-rules">
+            <div class="color-rule"><span class="color-dot" style="background:var(--status-blue);"></span> 在席</div>
+            <div class="color-rule"><span class="color-dot" style="background:var(--status-red);"></span> 外出</div>
+            <div class="color-rule"><span class="color-dot" style="background:var(--status-navy);"></span> 会議中</div>
+            <div class="color-rule"><span class="color-dot" style="background:var(--status-gray);border:2px solid var(--status-gray);width:10px;height:10px;"></span> 休み</div>
+            <div class="color-rule"><span class="color-dot" style="background:var(--status-purple);"></span> 接客</div>
+            <div class="color-rule"><span class="color-dot" style="background:var(--status-darkred);border-radius:3px;"></span> 車</div>
+          </div>
+        </div>
+
+        <!-- Member Cards Grid -->
+        <div class="wire-box highlighted">
+          <div class="wire-box-label">メンバーカード一覧（2カラム）</div>
+          <div class="members-grid">
+            <!-- Row 1 -->
+            <div class="member-card">
+              <div class="avatar">太</div>
+              <div class="member-info">
+                <div class="member-name">共栄 太郎</div>
+                <div class="member-memo">本社 デスクワーク</div>
+                <div class="member-time">09:02 更新</div>
+              </div>
+              <span class="status-badge badge-zaiseki">在席</span>
+            </div>
+            <div class="member-card">
+              <div class="avatar">花</div>
+              <div class="member-info">
+                <div class="member-name">田中 花子</div>
+                <div class="member-memo">終日外出</div>
+                <div class="member-time">08:45 更新</div>
+              </div>
+              <span class="status-badge badge-gaishutu">外出</span>
+            </div>
+            <!-- Row 2 -->
+            <div class="member-card">
+              <div class="avatar">健</div>
+              <div class="member-info">
+                <div class="member-name">鈴木 健一</div>
+                <div class="member-memo">会議室A 打ち合わせ</div>
+                <div class="member-time">09:00 更新</div>
+              </div>
+              <span class="status-badge badge-kaigi">会議中</span>
+            </div>
+            <div class="member-card">
+              <div class="avatar">美</div>
+              <div class="member-info">
+                <div class="member-name">佐藤 美咲</div>
+                <div class="member-memo">有給休暇</div>
+                <div class="member-time">前日 更新</div>
+              </div>
+              <span class="status-badge badge-yasumi">休み</span>
+            </div>
+            <!-- Row 3 -->
+            <div class="member-card">
+              <div class="avatar">翔</div>
+              <div class="member-info">
+                <div class="member-name">高橋 翔太</div>
+                <div class="member-memo">来客対応中</div>
+                <div class="member-time">08:55 更新</div>
+              </div>
+              <span class="status-badge badge-sekkyaku">接客</span>
+            </div>
+            <div class="member-card">
+              <div class="avatar">大</div>
+              <div class="member-info">
+                <div class="member-name">山田 大輔</div>
+                <div class="member-memo">○○案件→▲▲案件 直帰</div>
+                <div class="member-time">08:30 更新</div>
+              </div>
+              <span class="status-badge badge-kuruma">車</span>
+            </div>
+            <!-- Row 4 -->
+            <div class="member-card">
+              <div class="avatar">恵</div>
+              <div class="member-info">
+                <div class="member-name">中村 恵理</div>
+                <div class="member-memo">リモートワーク</div>
+                <div class="member-time">08:58 更新</div>
+              </div>
+              <span class="status-badge badge-zaiseki">在席</span>
+            </div>
+            <div class="member-card">
+              <div class="avatar">誠</div>
+              <div class="member-info">
+                <div class="member-name">小林 誠</div>
+                <div class="member-memo">△△建設 訪問</div>
+                <div class="member-time">09:01 更新</div>
+              </div>
+              <span class="status-badge badge-gaishutu">外出</span>
+            </div>
+            <!-- Row 5 -->
+            <div class="member-card">
+              <div class="avatar">愛</div>
+              <div class="member-info">
+                <div class="member-name">伊藤 愛</div>
+                <div class="member-memo">午後出社予定</div>
+                <div class="member-time">07:30 更新</div>
+              </div>
+              <span class="status-badge badge-gaishutu">外出</span>
+            </div>
+            <div class="member-card">
+              <div class="avatar">勇</div>
+              <div class="member-info">
+                <div class="member-name">渡辺 勇気</div>
+                <div class="member-memo">経理処理</div>
+                <div class="member-time">09:03 更新</div>
+              </div>
+              <span class="status-badge badge-zaiseki">在席</span>
+            </div>
+          </div>
+          <div class="annotation">* 10-20名表示対応。スクロール不要のレイアウト推奨。</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── BACK SIDE ── -->
+    <div class="panel panel-back">
+      <div class="panel-header">
+        <span>&#x2699;</span> 裏側 ― データフロー / GAS
+      </div>
+      <div class="panel-body">
+
+        <!-- Data Source -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f4ca;</span> Google Spreadsheet (データソース)
+          </div>
+          <div class="back-note">
+            <strong>シート名:</strong> <code>在席管理</code><br>
+            <strong>カラム構成:</strong><br>
+            <code>name</code> | <code>status</code> | <code>location</code> | <code>work_type</code> | <code>memo</code> | <code>updated_at</code><br><br>
+            メンバーがスプレッドシートを直接編集、<br>
+            またはGoogle Form / モバイルアプリ経由で更新。
+          </div>
+        </div>
+
+        <!-- GAS Logic -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x2699;</span> GAS Web App ― doGet()
+          </div>
+          <div class="code-block">
+<span class="kw">function</span> <span class="fn">doGet</span>(e) {<br>
+&nbsp;&nbsp;<span class="kw">const</span> ss = SpreadsheetApp<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">getActiveSpreadsheet</span>();<br>
+&nbsp;&nbsp;<span class="kw">const</span> sheet = ss.<span class="fn">getSheetByName</span>(<span class="str">"在席管理"</span>);<br>
+&nbsp;&nbsp;<span class="kw">const</span> data = sheet.<span class="fn">getDataRange</span>().<span class="fn">getValues</span>();<br>
+&nbsp;&nbsp;<span class="kw">const</span> headers = data.<span class="fn">shift</span>();<br>
+&nbsp;&nbsp;<span class="kw">const</span> result = data.<span class="fn">map</span>(row =&gt; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> obj = {};<br>
+&nbsp;&nbsp;&nbsp;&nbsp;headers.<span class="fn">forEach</span>((h, i) =&gt; obj[h] = row[i]);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> obj;<br>
+&nbsp;&nbsp;});<br>
+&nbsp;&nbsp;<span class="kw">return</span> ContentService<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">createTextOutput</span>(JSON.<span class="fn">stringify</span>(result))<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">setMimeType</span>(ContentService.MimeType.JSON);<br>
+}
+          </div>
+        </div>
+
+        <!-- Polling -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f504;</span> ポーリング設定
+          </div>
+          <div class="back-note">
+            <strong>間隔:</strong> 30-60秒 <span class="interval-badge">30-60s</span><br>
+            <strong>方式:</strong> <code>setInterval(() =&gt; fetch(GAS_URL), 30000)</code><br>
+            <strong>エラー時:</strong> 前回データを保持、リトライ<br>
+          </div>
+        </div>
+
+        <!-- Data Flow Diagram -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x27a1;</span> データフロー
+          </div>
+          <div class="arch-flow" style="flex-wrap:wrap;gap:6px;padding:8px;">
+            <div class="flow-box flow-db" style="font-size:11px;padding:6px 10px;">Spreadsheet</div>
+            <div class="flow-arrow-wrap">
+              <span class="flow-arrow" style="font-size:16px;">&rarr;</span>
+              <span class="flow-arrow-label">getValues()</span>
+            </div>
+            <div class="flow-box flow-gas" style="font-size:11px;padding:6px 10px;">GAS doGet()</div>
+            <div class="flow-arrow-wrap">
+              <span class="flow-arrow" style="font-size:16px;">&rarr;</span>
+              <span class="flow-arrow-label">JSON</span>
+            </div>
+            <div class="flow-box flow-api" style="font-size:11px;padding:6px 10px;">fetch()</div>
+            <div class="flow-arrow-wrap">
+              <span class="flow-arrow" style="font-size:16px;">&rarr;</span>
+              <span class="flow-arrow-label">DOM更新</span>
+            </div>
+            <div class="flow-box flow-browser" style="font-size:11px;padding:6px 10px;">サイネージ画面</div>
+          </div>
+        </div>
+
+        <!-- JSON Sample -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f4e6;</span> JSONレスポンス例
+          </div>
+          <div class="code-block">
+[<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"name"</span>: <span class="str">"共栄 太郎"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"status"</span>: <span class="str">"在席"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"location"</span>: <span class="str">"本社"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"work_type"</span>: <span class="str">"デスクワーク"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"memo"</span>: <span class="str">"本社 デスクワーク"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"updated_at"</span>: <span class="str">"2023-01-10T09:02:00"</span><br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;...<br>
+]
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!--  2. 労務管理・営業カレンダー                                     -->
+<!-- ============================================================ -->
+<section class="section" id="sec-calendar">
+  <h2 class="section-title">2. 労務管理・営業カレンダー</h2>
+  <p class="section-desc">
+    週間カレンダー形式で当日・翌日の予定をハイライト表示。
+    直近6件の予定リストをボトムセクションに一覧表示します。
+  </p>
+
+  <div class="split-panels">
+    <!-- ── FRONT SIDE ── -->
+    <div class="panel panel-front">
+      <div class="panel-header">
+        <span>&#x1f5a5;</span> 表側 ― サイネージ表示
+      </div>
+      <div class="panel-body">
+
+        <!-- Weekly Calendar -->
+        <div class="wire-box highlighted">
+          <div class="wire-box-label">週間カレンダービュー</div>
+          <div class="cal-header">
+            <div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div style="color:#ef4444;">土</div><div style="color:#ef4444;">日</div>
+          </div>
+          <div class="cal-row">
+            <div class="cal-cell">9</div>
+            <div class="cal-cell today">10<br><span style="font-size:9px;">今日</span></div>
+            <div class="cal-cell tomorrow">11<br><span style="font-size:9px;">明日</span></div>
+            <div class="cal-cell">12</div>
+            <div class="cal-cell">13</div>
+            <div class="cal-cell" style="color:#ef4444;">14</div>
+            <div class="cal-cell" style="color:#ef4444;">15</div>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:12px;font-size:11px;">
+            <span class="highlight-today">今日 = 強調ハイライト</span>
+            <span class="highlight-tomorrow">明日 = 淡色ハイライト</span>
+          </div>
+        </div>
+
+        <!-- Schedule List -->
+        <div class="wire-box highlighted">
+          <div class="wire-box-label">直近6件の予定リスト</div>
+
+          <div class="sched-item today-item">
+            <div class="sched-date">1/10 (火)</div>
+            <div class="sched-name">田中 花子</div>
+            <div class="sched-content">○○商事 訪問（新規提案）</div>
+          </div>
+          <div class="sched-item today-item">
+            <div class="sched-date">1/10 (火)</div>
+            <div class="sched-name">山田 大輔</div>
+            <div class="sched-content">△△建設 現場立会い → 直帰</div>
+          </div>
+          <div class="sched-item today-item">
+            <div class="sched-date">1/10 (火)</div>
+            <div class="sched-name">鈴木 健一</div>
+            <div class="sched-content">社内会議（10:00-11:30 会議室A）</div>
+          </div>
+          <div class="sched-item tomorrow-item">
+            <div class="sched-date">1/11 (水)</div>
+            <div class="sched-name">共栄 太郎</div>
+            <div class="sched-content">□□工業 打ち合わせ（午後）</div>
+          </div>
+          <div class="sched-item tomorrow-item">
+            <div class="sched-date">1/11 (水)</div>
+            <div class="sched-name">伊藤 愛</div>
+            <div class="sched-content">研修参加（終日）</div>
+          </div>
+          <div class="sched-item">
+            <div class="sched-date">1/12 (木)</div>
+            <div class="sched-name">高橋 翔太</div>
+            <div class="sched-content">○○案件 納品対応</div>
+          </div>
+
+          <div class="annotation">* 今日 = 紫ボーダー、明日 = 淡紫ボーダー、他日 = グレーボーダー</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── BACK SIDE ── -->
+    <div class="panel panel-back">
+      <div class="panel-header">
+        <span>&#x2699;</span> 裏側 ― データフロー / GAS
+      </div>
+      <div class="panel-body">
+
+        <!-- Data Source -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f4ca;</span> Google Spreadsheet (データソース)
+          </div>
+          <div class="back-note">
+            <strong>シート名:</strong> <code>営業カレンダー</code><br>
+            <strong>カラム構成:</strong><br>
+            <code>date</code> | <code>name</code> | <code>content</code> | <code>type</code> | <code>location</code><br><br>
+            営業担当が週次・日次で予定を登録。<br>
+            管理者がまとめて入力するケースにも対応。
+          </div>
+        </div>
+
+        <!-- GAS Logic -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x2699;</span> GAS Web App ― doGet() フィルタリング
+          </div>
+          <div class="code-block">
+<span class="kw">function</span> <span class="fn">doGet</span>(e) {<br>
+&nbsp;&nbsp;<span class="kw">const</span> sheet = SpreadsheetApp<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">getActiveSpreadsheet</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">getSheetByName</span>(<span class="str">"営業カレンダー"</span>);<br>
+&nbsp;&nbsp;<span class="kw">const</span> today = <span class="kw">new</span> Date();<br>
+&nbsp;&nbsp;<span class="kw">const</span> endDate = <span class="kw">new</span> Date(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;today.getTime() + 7*24*60*60*1000<br>
+&nbsp;&nbsp;);<br>
+&nbsp;&nbsp;<span class="cm">// 今日〜7日後のデータをフィルタ</span><br>
+&nbsp;&nbsp;<span class="kw">const</span> filtered = allData.<span class="fn">filter</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;row =&gt; row.date &gt;= today<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;&amp; row.date &lt;= endDate<br>
+&nbsp;&nbsp;);<br>
+&nbsp;&nbsp;<span class="kw">return</span> ContentService<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">createTextOutput</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JSON.<span class="fn">stringify</span>(filtered)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;).setMimeType(ContentService.MimeType.JSON);<br>
+}
+          </div>
+        </div>
+
+        <!-- Polling -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f504;</span> ポーリング設定
+          </div>
+          <div class="back-note">
+            <strong>間隔:</strong> 5分 <span class="interval-badge">5min</span><br>
+            <strong>方式:</strong> <code>setInterval(() =&gt; fetchCalendar(), 300000)</code><br>
+            <strong>フィルタ:</strong> 今日 + 翌7日間のみ返却<br>
+            <strong>ソート:</strong> 日付昇順
+          </div>
+        </div>
+
+        <!-- Data Flow -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x27a1;</span> データフロー
+          </div>
+          <div class="arch-flow" style="flex-wrap:wrap;gap:6px;padding:8px;">
+            <div class="flow-box flow-db" style="font-size:11px;padding:6px 10px;">Spreadsheet<br><span style="font-size:9px;">営業カレンダー</span></div>
+            <div class="flow-arrow-wrap">
+              <span class="flow-arrow" style="font-size:16px;">&rarr;</span>
+              <span class="flow-arrow-label">フィルタ<br>(7日間)</span>
+            </div>
+            <div class="flow-box flow-gas" style="font-size:11px;padding:6px 10px;">GAS doGet()</div>
+            <div class="flow-arrow-wrap">
+              <span class="flow-arrow" style="font-size:16px;">&rarr;</span>
+              <span class="flow-arrow-label">JSON</span>
+            </div>
+            <div class="flow-box flow-browser" style="font-size:11px;padding:6px 10px;">サイネージ</div>
+          </div>
+        </div>
+
+        <!-- JSON Sample -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f4e6;</span> JSONレスポンス例
+          </div>
+          <div class="code-block">
+[<br>
+&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"date"</span>: <span class="str">"2023-01-10"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"name"</span>: <span class="str">"田中 花子"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"content"</span>: <span class="str">"○○商事 訪問"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"type"</span>: <span class="str">"外出"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"location"</span>: <span class="str">"○○商事本社"</span><br>
+&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;...<br>
+]
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!--  3. 案件・現場リソース管理                                       -->
+<!-- ============================================================ -->
+<section class="section" id="sec-capacity">
+  <h2 class="section-title">3. 案件・現場リソース管理（キャパシティ可視化）</h2>
+  <p class="section-desc">
+    最大10件のプロジェクト/現場のリソース配分を可視化。
+    稼働率バーで負荷状況を直感的に把握し、空きメンバーを確認できます。
+  </p>
+
+  <div class="split-panels">
+    <!-- ── FRONT SIDE ── -->
+    <div class="panel panel-front">
+      <div class="panel-header">
+        <span>&#x1f5a5;</span> 表側 ― サイネージ表示
+      </div>
+      <div class="panel-body">
+
+        <!-- Summary Stats -->
+        <div class="wire-box highlighted">
+          <div class="wire-box-label">サマリー</div>
+          <div class="summary-card">
+            <div class="summary-stat">
+              <div class="val">72%</div>
+              <div class="label">全体キャパシティ使用率</div>
+            </div>
+            <div class="summary-stat">
+              <div class="val" style="color:var(--bar-green);">4名</div>
+              <div class="label">空きメンバー数</div>
+            </div>
+            <div class="summary-stat">
+              <div class="val">8</div>
+              <div class="label">稼働中プロジェクト</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Capacity Bar Color Rules -->
+        <div class="wire-box">
+          <div class="wire-box-label">バーカラールール</div>
+          <div class="color-rules">
+            <div class="color-rule"><span class="color-dot" style="background:var(--bar-green);"></span> ~60% (余裕あり)</div>
+            <div class="color-rule"><span class="color-dot" style="background:var(--bar-yellow);"></span> 60-80% (注意)</div>
+            <div class="color-rule"><span class="color-dot" style="background:var(--bar-red);"></span> 80%~ (過負荷)</div>
+          </div>
+        </div>
+
+        <!-- Project Rows -->
+        <div class="wire-box highlighted">
+          <div class="wire-box-label">プロジェクト / 現場一覧（最大10件）</div>
+
+          <div class="cap-row">
+            <div class="cap-project">○○ビル新築工事</div>
+            <div class="cap-members">
+              <div class="chip">太</div><div class="chip">健</div><div class="chip">大</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill red" style="width:92%;"></div>
+            </div>
+            <div class="bar-label" style="color:var(--bar-red);">92%</div>
+          </div>
+
+          <div class="cap-row">
+            <div class="cap-project">△△マンション改修</div>
+            <div class="cap-members">
+              <div class="chip">花</div><div class="chip">愛</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill yellow" style="width:75%;"></div>
+            </div>
+            <div class="bar-label" style="color:var(--bar-yellow);">75%</div>
+          </div>
+
+          <div class="cap-row">
+            <div class="cap-project">□□商業施設設計</div>
+            <div class="cap-members">
+              <div class="chip">翔</div><div class="chip">恵</div><div class="chip">誠</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill yellow" style="width:68%;"></div>
+            </div>
+            <div class="bar-label" style="color:var(--bar-yellow);">68%</div>
+          </div>
+
+          <div class="cap-row">
+            <div class="cap-project">◇◇住宅リフォーム</div>
+            <div class="cap-members">
+              <div class="chip">勇</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill green" style="width:45%;"></div>
+            </div>
+            <div class="bar-label" style="color:var(--bar-green);">45%</div>
+          </div>
+
+          <div class="cap-row">
+            <div class="cap-project">☆☆公共施設保守</div>
+            <div class="cap-members">
+              <div class="chip">美</div><div class="chip">太</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill green" style="width:30%;"></div>
+            </div>
+            <div class="bar-label" style="color:var(--bar-green);">30%</div>
+          </div>
+
+          <div class="cap-row">
+            <div class="cap-project">▽▽オフィス移転</div>
+            <div class="cap-members">
+              <div class="chip">健</div><div class="chip">花</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill red" style="width:88%;"></div>
+            </div>
+            <div class="bar-label" style="color:var(--bar-red);">88%</div>
+          </div>
+
+          <div class="cap-row">
+            <div class="cap-project">◎◎店舗内装</div>
+            <div class="cap-members">
+              <div class="chip">翔</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill green" style="width:52%;"></div>
+            </div>
+            <div class="bar-label" style="color:var(--bar-green);">52%</div>
+          </div>
+
+          <div class="cap-row">
+            <div class="cap-project">★★倉庫建設</div>
+            <div class="cap-members">
+              <div class="chip">大</div><div class="chip">誠</div><div class="chip">勇</div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill yellow" style="width:63%;"></div>
+            </div>
+            <div class="bar-label" style="color:var(--bar-yellow);">63%</div>
+          </div>
+
+          <div class="annotation">* 稼働率が高い順にソート推奨。最大10件表示。</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── BACK SIDE ── -->
+    <div class="panel panel-back">
+      <div class="panel-header">
+        <span>&#x2699;</span> 裏側 ― データフロー / GAS
+      </div>
+      <div class="panel-body">
+
+        <!-- Data Source -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f4ca;</span> Google Spreadsheet (データソース)
+          </div>
+          <div class="back-note">
+            <strong>シート名:</strong> <code>リソース管理</code><br>
+            <strong>カラム構成:</strong><br>
+            <code>project_name</code> | <code>assigned_members</code> | <code>utilization_rate</code> | <code>status</code> | <code>deadline</code><br><br>
+            <code>assigned_members</code> はカンマ区切り（例: "共栄太郎,鈴木健一,山田大輔"）<br>
+            <code>utilization_rate</code> は 0-100 の数値
+          </div>
+        </div>
+
+        <!-- GAS Logic -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x2699;</span> GAS Web App ― doGet() 集計ロジック
+          </div>
+          <div class="code-block">
+<span class="kw">function</span> <span class="fn">doGet</span>(e) {<br>
+&nbsp;&nbsp;<span class="kw">const</span> sheet = SpreadsheetApp<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">getActiveSpreadsheet</span>()<br>
+&nbsp;&nbsp;&nbsp;&nbsp;.<span class="fn">getSheetByName</span>(<span class="str">"リソース管理"</span>);<br>
+&nbsp;&nbsp;<span class="kw">const</span> data = <span class="fn">parseSheet</span>(sheet);<br><br>
+&nbsp;&nbsp;<span class="cm">// チーム全体のキャパシティ集計</span><br>
+&nbsp;&nbsp;<span class="kw">const</span> allMembers = <span class="kw">new</span> Set();<br>
+&nbsp;&nbsp;<span class="kw">const</span> assignedMembers = <span class="kw">new</span> Set();<br>
+&nbsp;&nbsp;data.<span class="fn">forEach</span>(p =&gt; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;p.members.<span class="fn">forEach</span>(m =&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assignedMembers.<span class="fn">add</span>(m));<br>
+&nbsp;&nbsp;});<br><br>
+&nbsp;&nbsp;<span class="kw">const</span> summary = {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;totalCapacity: <span class="fn">calcAvgRate</span>(data),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;availableCount: totalTeam<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- assignedMembers.size,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;projects: data<br>
+&nbsp;&nbsp;};<br>
+&nbsp;&nbsp;<span class="kw">return</span> <span class="fn">jsonOutput</span>(summary);<br>
+}
+          </div>
+        </div>
+
+        <!-- Polling -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f504;</span> ポーリング設定
+          </div>
+          <div class="back-note">
+            <strong>間隔:</strong> 10分 <span class="interval-badge">10min</span><br>
+            <strong>方式:</strong> <code>setInterval(() =&gt; fetchCapacity(), 600000)</code><br>
+            <strong>集計:</strong> GAS側でチーム全体キャパシティを計算<br>
+            <strong>ソート:</strong> 稼働率降順
+          </div>
+        </div>
+
+        <!-- Data Flow -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x27a1;</span> データフロー
+          </div>
+          <div class="arch-flow" style="flex-wrap:wrap;gap:6px;padding:8px;">
+            <div class="flow-box flow-db" style="font-size:11px;padding:6px 10px;">Spreadsheet<br><span style="font-size:9px;">リソース管理</span></div>
+            <div class="flow-arrow-wrap">
+              <span class="flow-arrow" style="font-size:16px;">&rarr;</span>
+              <span class="flow-arrow-label">集計<br>計算</span>
+            </div>
+            <div class="flow-box flow-gas" style="font-size:11px;padding:6px 10px;">GAS doGet()</div>
+            <div class="flow-arrow-wrap">
+              <span class="flow-arrow" style="font-size:16px;">&rarr;</span>
+              <span class="flow-arrow-label">JSON</span>
+            </div>
+            <div class="flow-box flow-browser" style="font-size:11px;padding:6px 10px;">サイネージ</div>
+          </div>
+        </div>
+
+        <!-- JSON Sample -->
+        <div class="back-box">
+          <div class="back-box-title">
+            <span>&#x1f4e6;</span> JSONレスポンス例
+          </div>
+          <div class="code-block">
+{<br>
+&nbsp;&nbsp;<span class="str">"totalCapacity"</span>: 72,<br>
+&nbsp;&nbsp;<span class="str">"availableCount"</span>: 4,<br>
+&nbsp;&nbsp;<span class="str">"projects"</span>: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"project_name"</span>: <span class="str">"○○ビル新築工事"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"assigned_members"</span>: [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"共栄太郎"</span>,<span class="str">"鈴木健一"</span>,<span class="str">"山田大輔"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"utilization_rate"</span>: 92,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"status"</span>: <span class="str">"進行中"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"deadline"</span>: <span class="str">"2023-03-31"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;...<br>
+&nbsp;&nbsp;]<br>
+}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!--  DATA SCHEMA                                                   -->
+<!-- ============================================================ -->
+<section class="section" id="sec-schema">
+  <h2 class="section-title">データスキーマ定義</h2>
+  <p class="section-desc">
+    3つのGoogle Spreadsheetシートのカラム定義です。
+    すべてのシートは同一スプレッドシートファイル内に配置します。
+  </p>
+
+  <!-- Sheet 1: 在席管理 -->
+  <div class="full-panel" style="margin-bottom:20px;">
+    <div class="panel-header">
+      <span>&#x1f4ca;</span> シート1: 在席管理
+    </div>
+    <div class="panel-body">
+      <table class="schema-table">
+        <thead>
+          <tr>
+            <th>カラム名</th>
+            <th>型</th>
+            <th>必須</th>
+            <th>説明</th>
+            <th>例</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>name</code></td>
+            <td>文字列</td>
+            <td>必須</td>
+            <td>メンバー氏名</td>
+            <td>共栄 太郎</td>
+          </tr>
+          <tr>
+            <td><code>status</code></td>
+            <td>文字列 (enum)</td>
+            <td>必須</td>
+            <td>在席ステータス</td>
+            <td>在席 / 外出 / 会議中 / 休み / 接客 / 車</td>
+          </tr>
+          <tr>
+            <td><code>location</code></td>
+            <td>文字列</td>
+            <td>任意</td>
+            <td>現在地・場所</td>
+            <td>本社 / ○○商事 / 会議室A</td>
+          </tr>
+          <tr>
+            <td><code>work_type</code></td>
+            <td>文字列</td>
+            <td>任意</td>
+            <td>業務種別</td>
+            <td>デスクワーク / 訪問 / 打ち合わせ</td>
+          </tr>
+          <tr>
+            <td><code>memo</code></td>
+            <td>文字列</td>
+            <td>任意</td>
+            <td>一行メモ（自由記述）</td>
+            <td>○○案件→▲▲案件 直帰</td>
+          </tr>
+          <tr>
+            <td><code>updated_at</code></td>
+            <td>日時</td>
+            <td>自動</td>
+            <td>最終更新日時</td>
+            <td>2023-01-10T09:02:00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sheet 2: 営業カレンダー -->
+  <div class="full-panel" style="margin-bottom:20px;">
+    <div class="panel-header">
+      <span>&#x1f4ca;</span> シート2: 営業カレンダー
+    </div>
+    <div class="panel-body">
+      <table class="schema-table">
+        <thead>
+          <tr>
+            <th>カラム名</th>
+            <th>型</th>
+            <th>必須</th>
+            <th>説明</th>
+            <th>例</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>date</code></td>
+            <td>日付</td>
+            <td>必須</td>
+            <td>予定日</td>
+            <td>2023-01-10</td>
+          </tr>
+          <tr>
+            <td><code>name</code></td>
+            <td>文字列</td>
+            <td>必須</td>
+            <td>担当者名</td>
+            <td>田中 花子</td>
+          </tr>
+          <tr>
+            <td><code>content</code></td>
+            <td>文字列</td>
+            <td>必須</td>
+            <td>予定内容</td>
+            <td>○○商事 訪問（新規提案）</td>
+          </tr>
+          <tr>
+            <td><code>type</code></td>
+            <td>文字列 (enum)</td>
+            <td>任意</td>
+            <td>予定種別</td>
+            <td>外出 / 会議 / 研修 / 休暇</td>
+          </tr>
+          <tr>
+            <td><code>location</code></td>
+            <td>文字列</td>
+            <td>任意</td>
+            <td>訪問先・場所</td>
+            <td>○○商事本社</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Sheet 3: リソース管理 -->
+  <div class="full-panel" style="margin-bottom:20px;">
+    <div class="panel-header">
+      <span>&#x1f4ca;</span> シート3: リソース管理
+    </div>
+    <div class="panel-body">
+      <table class="schema-table">
+        <thead>
+          <tr>
+            <th>カラム名</th>
+            <th>型</th>
+            <th>必須</th>
+            <th>説明</th>
+            <th>例</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>project_name</code></td>
+            <td>文字列</td>
+            <td>必須</td>
+            <td>案件・現場名</td>
+            <td>○○ビル新築工事</td>
+          </tr>
+          <tr>
+            <td><code>assigned_members</code></td>
+            <td>文字列 (CSV)</td>
+            <td>必須</td>
+            <td>担当メンバー（カンマ区切り）</td>
+            <td>共栄太郎,鈴木健一,山田大輔</td>
+          </tr>
+          <tr>
+            <td><code>utilization_rate</code></td>
+            <td>数値 (0-100)</td>
+            <td>必須</td>
+            <td>稼働率（%）</td>
+            <td>92</td>
+          </tr>
+          <tr>
+            <td><code>status</code></td>
+            <td>文字列 (enum)</td>
+            <td>必須</td>
+            <td>プロジェクト状態</td>
+            <td>進行中 / 完了 / 保留</td>
+          </tr>
+          <tr>
+            <td><code>deadline</code></td>
+            <td>日付</td>
+            <td>任意</td>
+            <td>納期・完了予定日</td>
+            <td>2023-03-31</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- ============================================================ -->
+<!--  AUTHENTICATION NOTE                                          -->
+<!-- ============================================================ -->
+<section class="section" id="sec-auth">
+  <h2 class="section-title">認証・アクセス制御</h2>
+  <p class="section-desc">
+    本システムはログイン不要の構成です。GAS Web Appをパブリック公開し、
+    データアクセスはSpreadsheetレベルの権限で制御します。
+  </p>
+
+  <div class="auth-note">
+    <span class="icon">&#x1f512;</span>
+    <div>
+      <strong>認証方式: ログイン不要（パブリックGAS Web App）</strong><br><br>
+      <strong>GAS Web App公開設定:</strong><br>
+      ・実行ユーザー: 「自分」（スプレッドシートオーナー）<br>
+      ・アクセス権限: 「全員（匿名ユーザーを含む）」<br><br>
+
+      <strong>セキュリティ対策:</strong><br>
+      ・Google Spreadsheetの共有設定で閲覧権限を管理<br>
+      ・GAS Web AppのURL自体が認証トークンの代替<br>
+      ・社内ネットワーク内のサイネージ端末のみで使用を想定<br>
+      ・書き込みAPIは公開しない（読み取り専用: doGet のみ）<br><br>
+
+      <strong>推奨構成:</strong><br>
+      ・サイネージ端末は社内LAN接続の専用デバイス<br>
+      ・Spreadsheetの編集権限はチームメンバーのみに付与<br>
+      ・GAS URLは外部に漏洩しないよう管理
+    </div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <div class="full-panel">
+      <div class="panel-header">
+        <span>&#x1f6e1;</span> アクセスフロー図
+      </div>
+      <div class="panel-body">
+        <div class="arch-flow">
+          <div class="flow-box flow-browser" style="font-size:12px;">
+            サイネージ端末<br>
+            <span style="font-size:10px;color:#7c3aed;">(社内LAN)</span>
+          </div>
+          <div class="flow-arrow-wrap">
+            <span class="flow-arrow">&rarr;</span>
+            <span class="flow-arrow-label">HTTPS GET<br>(認証なし)</span>
+          </div>
+          <div class="flow-box flow-gas" style="font-size:12px;">
+            GAS Web App<br>
+            <span style="font-size:10px;color:#854d0e;">(パブリック公開)</span>
+          </div>
+          <div class="flow-arrow-wrap">
+            <span class="flow-arrow">&rarr;</span>
+            <span class="flow-arrow-label">オーナー権限<br>で実行</span>
+          </div>
+          <div class="flow-box flow-db" style="font-size:12px;">
+            Google Spreadsheet<br>
+            <span style="font-size:10px;color:#065f46;">(チーム共有)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!--  APPENDIX: サイネージ表示切替                                    -->
+<!-- ============================================================ -->
+<hr class="section-divider">
+
+<section class="section">
+  <h2 class="section-title">補足: サイネージ表示切替</h2>
+  <p class="section-desc">
+    3機能を1つのサイネージ画面で切替表示する場合の動作フローです。
+    タブ方式または自動ローテーション方式を選択可能です。
+  </p>
+
+  <div class="full-panel">
+    <div class="panel-header">
+      <span>&#x1f504;</span> 表示切替フロー
+    </div>
+    <div class="panel-body">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;">
+        <div class="flow-box flow-browser" style="flex-direction:column;text-align:center;">
+          <strong>画面1</strong>
+          在席管理ボード<br>
+          <span style="font-size:10px;color:#5b21b6;">表示: 30秒</span>
+        </div>
+        <div class="flow-arrow-wrap">
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-arrow-label">自動切替</span>
+        </div>
+        <div class="flow-box flow-browser" style="flex-direction:column;text-align:center;">
+          <strong>画面2</strong>
+          営業カレンダー<br>
+          <span style="font-size:10px;color:#5b21b6;">表示: 20秒</span>
+        </div>
+        <div class="flow-arrow-wrap">
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-arrow-label">自動切替</span>
+        </div>
+        <div class="flow-box flow-browser" style="flex-direction:column;text-align:center;">
+          <strong>画面3</strong>
+          キャパシティ一覧<br>
+          <span style="font-size:10px;color:#5b21b6;">表示: 20秒</span>
+        </div>
+        <div class="flow-arrow-wrap">
+          <span class="flow-arrow">&rarr;</span>
+          <span class="flow-arrow-label">ループ</span>
+        </div>
+      </div>
+      <div class="code-block">
+<span class="cm">// 表示切替ロジック（自動ローテーション）</span><br>
+<span class="kw">const</span> screens = [<br>
+&nbsp;&nbsp;{ id: <span class="str">"status-board"</span>, duration: 30000 },<br>
+&nbsp;&nbsp;{ id: <span class="str">"calendar"</span>, duration: 20000 },<br>
+&nbsp;&nbsp;{ id: <span class="str">"capacity"</span>, duration: 20000 }<br>
+];<br>
+<span class="kw">let</span> currentIdx = 0;<br><br>
+<span class="kw">function</span> <span class="fn">rotateScreen</span>() {<br>
+&nbsp;&nbsp;screens.<span class="fn">forEach</span>((s, i) =&gt; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;document.<span class="fn">getElementById</span>(s.id)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;.style.display = i === currentIdx<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;? <span class="str">"block"</span> : <span class="str">"none"</span>;<br>
+&nbsp;&nbsp;});<br>
+&nbsp;&nbsp;<span class="fn">setTimeout</span>(() =&gt; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;currentIdx = (currentIdx + 1) % screens.length;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">rotateScreen</span>();<br>
+&nbsp;&nbsp;}, screens[currentIdx].duration);<br>
+}<br>
+<span class="fn">rotateScreen</span>();
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!--  APPENDIX: ブラウザ側 fetch 実装パターン                          -->
+<!-- ============================================================ -->
+<hr class="section-divider">
+
+<section class="section">
+  <h2 class="section-title">補足: ブラウザ側 fetch 実装パターン</h2>
+  <p class="section-desc">
+    サイネージ側のJavaScript実装の基本パターンです。
+    各機能ごとに異なるポーリング間隔を設定します。
+  </p>
+
+  <div class="full-panel">
+    <div class="panel-header">
+      <span>&#x1f4bb;</span> fetch + DOM更新 サンプルコード
+    </div>
+    <div class="panel-body">
+      <div class="code-block">
+<span class="cm">// GAS Web App URL（デプロイ後に取得）</span><br>
+<span class="kw">const</span> GAS_BASE = <span class="str">"https://script.google.com/macros/s/XXXX/exec"</span>;<br><br>
+
+<span class="cm">// 在席管理: 30秒ポーリング</span><br>
+<span class="kw">async function</span> <span class="fn">fetchStatus</span>() {<br>
+&nbsp;&nbsp;<span class="kw">try</span> {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GAS_BASE + <span class="str">"?action=status"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;);<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">renderStatusBoard</span>(data);<br>
+&nbsp;&nbsp;} <span class="kw">catch</span>(e) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;console.<span class="fn">error</span>(<span class="str">"Status fetch failed"</span>, e);<br>
+&nbsp;&nbsp;}<br>
+}<br>
+<span class="fn">setInterval</span>(fetchStatus, 30000);<br>
+<span class="fn">fetchStatus</span>(); <span class="cm">// 初回即時実行</span><br><br>
+
+<span class="cm">// 営業カレンダー: 5分ポーリング</span><br>
+<span class="fn">setInterval</span>(fetchCalendar, 300000);<br><br>
+
+<span class="cm">// キャパシティ: 10分ポーリング</span><br>
+<span class="fn">setInterval</span>(fetchCapacity, 600000);
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /.container -->
+
+<!-- ============================================================ -->
+<!--  FOOTER                                                        -->
+<!-- ============================================================ -->
+<footer class="page-footer">
+  Team Signage v1 &mdash; Wireframe Document | Updated 2026-04-07
+</footer>
+
+</body>
+</html>

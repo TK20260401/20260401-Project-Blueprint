@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Signage — Mockup</title>
+<style>
+  :root {
+    --bg-dark: #1a1a2e;
+    --bg-header: #16213e;
+    --bg-card: #ffffff;
+    --text-primary: #ffffff;
+    --text-dark: #1a1a2e;
+    --text-gray: #6b7280;
+    --text-light-gray: #9ca3af;
+    --status-present: #3b82f6;
+    --status-out: #ef4444;
+    --status-meeting: #1e3a5f;
+    --status-off: #9ca3af;
+    --status-reception: #7c3aed;
+    --status-car: #991b1b;
+    --accent-violet: #6d28d9;
+    --accent-blue: #2563eb;
+    --green-tint: #0a2e1a;
+    --green-border: #22c55e;
+    --green-text: #4ade80;
+    --green-bg: #0d3320;
+    --green-arrow: #22c55e;
+    --bar-green: #22c55e;
+    --bar-yellow: #eab308;
+    --bar-red: #ef4444;
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.18);
+    --radius: 12px;
+    --font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Segoe UI", sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font-family);
+    background: #0f0f1a;
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+
+  /* ===== Control Bar ===== */
+  .control-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: #111827;
+    border-bottom: 1px solid #374151;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .control-bar h1 {
+    font-size: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+    color: #f3f4f6;
+    letter-spacing: 0.5px;
+  }
+  .control-bar .separator {
+    width: 1px;
+    height: 28px;
+    background: #374151;
+  }
+  .btn-group {
+    display: flex;
+    gap: 6px;
+  }
+  .ctrl-btn {
+    padding: 7px 16px;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    background: transparent;
+    color: #d1d5db;
+    font-size: 13px;
+    font-family: var(--font-family);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .ctrl-btn:hover {
+    background: #1f2937;
+    border-color: #6b7280;
+  }
+  .ctrl-btn.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: #fff;
+  }
+  .ctrl-btn.active-violet {
+    background: var(--accent-violet);
+    border-color: var(--accent-violet);
+    color: #fff;
+  }
+
+  /* ===== Browser Chrome Frame ===== */
+  .browser-frame {
+    background: #1e1e2e;
+    border: 1px solid #374151;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  }
+  .browser-chrome {
+    background: #2d2d3f;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #374151;
+  }
+  .browser-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .browser-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .browser-dots span:nth-child(1) { background: #ff5f57; }
+  .browser-dots span:nth-child(2) { background: #ffbd2e; }
+  .browser-dots span:nth-child(3) { background: #28c840; }
+  .browser-url {
+    flex: 1;
+    background: #1a1a2e;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: #9ca3af;
+    font-family: monospace;
+  }
+  .browser-body {
+    min-height: 500px;
+  }
+
+  /* ===== Split Layout ===== */
+  .split-container {
+    display: flex;
+    gap: 0;
+    padding: 24px;
+  }
+  .split-container.front-only .panel-front {
+    flex: 1;
+  }
+  .split-container.front-only .panel-back {
+    display: none;
+  }
+  .panel-front {
+    flex: 1;
+    min-width: 0;
+  }
+  .panel-back {
+    flex: 0.65;
+    min-width: 0;
+    margin-left: 20px;
+  }
+
+  /* ===== Screen container ===== */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ===== Signage Header ===== */
+  .signage-header {
+    background: var(--bg-header);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .signage-header .datetime {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .signage-header .subtitle {
+    font-size: 14px;
+    color: var(--text-light-gray);
+  }
+
+  /* ===== Screen 1: Attendance Board ===== */
+  .attendance-grid {
+    background: var(--bg-dark);
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    min-height: 460px;
+  }
+  .member-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .member-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  }
+  .avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .avatar svg {
+    width: 28px;
+    height: 28px;
+    fill: #9ca3af;
+  }
+  .member-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .member-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.3;
+  }
+  .member-memo {
+    font-size: 13px;
+    color: var(--text-gray);
+    margin-top: 2px;
+  }
+  .member-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .status-badges {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .status-badge {
+    padding: 4px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+  .badge-present { background: var(--status-present); }
+  .badge-out { background: var(--status-out); }
+  .badge-meeting { background: var(--status-meeting); }
+  .badge-off {
+    background: transparent;
+    border: 1.5px solid var(--status-off);
+    color: var(--status-off);
+  }
+  .badge-reception { background: var(--status-reception); }
+  .badge-car {
+    background: var(--status-car);
+    padding: 4px 8px;
+    font-size: 13px;
+    border-radius: 4px;
+  }
+  .member-time {
+    font-size: 11px;
+    color: var(--text-light-gray);
+    white-space: nowrap;
+  }
+
+  /* ===== Screen 2: Calendar ===== */
+  .calendar-section {
+    background: var(--bg-dark);
+    padding: 20px 24px;
+  }
+  .weekly-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .day-col {
+    background: #232340;
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 260px;
+  }
+  .day-col.today {
+    border: 2px solid var(--accent-violet);
+    background: #1e1040;
+  }
+  .day-header {
+    padding: 10px 8px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    background: rgba(255,255,255,0.05);
+  }
+  .day-col.today .day-header {
+    background: var(--accent-violet);
+    color: #fff;
+  }
+  .day-header .day-date {
+    display: block;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-light-gray);
+    margin-top: 2px;
+  }
+  .day-col.today .day-header .day-date {
+    color: #ddd6fe;
+  }
+  .day-entries {
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .day-entry {
+    font-size: 12px;
+    padding: 5px 7px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 5px;
+    line-height: 1.4;
+    color: #d1d5db;
+  }
+  .day-entry .entry-name {
+    font-weight: 600;
+    color: #f3f4f6;
+  }
+
+  .upcoming-section h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: #f3f4f6;
+  }
+  .upcoming-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .upcoming-card {
+    background: #232340;
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .upcoming-date-badge {
+    background: var(--accent-blue);
+    border-radius: 8px;
+    padding: 6px 10px;
+    text-align: center;
+    flex-shrink: 0;
+    min-width: 48px;
+  }
+  .upcoming-date-badge .udb-month {
+    font-size: 10px;
+    color: #bfdbfe;
+  }
+  .upcoming-date-badge .udb-day {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .upcoming-detail {
+    flex: 1;
+    min-width: 0;
+  }
+  .upcoming-detail .ud-name {
+    font-weight: 700;
+    font-size: 14px;
+    color: #f3f4f6;
+  }
+  .upcoming-detail .ud-content {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-top: 2px;
+  }
+  .upcoming-detail .ud-location {
+    display: inline-block;
+    margin-top: 5px;
+    font-size: 11px;
+    padding: 2px 8px;
+    background: rgba(99,102,241,0.2);
+    border-radius: 4px;
+    color: #a5b4fc;
+  }
+
+  /* ===== Screen 3: Resource / Capacity ===== */
+  .resource-section {
+    background: var(--bg-dark);
+    padding: 20px 24px;
+  }
+  .stat-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .stat-card {
+    background: #232340;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .stat-label {
+    font-size: 14px;
+    color: var(--text-light-gray);
+    margin-bottom: 6px;
+  }
+  .stat-card .stat-value {
+    font-size: 36px;
+    font-weight: 800;
+  }
+  .stat-card .stat-value.blue { color: var(--status-present); }
+  .stat-card .stat-value.violet { color: var(--accent-violet); }
+  .stat-card .stat-value.green { color: var(--bar-green); }
+
+  .project-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+  }
+  .project-table th {
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-light-gray);
+    padding: 6px 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .project-table td {
+    padding: 12px;
+    background: #232340;
+    vertical-align: middle;
+  }
+  .project-table tr td:first-child { border-radius: 8px 0 0 8px; }
+  .project-table tr td:last-child { border-radius: 0 8px 8px 0; }
+  .proj-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #f3f4f6;
+  }
+  .proj-avatars {
+    display: flex;
+    gap: 0;
+  }
+  .proj-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #4b5563;
+    border: 2px solid #232340;
+    margin-left: -8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #e5e7eb;
+  }
+  .proj-avatar:first-child { margin-left: 0; }
+  .util-bar-wrap {
+    width: 120px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .util-bar {
+    flex: 1;
+    height: 10px;
+    background: #374151;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .util-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.4s;
+  }
+  .util-pct {
+    font-size: 13px;
+    font-weight: 700;
+    min-width: 36px;
+    text-align: right;
+  }
+  .proj-status {
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .proj-status.active { background: rgba(34,197,94,0.2); color: #4ade80; }
+  .proj-status.done { background: rgba(59,130,246,0.2); color: #93c5fd; }
+  .proj-status.waiting { background: rgba(234,179,8,0.2); color: #fde047; }
+
+  /* ===== Back Side Panel ===== */
+  .back-panel {
+    background: var(--green-tint);
+    border: 1px solid var(--green-border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .back-panel .browser-chrome {
+    background: #0d2818;
+    border-bottom-color: #166534;
+  }
+  .back-panel .browser-url {
+    background: #0a2010;
+    border-color: #166534;
+    color: var(--green-text);
+  }
+  .back-content {
+    padding: 18px;
+    color: var(--green-text);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .back-box {
+    background: var(--green-bg);
+    border: 1px solid #166534;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .back-box h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #86efac;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .back-box h4 .icon {
+    font-size: 16px;
+  }
+  .back-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 6px;
+  }
+  .back-table th {
+    text-align: left;
+    padding: 4px 8px;
+    background: rgba(34,197,94,0.15);
+    color: #86efac;
+    font-weight: 600;
+    border: 1px solid #166534;
+  }
+  .back-table td {
+    padding: 4px 8px;
+    border: 1px solid #166534;
+    color: #4ade80;
+  }
+  .back-arrow {
+    text-align: center;
+    padding: 8px 0;
+    color: var(--green-arrow);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+  .back-code {
+    background: #061a0e;
+    border: 1px solid #166534;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    font-size: 11px;
+    color: #4ade80;
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.5;
+  }
+  .back-code .kw { color: #fbbf24; }
+  .back-code .fn { color: #60a5fa; }
+  .back-code .str { color: #f472b6; }
+  .back-code .cm { color: #6b7280; }
+
+  /* ===== Responsive adjustments ===== */
+  @media (max-width: 1200px) {
+    .split-container {
+      flex-direction: column;
+    }
+    .panel-back {
+      margin-left: 0;
+      margin-top: 20px;
+    }
+    .upcoming-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .attendance-grid {
+      grid-template-columns: 1fr;
+    }
+    .stat-cards {
+      grid-template-columns: 1fr;
+    }
+    .weekly-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .upcoming-grid {
+      grid-template-columns: 1fr;
+    }
+    .control-bar {
+      padding: 8px 12px;
+      gap: 10px;
+    }
+    .control-bar h1 {
+      font-size: 14px;
+    }
+  }
+
+  /* ===== Transitions ===== */
+  .screen {
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Hover & Focus States ===== */
+  .member-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .upcoming-card {
+    transition: transform 0.15s ease, background 0.15s ease;
+  }
+  .upcoming-card:hover {
+    transform: translateY(-2px);
+    background: #2a2a50;
+  }
+  .day-entry {
+    transition: background 0.15s ease;
+  }
+  .day-entry:hover {
+    background: rgba(255,255,255,0.12);
+  }
+  .project-table tbody tr {
+    transition: opacity 0.15s;
+  }
+  .project-table tbody tr:hover td {
+    background: #2a2a50;
+  }
+  .stat-card {
+    transition: transform 0.2s ease;
+  }
+  .stat-card:hover {
+    transform: translateY(-3px);
+  }
+  .back-box {
+    transition: border-color 0.2s ease;
+  }
+  .back-box:hover {
+    border-color: #22c55e;
+  }
+
+  /* ===== Label ===== */
+  .panel-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 6px 0;
+    color: #6b7280;
+    margin-bottom: 8px;
+  }
+  .panel-label.green {
+    color: var(--green-text);
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== Control Bar ===== -->
+<div class="control-bar">
+  <h1>Team Signage — Mockup</h1>
+  <div class="separator"></div>
+  <div class="btn-group">
+    <button class="ctrl-btn active-violet" id="btn-view-split" onclick="setView('split')">表側 + 裏側</button>
+    <button class="ctrl-btn" id="btn-view-front" onclick="setView('front')">表側のみ</button>
+  </div>
+  <div class="separator"></div>
+  <div class="btn-group">
+    <button class="ctrl-btn active" id="btn-screen-attendance" onclick="showScreen('attendance')">在席管理</button>
+    <button class="ctrl-btn" id="btn-screen-calendar" onclick="showScreen('calendar')">営業カレンダー</button>
+    <button class="ctrl-btn" id="btn-screen-resource" onclick="showScreen('resource')">リソース管理</button>
+  </div>
+</div>
+
+<!-- ===== Screen 1: Attendance ===== -->
+<div class="screen active" id="screen-attendance">
+  <div class="split-container" id="split-attendance">
+    <!-- Front Side -->
+    <div class="panel-front">
+      <div class="panel-label">表側（フロントUI）</div>
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://team-signage.example.com/attendance</div>
+        </div>
+        <div class="browser-body">
+          <div class="signage-header">
+            <div>
+              <div class="datetime" id="header-date-1">2026年 4月7日 火 09:00</div>
+              <div class="subtitle">在席管理 — ステータスボード</div>
+            </div>
+          </div>
+          <div class="attendance-grid" id="attendance-grid">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Back Side -->
+    <div class="panel-back">
+      <div class="panel-label green">裏側（データフロー）</div>
+      <div class="back-panel">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">data-flow://attendance</div>
+        </div>
+        <div class="back-content">
+          <div class="back-box">
+            <h4><span class="icon">📊</span> Google Sheets — 在席データ</h4>
+            <table class="back-table">
+              <thead>
+                <tr><th>name</th><th>status</th><th>memo</th><th>updated_at</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>共栄 太郎</td><td>在席</td><td></td><td>2026-04-07 08:45</td></tr>
+                <tr><td>田中 花子</td><td>外出</td><td>終日外出</td><td>2026-04-07 08:30</td></tr>
+                <tr><td>佐藤 健一</td><td>会議中</td><td>役員会議</td><td>2026-04-07 09:00</td></tr>
+                <tr><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="back-arrow">▼</div>
+
+          <div class="back-box">
+            <h4><span class="icon">⚙️</span> GAS Web App</h4>
+            <p style="margin-bottom:8px;color:#6ee7b7;">doGet() → JSON serialize → ContentService.createTextOutput()</p>
+            <div class="back-code"><span class="kw">function</span> <span class="fn">doGet</span>(e) {
+  <span class="kw">const</span> ss = SpreadsheetApp.<span class="fn">getActiveSpreadsheet</span>();
+  <span class="kw">const</span> sheet = ss.<span class="fn">getSheetByName</span>(<span class="str">"在席"</span>);
+  <span class="kw">const</span> data = sheet.<span class="fn">getDataRange</span>().<span class="fn">getValues</span>();
+  <span class="kw">const</span> headers = data.<span class="fn">shift</span>();
+  <span class="kw">const</span> result = data.<span class="fn">map</span>(row => {
+    <span class="kw">let</span> obj = {};
+    headers.<span class="fn">forEach</span>((h, i) => obj[h] = row[i]);
+    <span class="kw">return</span> obj;
+  });
+  <span class="kw">return</span> ContentService
+    .<span class="fn">createTextOutput</span>(JSON.<span class="fn">stringify</span>(result))
+    .<span class="fn">setMimeType</span>(ContentService.MimeType.JSON);
+}</div>
+          </div>
+
+          <div class="back-arrow">▼</div>
+
+          <div class="back-box">
+            <h4><span class="icon">🔄</span> Fetch / Polling</h4>
+            <p style="color:#6ee7b7;margin-bottom:8px;">fetch() every 30sec → DOM update</p>
+            <div class="back-code"><span class="fn">setInterval</span>(<span class="kw">async</span> () => {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(GAS_URL);
+  <span class="kw">const</span> members = <span class="kw">await</span> res.<span class="fn">json</span>();
+  <span class="fn">renderCards</span>(members); <span class="cm">// DOM差分更新</span>
+}, <span class="str">30000</span>);</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Screen 2: Calendar ===== -->
+<div class="screen" id="screen-calendar">
+  <div class="split-container" id="split-calendar">
+    <!-- Front Side -->
+    <div class="panel-front">
+      <div class="panel-label">表側（フロントUI）</div>
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://team-signage.example.com/calendar</div>
+        </div>
+        <div class="browser-body">
+          <div class="signage-header">
+            <div>
+              <div class="datetime" id="header-date-2">2026年 4月7日 火 09:00</div>
+              <div class="subtitle">営業カレンダー — 週間予定</div>
+            </div>
+          </div>
+          <div class="calendar-section">
+            <div class="weekly-grid" id="weekly-grid">
+              <!-- Generated by JS -->
+            </div>
+            <div class="upcoming-section">
+              <h3>直近の予定</h3>
+              <div class="upcoming-grid" id="upcoming-grid">
+                <!-- Generated by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Back Side -->
+    <div class="panel-back">
+      <div class="panel-label green">裏側（データフロー）</div>
+      <div class="back-panel">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">data-flow://calendar</div>
+        </div>
+        <div class="back-content">
+          <div class="back-box">
+            <h4><span class="icon">📊</span> Google Sheets — カレンダーデータ</h4>
+            <table class="back-table">
+              <thead>
+                <tr><th>date</th><th>name</th><th>content</th><th>type</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>2026-04-07</td><td>共栄 太郎</td><td>A社訪問</td><td>外出</td></tr>
+                <tr><td>2026-04-07</td><td>田中 花子</td><td>社内MTG</td><td>会議</td></tr>
+                <tr><td>2026-04-08</td><td>佐藤 健一</td><td>B社提案</td><td>外出</td></tr>
+                <tr><td>2026-04-09</td><td>山田 美咲</td><td>研修</td><td>社内</td></tr>
+                <tr><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="back-arrow">▼</div>
+
+          <div class="back-box">
+            <h4><span class="icon">⚙️</span> GAS フィルタリングロジック</h4>
+            <div class="back-code"><span class="kw">function</span> <span class="fn">getWeeklySchedule</span>() {
+  <span class="kw">const</span> sheet = ss.<span class="fn">getSheetByName</span>(<span class="str">"カレンダー"</span>);
+  <span class="kw">const</span> today = <span class="kw">new</span> Date();
+  <span class="kw">const</span> weekStart = <span class="fn">getMonday</span>(today);
+  <span class="kw">const</span> weekEnd = <span class="fn">addDays</span>(weekStart, 6);
+
+  <span class="cm">// 当週のデータのみフィルタ</span>
+  <span class="kw">return</span> data.<span class="fn">filter</span>(row =>
+    row.date >= weekStart &&
+    row.date <= weekEnd
+  );
+}</div>
+          </div>
+
+          <div class="back-arrow">▼</div>
+
+          <div class="back-box">
+            <h4><span class="icon">🔄</span> 自動リフレッシュ</h4>
+            <p style="color:#6ee7b7;">5分間隔でポーリング。日付変更時にカレンダー週を自動切替。</p>
+            <div class="back-code" style="margin-top:8px;"><span class="cm">// 5分ごとにカレンダーデータを再取得</span>
+<span class="fn">setInterval</span>(() => {
+  <span class="fn">fetchCalendar</span>().<span class="fn">then</span>(data => {
+    <span class="fn">renderWeeklyGrid</span>(data);
+    <span class="fn">renderUpcoming</span>(data);
+  });
+}, <span class="str">300000</span>);</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Screen 3: Resource ===== -->
+<div class="screen" id="screen-resource">
+  <div class="split-container" id="split-resource">
+    <!-- Front Side -->
+    <div class="panel-front">
+      <div class="panel-label">表側（フロントUI）</div>
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://team-signage.example.com/resource</div>
+        </div>
+        <div class="browser-body">
+          <div class="signage-header">
+            <div>
+              <div class="datetime" id="header-date-3">2026年 4月7日 火 09:00</div>
+              <div class="subtitle">リソース管理 — キャパシティ</div>
+            </div>
+          </div>
+          <div class="resource-section">
+            <div class="stat-cards">
+              <div class="stat-card">
+                <div class="stat-label">チーム稼働率</div>
+                <div class="stat-value blue">72%</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">稼働中案件</div>
+                <div class="stat-value violet">8件</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">空きリソース</div>
+                <div class="stat-value green">3名</div>
+              </div>
+            </div>
+            <table class="project-table" id="project-table">
+              <thead>
+                <tr>
+                  <th>案件名</th>
+                  <th>担当者</th>
+                  <th>稼働率</th>
+                  <th>ステータス</th>
+                </tr>
+              </thead>
+              <tbody id="project-tbody">
+                <!-- Generated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Back Side -->
+    <div class="panel-back">
+      <div class="panel-label green">裏側（データフロー）</div>
+      <div class="back-panel">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">data-flow://resource</div>
+        </div>
+        <div class="back-content">
+          <div class="back-box">
+            <h4><span class="icon">📊</span> Google Sheets — リソースデータ</h4>
+            <table class="back-table">
+              <thead>
+                <tr><th>project</th><th>members</th><th>hours</th><th>capacity</th><th>status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>A社Webリニューアル</td><td>共栄,田中</td><td>120</td><td>160</td><td>進行中</td></tr>
+                <tr><td>B社EC構築</td><td>佐藤,山田,鈴木</td><td>200</td><td>240</td><td>進行中</td></tr>
+                <tr><td>社内DX推進</td><td>中村</td><td>30</td><td>80</td><td>待機</td></tr>
+                <tr><td>…</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="back-arrow">▼</div>
+
+          <div class="back-box">
+            <h4><span class="icon">🧮</span> キャパシティ計算式</h4>
+            <div class="back-code"><span class="cm">// 稼働率 = 実績工数 / 計画工数 × 100</span>
+<span class="kw">const</span> utilization =
+  (actual_hours / planned_capacity) * <span class="str">100</span>;
+
+<span class="cm">// チーム稼働率 = Σ個人稼働率 / メンバー数</span>
+<span class="kw">const</span> teamRate =
+  members.<span class="fn">reduce</span>((s, m) => s + m.util, <span class="str">0</span>)
+  / members.length;
+
+<span class="cm">// 空きリソース = 稼働率50%未満のメンバー数</span>
+<span class="kw">const</span> available =
+  members.<span class="fn">filter</span>(m => m.util < <span class="str">50</span>).length;</div>
+          </div>
+
+          <div class="back-arrow">▼</div>
+
+          <div class="back-box">
+            <h4><span class="icon">📈</span> 集計ロジック</h4>
+            <div class="back-code"><span class="kw">function</span> <span class="fn">aggregateCapacity</span>(projects) {
+  <span class="kw">return</span> {
+    teamRate: <span class="fn">calcTeamRate</span>(projects),
+    activeCount: projects
+      .<span class="fn">filter</span>(p => p.status === <span class="str">"進行中"</span>).length,
+    available: <span class="fn">getAvailable</span>(projects),
+    projects: projects.<span class="fn">map</span>(p => ({
+      ...p,
+      utilization: <span class="fn">calcUtil</span>(p),
+      barColor: <span class="fn">getBarColor</span>(p)
+    }))
+  };
+}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Data =====
+const MEMBERS = [
+  { name: '共栄 太郎', status: '在席', memo: '', time: '2026-04-07 08:45' },
+  { name: '田中 花子', status: '外出', memo: '終日外出', time: '2026-04-07 08:30' },
+  { name: '佐藤 健一', status: '会議中', memo: '役員会議', time: '2026-04-07 09:00' },
+  { name: '山田 美咲', status: '在席', memo: '', time: '2026-04-07 08:50' },
+  { name: '鈴木 一郎', status: '休み', memo: '有給休暇', time: '2026-04-06 18:00' },
+  { name: '高橋 真理', status: '接客', memo: 'C社来客対応', time: '2026-04-07 09:05' },
+  { name: '中村 大輔', status: '在席', memo: '', time: '2026-04-07 08:55' },
+  { name: '伊藤 さくら', status: '外出', memo: 'D社訪問', time: '2026-04-07 08:20', car: true },
+  { name: '渡辺 裕太', status: '会議中', memo: 'プロジェクト定例', time: '2026-04-07 09:00' },
+  { name: '小林 由美', status: '在席', memo: '午後外出予定', time: '2026-04-07 08:40' },
+];
+
+const STATUS_MAP = {
+  '在席': 'badge-present',
+  '外出': 'badge-out',
+  '会議中': 'badge-meeting',
+  '休み': 'badge-off',
+  '接客': 'badge-reception',
+};
+
+const PROJECTS = [
+  { name: 'A社 Webリニューアル', members: ['共','田'], pct: 75, status: '進行中' },
+  { name: 'B社 EC構築', members: ['佐','山','鈴'], pct: 88, status: '進行中' },
+  { name: 'C社 コーポレートLP', members: ['高','中'], pct: 45, status: '進行中' },
+  { name: '社内DX推進プロジェクト', members: ['中'], pct: 30, status: '待機' },
+  { name: 'D社 アプリ開発', members: ['伊','渡'], pct: 92, status: '進行中' },
+  { name: 'E社 保守運用', members: ['小'], pct: 55, status: '進行中' },
+  { name: 'F社 データ分析基盤', members: ['共','佐'], pct: 68, status: '進行中' },
+  { name: '新卒研修プログラム', members: ['田','山'], pct: 100, status: '完了' },
+  { name: 'G社 SEOコンサル', members: ['高'], pct: 40, status: '進行中' },
+  { name: '社内ツール改善', members: ['渡','小'], pct: 22, status: '待機' },
+];
+
+const WEEK_DAYS = ['月', '火', '水', '木', '金', '土', '日'];
+const WEEK_DATES = [6, 7, 8, 9, 10, 11, 12]; // April 2026
+
+const CALENDAR_DATA = {
+  6: [
+    { name: '田中', text: '資料準備' },
+    { name: '佐藤', text: 'A社訪問' },
+  ],
+  7: [
+    { name: '共栄', text: 'A社打合せ' },
+    { name: '田中', text: '終日外出' },
+    { name: '佐藤', text: '役員会議' },
+    { name: '高橋', text: 'C社来客' },
+    { name: '伊藤', text: 'D社訪問' },
+  ],
+  8: [
+    { name: '山田', text: '研修' },
+    { name: '渡辺', text: 'B社提案' },
+    { name: '中村', text: '社内MTG' },
+  ],
+  9: [
+    { name: '共栄', text: 'E社フォロー' },
+    { name: '小林', text: 'F社訪問' },
+  ],
+  10: [
+    { name: '田中', text: '週次レポート' },
+    { name: '鈴木', text: 'G社打合せ' },
+    { name: '高橋', text: '新規提案' },
+    { name: '伊藤', text: '社内勉強会' },
+  ],
+  11: [],
+  12: [],
+};
+
+const UPCOMING = [
+  { month: '4月', day: 7, name: '共栄 太郎', content: 'A社打合せ 提案資料レビュー', location: 'A社本社' },
+  { month: '4月', day: 7, name: '高橋 真理', content: 'C社来客対応 契約更新', location: '本社応接室' },
+  { month: '4月', day: 8, name: '渡辺 裕太', content: 'B社新規提案プレゼン', location: 'B社会議室' },
+  { month: '4月', day: 8, name: '山田 美咲', content: '新入社員向け研修講師', location: '本社3F研修室' },
+  { month: '4月', day: 9, name: '共栄 太郎', content: 'E社フォローアップ面談', location: 'オンライン' },
+  { month: '4月', day: 10, name: '田中 花子', content: '週次営業レポート提出', location: '本社' },
+];
+
+// ===== Render Functions =====
+function renderAttendance() {
+  const grid = document.getElementById('attendance-grid');
+  grid.innerHTML = MEMBERS.map(m => {
+    const badgeClass = STATUS_MAP[m.status] || 'badge-present';
+    const carBadge = m.car ? '<span class="status-badge badge-car">車</span>' : '';
+    return `
+      <div class="member-card">
+        <div class="avatar">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+        </div>
+        <div class="member-info">
+          <div class="member-name">${m.name}</div>
+          ${m.memo ? `<div class="member-memo">${m.memo}</div>` : ''}
+        </div>
+        <div class="member-right">
+          <div class="status-badges">
+            <span class="status-badge ${badgeClass}">${m.status}</span>
+            ${carBadge}
+          </div>
+          <div class="member-time">${m.time}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('weekly-grid');
+  grid.innerHTML = WEEK_DAYS.map((day, i) => {
+    const date = WEEK_DATES[i];
+    const isToday = date === 7;
+    const entries = CALENDAR_DATA[date] || [];
+    return `
+      <div class="day-col${isToday ? ' today' : ''}">
+        <div class="day-header">
+          ${day}
+          <span class="day-date">4/${date}</span>
+        </div>
+        <div class="day-entries">
+          ${entries.map(e => `
+            <div class="day-entry">
+              <span class="entry-name">${e.name}</span><br>${e.text}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const upGrid = document.getElementById('upcoming-grid');
+  upGrid.innerHTML = UPCOMING.map(u => `
+    <div class="upcoming-card">
+      <div class="upcoming-date-badge">
+        <div class="udb-month">${u.month}</div>
+        <div class="udb-day">${u.day}</div>
+      </div>
+      <div class="upcoming-detail">
+        <div class="ud-name">${u.name}</div>
+        <div class="ud-content">${u.content}</div>
+        <span class="ud-location">${u.location}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderProjects() {
+  const tbody = document.getElementById('project-tbody');
+  tbody.innerHTML = PROJECTS.map(p => {
+    let barColor;
+    if (p.pct < 60) barColor = 'var(--bar-green)';
+    else if (p.pct < 80) barColor = 'var(--bar-yellow)';
+    else barColor = 'var(--bar-red)';
+
+    let statusClass = 'active';
+    let statusLabel = p.status;
+    if (p.status === '完了') statusClass = 'done';
+    else if (p.status === '待機') statusClass = 'waiting';
+
+    const avatars = p.members.map(m =>
+      `<div class="proj-avatar">${m}</div>`
+    ).join('');
+
+    return `
+      <tr>
+        <td><span class="proj-name">${p.name}</span></td>
+        <td><div class="proj-avatars">${avatars}</div></td>
+        <td>
+          <div class="util-bar-wrap">
+            <div class="util-bar">
+              <div class="util-bar-fill" style="width:${p.pct}%;background:${barColor};"></div>
+            </div>
+            <span class="util-pct" style="color:${barColor}">${p.pct}%</span>
+          </div>
+        </td>
+        <td><span class="proj-status ${statusClass}">${statusLabel}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ===== Screen / View Switching =====
+let currentScreen = 'attendance';
+let currentView = 'split';
+
+function showScreen(name) {
+  currentScreen = name;
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+
+  // Update buttons
+  document.querySelectorAll('[id^="btn-screen-"]').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('btn-screen-' + name).classList.add('active');
+}
+
+function setView(mode) {
+  currentView = mode;
+  const containers = document.querySelectorAll('.split-container');
+  containers.forEach(c => {
+    if (mode === 'front') {
+      c.classList.add('front-only');
+    } else {
+      c.classList.remove('front-only');
+    }
+  });
+
+  document.getElementById('btn-view-split').classList.remove('active-violet');
+  document.getElementById('btn-view-front').classList.remove('active-violet');
+  if (mode === 'split') {
+    document.getElementById('btn-view-split').classList.add('active-violet');
+  } else {
+    document.getElementById('btn-view-front').classList.add('active-violet');
+  }
+}
+
+// ===== Clock =====
+function updateClock() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+  const dayName = dayNames[now.getDay()];
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const text = `${year}年 ${month}月${day}日 ${dayName} ${hours}:${minutes}`;
+  document.getElementById('header-date-1').textContent = text;
+  document.getElementById('header-date-2').textContent = text;
+  document.getElementById('header-date-3').textContent = text;
+}
+
+// ===== Init =====
+renderAttendance();
+renderCalendar();
+renderProjects();
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
