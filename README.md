@@ -16,7 +16,7 @@
 | [Asset-Management](./asset-management-ledger/) | 備品管理台帳（備品CRUD・QRコード・棚卸し・更新推奨アラート） | https://asset-management-ledger.vercel.app | v1 |
 | [Report-Hub](./report-hub/) | 日報・週報・月報 統合レポート（工数削減トラッカー・ナレッジベース） | https://report-hub-one.vercel.app | v1 |
 | [ROI-Simulator](./roi-simulator/) | 収益計画シミュレーション・KGI/KPI管理（即時ROI計算・グラフ） | https://roi-simulator-delta.vercel.app | v2 |
-| [Otetsudai-Bank](./otetsudai-bank/) | BusyKid日本版 お手伝い×マネー教育（サインアップ・支出承認・貯金目標・バッジ・AIチャット） | https://otetsudai-bank-beta.vercel.app | v0.2 |
+| [おこづかいクエスト](./otetsudai-bank/) | お手伝い＝クエスト！マネー冒険アプリ（サインアップ・支出承認・貯金目標・バッジ・AIチャット） | https://otetsudai-bank-beta.vercel.app | v0.3 |
 | [Team-Signage](./team-signage/) | デジタルサイネージ（在席管理・営業カレンダー・リソース可視化） | https://team-signage.vercel.app | v0.1 |
 | [todo-app](./todo-app/) | シンプルTODO Webアプリ（HTML/CSS/JS） | — | v1 |
 | [Blueprint](./20260401-Project-Blueprint%201st/) | プロジェクト設計書・構想ドキュメント | — | — |
@@ -329,6 +329,7 @@ Phase 4: 深化（予定）
 | 2026-04-07 | ROI-Simulator | v2 | オペレーター人数×人月コスト自動算出連携、「月間コール件数」→「月間対応件数」ラベル汎用化（全チャネル対応）、API従量課金費用入力欄追加、コスト内訳にAPI費用行追加、全プリセット・保存・読込・比較画面を一貫更新、DBマイグレーション（operator_count/monthly_api_cost カラム追加）、ワイヤーフレーム・モックアップ更新 |
 | 2026-04-07 | Otetsudai-Bank | v0.1.1 | タスク絵カードアイコン30種、子供画面全漢字ルビ（AutoRuby辞書80語）、AIチャット（子供向けコインくん🪙/親向けアドバイザー💬）、ヘルプページ、新規タスク25件追加 |
 | 2026-04-07 | Otetsudai-Bank | v0.2 | BusyKid日本版コンセプト導入。ランディングページ、サインアップフロー（Supabase Auth）、支出承認フロー（つかう申請→親承認/却下+理由）、分割比率設定UI、貯金目標（設定・進捗・達成演出）、達成バッジ4種（🌟🔥💰🐷）、コインアニメーション、動的貯金箱、きょうやること、共通ヘッダー、親ダッシュボード4指標+支出承認キュー、PWA manifest、DB 3テーブル追加（計9テーブル）、ワイヤーフレーム・モックアップ更新 |
+| 2026-04-08 | おこづかいクエスト | v0.3 | 「おてつだいバンク」→「おこづかいクエスト」リブランド。クエスト世界観統一（タスク→クエスト、完了→クリア）、テーマカラー変更（amber→emerald）、AIチャット全ページ化（layout.tsx一元化+ゲストモード）、🏆クエストマスターバッジ追加（累計50クエスト）、PIN説明テキスト追加 |
 | 2026-04-07 | Team-Signage | v0.1 | デジタルサイネージ初期構築。3機能（在席管理・営業カレンダー・リソース管理）のUI設計、ワイヤーフレーム・モックアップ作成、データ項目定義、GAS連携アーキテクチャ設計、Vercelデプロイ |
 
 ## インフラ
