@@ -16,7 +16,7 @@
 | [Asset-Management](./asset-management-ledger/) | 備品管理台帳（備品CRUD・QRコード・棚卸し・更新推奨アラート） | https://asset-management-ledger.vercel.app | v1 |
 | [Report-Hub](./report-hub/) | 日報・週報・月報 統合レポート（工数削減トラッカー・ナレッジベース） | https://report-hub-one.vercel.app | v1 |
 | [ROI-Simulator](./roi-simulator/) | 収益計画シミュレーション・KGI/KPI管理（即時ROI計算・グラフ） | https://roi-simulator-delta.vercel.app | v2 |
-| [おこづかいクエスト](./otetsudai-bank/) | お手伝い＝クエスト！マネー冒険アプリ（サインアップ・支出承認・貯金目標・バッジ・AIチャット） | https://otetsudai-bank-beta.vercel.app | v0.3 |
+| [おこづかいクエスト](./otetsudai-bank/) | お手伝い＝クエスト！マネー冒険アプリ（サインアップ・支出承認・貯金目標・バッジ・AIチャット・RLS・PIN暗号化） | https://otetsudai-bank-beta.vercel.app | v0.4 |
 | [Team-Signage](./team-signage/) | デジタルサイネージ（在席管理・営業カレンダー・リソース可視化） | https://team-signage.vercel.app | v0.1 |
 | [todo-app](./todo-app/) | シンプルTODO Webアプリ（HTML/CSS/JS） | — | v1 |
 | [Blueprint](./20260401-Project-Blueprint%201st/) | プロジェクト設計書・構想ドキュメント | — | — |
@@ -206,7 +206,7 @@ Phase 4: 深化（予定）
 | `efficiency_actions` | 工数削減アクション（削減時間記録） |
 | `knowledge_notes` | 定性的気づき・暗黙知（タグ・共有フラグ） |
 
-## Otetsudai-Bank — お手伝い×マネー教育
+## おこづかいクエスト — お手伝い×マネー教育（v0.4）
 
 | 機能 | 内容 |
 | --- | --- |
@@ -217,6 +217,11 @@ Phase 4: 深化（予定）
 | おてつだい実行 | アクティブタスク一覧→「できた！」で完了申請 |
 | ウォレット | 報酬を分配比率で「つかえるお金」「ちょきん」に自動振り分け |
 | 取引履歴 | 獲得・使用の履歴をタブ切替で確認 |
+| RLSセキュリティ | 全9テーブルにRLS有効化、get_my_family_id()で家族単位アクセス制御 |
+| PIN暗号化 | pgcrypto+bcryptハッシュ保存、平文PIN非保持（verify_pin/set_pin_hash RPC） |
+| アカウント削除 | soft delete + 確認ダイアログ（「削除する」入力必須）、Supabase Auth連携 |
+| 法務ページ | プライバシーポリシー・利用規約 |
+| サービス層 | lib/services/にDB操作を集約（auth/tasks/wallets/families） |
 
 ### 技術スタック
 
@@ -299,7 +304,7 @@ Phase 4: 深化（予定）
 │   ├── src/lib/
 │   ├── docs/
 │   └── package.json
-├── otetsudai-bank/                    ← お手伝い×マネー教育アプリ（v0.1）
+├── otetsudai-bank/                    ← お手伝い×マネー教育アプリ（v0.4）
 │   ├── app/
 │   ├── components/
 │   ├── lib/
@@ -330,6 +335,7 @@ Phase 4: 深化（予定）
 | 2026-04-07 | Otetsudai-Bank | v0.1.1 | タスク絵カードアイコン30種、子供画面全漢字ルビ（AutoRuby辞書80語）、AIチャット（子供向けコインくん🪙/親向けアドバイザー💬）、ヘルプページ、新規タスク25件追加 |
 | 2026-04-07 | Otetsudai-Bank | v0.2 | BusyKid日本版コンセプト導入。ランディングページ、サインアップフロー（Supabase Auth）、支出承認フロー（つかう申請→親承認/却下+理由）、分割比率設定UI、貯金目標（設定・進捗・達成演出）、達成バッジ4種（🌟🔥💰🐷）、コインアニメーション、動的貯金箱、きょうやること、共通ヘッダー、親ダッシュボード4指標+支出承認キュー、PWA manifest、DB 3テーブル追加（計9テーブル）、ワイヤーフレーム・モックアップ更新 |
 | 2026-04-08 | おこづかいクエスト | v0.3 | 「おてつだいバンク」→「おこづかいクエスト」リブランド。クエスト世界観統一（タスク→クエスト、完了→クリア）、テーマカラー変更（amber→emerald）、AIチャット全ページ化（layout.tsx一元化+ゲストモード）、🏆クエストマスターバッジ追加（累計50クエスト）、PIN説明テキスト追加 |
+| 2026-04-08 | おこづかいクエスト | v0.4 | セキュリティ・認証・コード基盤強化。全9テーブルRLS有効化（get_my_family_id()関数で家族単位アクセス制御）、PIN暗号化（pgcrypto拡張+bcryptハッシュ、verify_pin/set_pin_hash RPC関数、既存PINデータ移行）、Supabase Authハイブリッドセッション（auth_idカラム追加+セッション連携）、アカウント削除機能（soft delete API+確認ダイアログ「削除する」入力必須+Supabase Auth連携削除）、法務ページ追加（プライバシーポリシー・利用規約+フッターリンク）、lib/services/層分離（auth.ts/tasks.ts/wallets.ts/families.ts にDB操作を集約、コンポーネントから分離） |
 | 2026-04-07 | Team-Signage | v0.1 | デジタルサイネージ初期構築。3機能（在席管理・営業カレンダー・リソース管理）のUI設計、ワイヤーフレーム・モックアップ作成、データ項目定義、GAS連携アーキテクチャ設計、Vercelデプロイ |
 
 ## インフラ
@@ -350,7 +356,9 @@ Phase 4: 深化（予定）
 | GitHub | TK20260401/asset-management-ledger | 備品管理台帳単体リポジトリ |
 | GitHub | TK20260401/report-hub | Report Hub単体リポジトリ |
 | GitHub | TK20260401/roi-simulator | ROI Simulator単体リポジトリ |
-| Supabase | otetsudai_* テーブル群 | お手伝いバンク DB（families/users/tasks/wallets/transactions） |
+| Vercel | otetsudai-bank-beta | おこづかいクエストのホスティング・CI/CD |
+| GitHub | TK20260401/otetsudai-bank | おこづかいクエスト単体リポジトリ |
+| Supabase | otetsudai_* テーブル群（9テーブル） | おこづかいクエスト DB（families/users/tasks/task_logs/wallets/transactions/spend_requests/badges/saving_goals）+ RLS + pgcrypto |
 
 ## 環境構築（2026-04-01実施）
 
@@ -433,7 +441,7 @@ cd report-hub && npm install && npm run dev
 # ROI-Simulator（.env.localにSupabase認証情報+BASIC_AUTH設定が必要）
 cd roi-simulator && npm install && npm run dev
 
-# Otetsudai-Bank（.env.localにSupabase認証情報が必要）
+# おこづかいクエスト（.env.localにSupabase認証情報+SERVICE_ROLE_KEY+ANTHROPIC_API_KEYが必要）
 cd otetsudai-bank && npm install && npm run dev
 ```
 
