@@ -16,7 +16,7 @@
 | [Asset-Management](./asset-management-ledger/) | 備品管理台帳（備品CRUD・QRコード・棚卸し・更新推奨アラート） | https://asset-management-ledger.vercel.app | v1 |
 | [Report-Hub](./report-hub/) | 日報・週報・月報 統合レポート（工数削減トラッカー・ナレッジベース） | https://report-hub-one.vercel.app | v1 |
 | [ROI-Simulator](./roi-simulator/) | 収益計画シミュレーション・KGI/KPI管理（即時ROI計算・グラフ） | https://roi-simulator-delta.vercel.app | v2 |
-| [Otetsudai-Bank](./otetsudai-bank/) | BusyKid日本版 お手伝い×マネー教育（サインアップ・支出承認・貯金目標・バッジ・AIチャット） | デプロイ後に追記 | v0.2 |
+| [Otetsudai-Bank](./otetsudai-bank/) | BusyKid日本版 お手伝い×マネー教育（サインアップ・支出承認・貯金目標・バッジ・AIチャット） | https://otetsudai-bank-beta.vercel.app | v0.2 |
 | [Team-Signage](./team-signage/) | デジタルサイネージ（在席管理・営業カレンダー・リソース可視化） | https://team-signage.vercel.app | v0.1 |
 | [todo-app](./todo-app/) | シンプルTODO Webアプリ（HTML/CSS/JS） | — | v1 |
 | [Blueprint](./20260401-Project-Blueprint%201st/) | プロジェクト設計書・構想ドキュメント | — | — |
