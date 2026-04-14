@@ -1,0 +1,2268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おてつだいバンク v0.2 — ワイヤーフレーム</title>
+<style>
+  :root {
+    --front-border: #7c3aed;
+    --front-bg: #ede9fe;
+    --front-header: #5b21b6;
+    --back-border: #34d399;
+    --back-bg: #ecfdf5;
+    --back-header: #065f46;
+    --arrow-color: #f97316;
+    --api-bg: #d1fae5;
+    --api-border: #10b981;
+    --db-bg: #dbeafe;
+    --db-border: #3b82f6;
+    --rpc-bg: #fef3c7;
+    --rpc-border: #f59e0b;
+    --dark-header: #1e1b4b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+    background: #f5f3ff;
+    color: #1e1b4b;
+    line-height: 1.5;
+  }
+
+  /* === Dark Header === */
+  .site-header {
+    background: var(--dark-header);
+    color: #fff;
+    padding: 24px 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 20px rgba(30,27,75,0.3);
+  }
+  .site-header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .site-header .subtitle {
+    font-size: 13px;
+    color: #c4b5fd;
+    margin-bottom: 12px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 12px;
+    align-items: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-swatch {
+    width: 20px;
+    height: 14px;
+    border-radius: 3px;
+    border: 2px solid;
+    display: inline-block;
+  }
+
+  /* === Sticky Nav === */
+  .sticky-nav {
+    background: #2e1065;
+    padding: 10px 32px;
+    position: sticky;
+    top: 82px;
+    z-index: 99;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 2px solid #7c3aed;
+  }
+  .sticky-nav a {
+    color: #c4b5fd;
+    text-decoration: none;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 14px;
+    border: 1px solid #6d28d9;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .sticky-nav a:hover {
+    background: #6d28d9;
+    color: #fff;
+  }
+
+  /* === Section === */
+  .section {
+    max-width: 1400px;
+    margin: 40px auto;
+    padding: 0 24px;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--front-header);
+    margin-bottom: 4px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--front-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-route {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 20px;
+    font-family: monospace;
+  }
+
+  /* === Split Panel === */
+  .split-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 900px) {
+    .split-panel { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    border-radius: 12px;
+    padding: 20px;
+    border: 2px solid;
+  }
+  .panel-front {
+    background: var(--front-bg);
+    border-color: var(--front-border);
+  }
+  .panel-back {
+    background: var(--back-bg);
+    border-color: var(--back-border);
+  }
+  .panel-label {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .panel-label-front {
+    background: var(--front-border);
+    color: #fff;
+  }
+  .panel-label-back {
+    background: var(--back-border);
+    color: #065f46;
+  }
+
+  /* === UI Mockup Elements === */
+  .mock-phone {
+    background: #fff;
+    border: 2px solid #d8b4fe;
+    border-radius: 24px;
+    padding: 16px;
+    max-width: 380px;
+    margin: 0 auto;
+    box-shadow: 0 2px 12px rgba(124,58,237,0.1);
+  }
+  .mock-notch {
+    width: 80px;
+    height: 6px;
+    background: #e9d5ff;
+    border-radius: 3px;
+    margin: 0 auto 12px;
+  }
+  .mock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #d8b4fe;
+    margin-bottom: 12px;
+  }
+  .mock-header-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #5b21b6;
+  }
+  .mock-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 7px 14px;
+    border: 1.5px solid #d8b4fe;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #5b21b6;
+    background: #fff;
+    cursor: default;
+    text-align: center;
+  }
+  .mock-btn-primary {
+    background: #7c3aed;
+    color: #fff;
+    border-color: #6d28d9;
+    font-weight: 600;
+  }
+  .mock-btn-full { width: 100%; padding: 10px; }
+  .mock-btn-sm { padding: 4px 10px; font-size: 11px; }
+  .mock-btn-danger {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fca5a5;
+  }
+  .mock-card {
+    border: 1.5px solid #d8b4fe;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+  .mock-card-header {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #5b21b6;
+  }
+  .mock-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid #d8b4fe;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #a78bfa;
+    background: #faf5ff;
+  }
+  .mock-stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .mock-stat-row-4 {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+  .mock-stat {
+    border: 1px solid #d8b4fe;
+    border-radius: 8px;
+    padding: 8px;
+    text-align: center;
+    background: #faf5ff;
+  }
+  .mock-stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #5b21b6;
+  }
+  .mock-stat-label {
+    font-size: 9px;
+    color: #7c3aed;
+    margin-top: 2px;
+  }
+  .mock-progress {
+    height: 8px;
+    background: #ede9fe;
+    border-radius: 4px;
+    margin: 6px 0;
+    overflow: hidden;
+  }
+  .mock-progress-bar {
+    height: 100%;
+    background: #7c3aed;
+    border-radius: 4px;
+  }
+  .mock-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border: 1px solid #d8b4fe;
+    border-radius: 10px;
+    font-size: 10px;
+    color: #7c3aed;
+    background: #faf5ff;
+  }
+  .mock-divider {
+    border: none;
+    border-top: 1px dashed #d8b4fe;
+    margin: 10px 0;
+  }
+  .mock-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .mock-cols-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .mock-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid #ede9fe;
+    font-size: 12px;
+  }
+  .mock-list-item:last-child { border-bottom: none; }
+  .mock-section-label {
+    font-size: 11px;
+    color: #7c3aed;
+    font-weight: 700;
+    margin: 10px 0 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* === Back-side boxes === */
+  .box-api {
+    background: var(--api-bg);
+    border: 2px solid var(--api-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .box-api::before {
+    content: 'API';
+    display: inline-block;
+    background: var(--api-border);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+  .box-db {
+    background: var(--db-bg);
+    border: 2px dashed var(--db-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .box-db::before {
+    content: 'DB';
+    display: inline-block;
+    background: var(--db-border);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+  .box-rpc {
+    background: var(--rpc-bg);
+    border: 2px solid var(--rpc-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .box-rpc::before {
+    content: 'RPC';
+    display: inline-block;
+    background: var(--rpc-border);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+  .box-static {
+    background: #f3f4f6;
+    border: 2px solid #9ca3af;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #4b5563;
+  }
+  .box-static::before {
+    content: 'STATIC';
+    display: inline-block;
+    background: #6b7280;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+
+  /* === Flow arrows === */
+  .flow-arrow {
+    text-align: center;
+    color: var(--arrow-color);
+    font-size: 22px;
+    font-weight: 700;
+    padding: 6px 0;
+    letter-spacing: 2px;
+  }
+  .flow-arrow-label {
+    font-size: 10px;
+    color: #ea580c;
+    font-weight: 600;
+  }
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .flow-num {
+    background: var(--arrow-color);
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .flow-desc {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* === Architecture diagram === */
+  .arch-diagram {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 24px;
+  }
+  .arch-box {
+    padding: 16px 24px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    min-width: 140px;
+  }
+  .arch-arrow {
+    font-size: 28px;
+    color: var(--arrow-color);
+    font-weight: 700;
+  }
+
+  /* === DB Schema table === */
+  .schema-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-bottom: 16px;
+  }
+  .schema-table th {
+    background: #3b82f6;
+    color: #fff;
+    padding: 6px 10px;
+    text-align: left;
+    font-size: 11px;
+  }
+  .schema-table td {
+    padding: 5px 10px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .schema-table tr:nth-child(even) td {
+    background: #f0f9ff;
+  }
+  .schema-table .pk { color: #f59e0b; font-weight: 700; }
+  .schema-table .fk { color: #3b82f6; font-style: italic; }
+
+  .table-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e40af;
+    margin: 16px 0 6px;
+    padding: 4px 10px;
+    background: #dbeafe;
+    border-left: 4px solid #3b82f6;
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* === Helpers === */
+  .mb-4 { margin-bottom: 4px; }
+  .mb-6 { margin-bottom: 6px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-10 { margin-bottom: 10px; }
+  .mb-12 { margin-bottom: 12px; }
+  .mb-16 { margin-bottom: 16px; }
+  .mb-20 { margin-bottom: 20px; }
+  .mt-4 { margin-top: 4px; }
+  .mt-8 { margin-top: 8px; }
+  .text-center { text-align: center; }
+  .text-xs { font-size: 11px; color: #6b7280; }
+  .text-muted { color: #9ca3af; }
+  code {
+    background: #f3f4f6;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #6d28d9;
+  }
+
+  /* === Footer === */
+  .site-footer {
+    text-align: center;
+    padding: 32px;
+    color: #6b7280;
+    font-size: 13px;
+    border-top: 2px solid #ede9fe;
+    margin-top: 48px;
+    background: #faf5ff;
+  }
+
+  /* === Full-width panel === */
+  .panel-full {
+    border-radius: 12px;
+    padding: 24px;
+    border: 2px solid;
+    margin-bottom: 32px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- HEADER                                                        -->
+<!-- ============================================================ -->
+<header class="site-header">
+  <h1>🏦 おてつだいバンク — Wireframe v0.2</h1>
+  <p class="subtitle">表側（UI）＋ 裏側（データフロー）完全設計書 ｜ BusyKid風・日本語ファミリーお手伝い管理アプリ</p>
+  <div class="legend">
+    <span style="color:#a78bfa;font-weight:600;">凡例:</span>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#ede9fe;border-color:#7c3aed;"></span>
+      表側（UI）
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#ecfdf5;border-color:#34d399;"></span>
+      裏側（データフロー）
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#d1fae5;border-color:#10b981;"></span>
+      API
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#dbeafe;border-color:#3b82f6;border-style:dashed;"></span>
+      DB
+    </div>
+    <div class="legend-item">
+      <span class="legend-swatch" style="background:#fef3c7;border-color:#f59e0b;"></span>
+      RPC
+    </div>
+    <div class="legend-item">
+      <span style="color:#f97316;font-weight:700;font-size:16px;">→</span>
+      フロー矢印
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- STICKY NAV                                                    -->
+<!-- ============================================================ -->
+<nav class="sticky-nav" id="nav-top">
+  <a href="#sec-architecture">1. 全体構成</a>
+  <a href="#sec-landing">2. ランディング</a>
+  <a href="#sec-signup">3. サインアップ</a>
+  <a href="#sec-login">4. ログイン</a>
+  <a href="#sec-parent-dashboard">5. 親ダッシュボード</a>
+  <a href="#sec-task-mgmt">6. タスク管理</a>
+  <a href="#sec-child-dashboard">7. 子どもダッシュボード</a>
+  <a href="#sec-spend-flow">8. 支出承認フロー</a>
+  <a href="#sec-ai-chat">9. AIチャット</a>
+  <a href="#sec-db-schema">10. DBスキーマ</a>
+</nav>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: 全体構成 (Architecture)                            -->
+<!-- ============================================================ -->
+<div class="section" id="sec-architecture">
+  <div class="section-title">
+    <span>1.</span> 全体構成 — アーキテクチャ図
+  </div>
+  <p class="section-route">システム全体のデータフローと技術スタック</p>
+
+  <div class="panel-full panel-back" style="border-color:#7c3aed;background:#faf5ff;">
+    <div class="panel-label panel-label-front">システム構成図</div>
+
+    <div class="arch-diagram">
+      <div class="arch-box" style="background:#ede9fe;border:3px solid #7c3aed;">
+        🖥️<br>ブラウザ<br><span style="font-size:11px;color:#6b7280;">(React / Next.js)</span>
+      </div>
+      <div class="arch-arrow">← fetch →</div>
+      <div class="arch-box" style="background:#fef3c7;border:3px solid #f59e0b;">
+        ⚡<br>Next.js API Routes<br><span style="font-size:11px;color:#6b7280;">/api/*</span>
+      </div>
+      <div class="arch-arrow">← SDK →</div>
+      <div class="arch-box" style="background:#d1fae5;border:3px solid #10b981;">
+        🟢<br>Supabase<br><span style="font-size:11px;color:#6b7280;">Auth + PostgreSQL</span>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin:20px 0 10px;">
+      <span style="font-size:14px;font-weight:700;color:#5b21b6;">データベース: 9テーブル</span>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin-top:12px;">
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_families</div>
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_users</div>
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_tasks</div>
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_task_logs</div>
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_wallets</div>
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_transactions</div>
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_spend_requests</div>
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_badges</div>
+      <div class="box-db" style="margin:0;padding:6px 12px;">otetsudai_saving_goals</div>
+    </div>
+
+    <div style="margin-top:20px;text-align:center;">
+      <div class="box-api" style="display:inline-block;margin:4px;">POST /api/chat → Anthropic Claude</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: ランディングページ                                  -->
+<!-- ============================================================ -->
+<div class="section" id="sec-landing">
+  <div class="section-title">
+    <span>2.</span> ランディングページ
+  </div>
+  <p class="section-route">ルート: <code>/</code></p>
+
+  <div class="split-panel">
+    <!-- Front -->
+    <div class="panel panel-front">
+      <div class="panel-label panel-label-front">表側 — UI</div>
+      <div class="mock-phone">
+        <div class="mock-notch"></div>
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:56px;margin-bottom:8px;">🏦</div>
+          <div style="font-size:22px;font-weight:800;color:#5b21b6;">おてつだいバンク</div>
+          <div style="font-size:13px;color:#7c3aed;margin-top:4px;">お手伝いでコインをためよう！</div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <div class="mock-btn mock-btn-primary mock-btn-full">はじめる</div>
+          <div class="mock-btn mock-btn-full">ログイン</div>
+        </div>
+
+        <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:10px;text-align:center;">できること</div>
+
+        <div class="mock-card">
+          <div style="text-align:center;">
+            <div style="font-size:28px;">📋</div>
+            <div style="font-size:13px;font-weight:600;margin-top:4px;">おてつだい管理</div>
+            <div class="text-xs">タスクを作って、こどもに割り当て</div>
+          </div>
+        </div>
+        <div class="mock-card">
+          <div style="text-align:center;">
+            <div style="font-size:28px;">🐷</div>
+            <div style="font-size:13px;font-weight:600;margin-top:4px;">ちょきんばこ</div>
+            <div class="text-xs">つかう・ためるを分けて管理</div>
+          </div>
+        </div>
+        <div class="mock-card">
+          <div style="text-align:center;">
+            <div style="font-size:28px;">🏆</div>
+            <div style="font-size:13px;font-weight:600;margin-top:4px;">バッジ＆もくひょう</div>
+            <div class="text-xs">がんばりにごほうびバッジ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back -->
+    <div class="panel panel-back">
+      <div class="panel-label panel-label-back">裏側 — データフロー</div>
+
+      <div class="box-static">
+        静的ページ — API呼び出しなし。<br>
+        Next.js の SSG（Static Site Generation）でビルド時に生成。
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-desc">
+          ユーザーがアクセス → 静的HTMLを即座に返却<br>
+          <code>app/page.tsx</code> — サーバーコンポーネント
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-desc">
+          「はじめる」クリック → <code>/signup</code> へ遷移<br>
+          「ログイン」クリック → <code>/login</code> へ遷移
+        </div>
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">技術メモ</div>
+        <ul style="font-size:11px;color:#6b7280;padding-left:16px;">
+          <li>SEO対応: メタタグ・OGP設定済み</li>
+          <li>レスポンシブ: モバイルファースト</li>
+          <li>Supabaseクライアント未初期化（認証不要）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: サインアップ                                       -->
+<!-- ============================================================ -->
+<div class="section" id="sec-signup">
+  <div class="section-title">
+    <span>3.</span> サインアップ
+  </div>
+  <p class="section-route">ルート: <code>/signup</code> + <code>/signup/children</code></p>
+
+  <div class="split-panel">
+    <!-- Front -->
+    <div class="panel panel-front">
+      <div class="panel-label panel-label-front">表側 — UI</div>
+
+      <!-- Step 1 -->
+      <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:8px;">Step 1: おやアカウント登録</div>
+      <div class="mock-phone" style="margin-bottom:20px;">
+        <div class="mock-notch"></div>
+        <div class="mock-header">
+          <div class="mock-header-title">🏦 アカウント作成</div>
+          <div class="text-xs">Step 1/2</div>
+        </div>
+
+        <div class="mb-8">
+          <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">メールアドレス</div>
+          <div class="mock-input">example@mail.com</div>
+        </div>
+        <div class="mb-8">
+          <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">パスワード</div>
+          <div class="mock-input">●●●●●●●●</div>
+        </div>
+        <div class="mb-8">
+          <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">パスワード（確認）</div>
+          <div class="mock-input">●●●●●●●●</div>
+        </div>
+        <div class="mb-12">
+          <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">おうちの名前</div>
+          <div class="mock-input">例: 山田家</div>
+        </div>
+        <div class="mock-btn mock-btn-primary mock-btn-full">つぎへ →</div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:8px;">Step 2: こどもを追加（1〜5人）</div>
+      <div class="mock-phone">
+        <div class="mock-notch"></div>
+        <div class="mock-header">
+          <div class="mock-header-title">👧 こどもを追加</div>
+          <div class="text-xs">Step 2/2</div>
+        </div>
+
+        <div class="mock-card">
+          <div class="mock-row mb-6">
+            <span style="font-weight:600;font-size:13px;">こども 1</span>
+            <div class="mock-btn mock-btn-sm mock-btn-danger">✕</div>
+          </div>
+          <div class="mb-6">
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">なまえ</div>
+            <div class="mock-input">花子</div>
+          </div>
+          <div>
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">PIN（任意・4桁）</div>
+            <div class="mock-input" style="letter-spacing:8px;text-align:center;">●●●●</div>
+          </div>
+        </div>
+
+        <div class="mock-card" style="border-style:dashed;">
+          <div class="mock-row mb-6">
+            <span style="font-weight:600;font-size:13px;">こども 2</span>
+            <div class="mock-btn mock-btn-sm mock-btn-danger">✕</div>
+          </div>
+          <div class="mb-6">
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">なまえ</div>
+            <div class="mock-input">次郎</div>
+          </div>
+          <div>
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">PIN（任意・4桁）</div>
+            <div class="mock-input text-muted">設定しない</div>
+          </div>
+        </div>
+
+        <div class="mock-btn mock-btn-full mb-10" style="border-style:dashed;">＋ こどもを追加（最大5人）</div>
+        <div class="mock-btn mock-btn-primary mock-btn-full">登録する ✓</div>
+      </div>
+    </div>
+
+    <!-- Back -->
+    <div class="panel panel-back">
+      <div class="panel-label panel-label-back">裏側 — データフロー</div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin-bottom:10px;">Step 1 送信時:</div>
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-desc">
+          <code>supabase.auth.signUp({ email, password })</code><br>
+          → Supabase Authにユーザー登録
+        </div>
+      </div>
+
+      <div class="box-rpc">
+        auth.signUp() → auth.users テーブルにレコード作成<br>
+        → JWT トークン発行 → クライアントに返却
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-desc">
+          <code>INSERT INTO otetsudai_families</code><br>
+          family_name, created_by (auth.uid)
+        </div>
+      </div>
+
+      <div class="box-db">
+        otetsudai_families → 新規家族レコード作成<br>
+        返却: family_id (UUID)
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-desc">
+          <code>INSERT INTO otetsudai_users</code><br>
+          role='parent', family_id, auth_id
+        </div>
+      </div>
+
+      <div class="box-db">
+        otetsudai_users → 親ユーザーレコード作成
+      </div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin:16px 0 10px;">Step 2 送信時（各こどもに対して）:</div>
+
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-desc">
+          <code>INSERT INTO otetsudai_users</code><br>
+          role='child', name, pin_hash(任意), family_id
+        </div>
+      </div>
+
+      <div class="box-db">
+        otetsudai_users → 子ユーザーレコード作成（1〜5件）
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-desc">
+          <code>INSERT INTO otetsudai_wallets</code><br>
+          user_id, balance=0, spending_balance=0, saving_balance=0, split_ratio=50
+        </div>
+      </div>
+
+      <div class="box-db">
+        otetsudai_wallets → 各こどもにウォレット自動作成<br>
+        初期残高: 0 / 分配率: 50:50
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">エラーハンドリング</div>
+        <ul style="font-size:11px;color:#6b7280;padding-left:16px;">
+          <li>メール重複 → 「すでに登録済みです」表示</li>
+          <li>PW 8文字未満 → バリデーションエラー</li>
+          <li>こども0人 → 「1人以上追加してください」</li>
+          <li>トランザクション失敗 → ロールバック</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: ログイン                                           -->
+<!-- ============================================================ -->
+<div class="section" id="sec-login">
+  <div class="section-title">
+    <span>4.</span> ログイン
+  </div>
+  <p class="section-route">ルート: <code>/login</code></p>
+
+  <div class="split-panel">
+    <!-- Front -->
+    <div class="panel panel-front">
+      <div class="panel-label panel-label-front">表側 — UI</div>
+      <div class="mock-phone">
+        <div class="mock-notch"></div>
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:40px;">🏦</div>
+          <div style="font-size:18px;font-weight:700;color:#5b21b6;">おてつだいバンク</div>
+          <div class="text-xs">ログイン</div>
+        </div>
+
+        <!-- Step A: Family select -->
+        <div class="mock-section-label">① おうちをえらんでね</div>
+        <div class="mock-btn mock-btn-full mb-8" style="font-weight:600;">🏠 山田家</div>
+        <div class="mock-btn mock-btn-full mb-8" style="border-style:dashed;color:#a78bfa;">🏠 （他の家族）</div>
+
+        <div class="mock-divider"></div>
+
+        <!-- Step B: Member select -->
+        <div class="mock-section-label">② だれかな？</div>
+        <div class="mock-btn mock-btn-full mb-6">👨‍👩‍👧‍👦 山田 太郎 <span class="mock-badge" style="margin-left:8px;">おや</span></div>
+        <div class="mock-btn mock-btn-full mb-6">🧒 花子 <span class="mock-badge" style="margin-left:8px;">こども</span></div>
+        <div class="mock-btn mock-btn-full mb-6">🧒 次郎 <span class="mock-badge" style="margin-left:8px;">こども</span></div>
+
+        <div class="mock-divider"></div>
+
+        <!-- Step C: PIN -->
+        <div class="mock-section-label">③ PINにゅうりょく</div>
+        <div class="mock-input mb-10" style="text-align:center;font-size:20px;letter-spacing:12px;">● ● ● ●</div>
+        <div class="mock-btn mock-btn-primary mock-btn-full">ログイン</div>
+
+        <div class="text-xs text-center mt-8">
+          まだアカウントがない？ <span style="color:#7c3aed;font-weight:600;">新規登録</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back -->
+    <div class="panel panel-back">
+      <div class="panel-label panel-label-back">裏側 — データフロー</div>
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-desc">
+          ページ読み込み時:<br>
+          <code>SELECT * FROM otetsudai_families</code><br>
+          → 家族一覧を取得して表示
+        </div>
+      </div>
+      <div class="box-db">
+        otetsudai_families → 全家族リスト返却
+      </div>
+
+      <div class="flow-arrow">↓ 家族選択後</div>
+
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-desc">
+          <code>SELECT * FROM otetsudai_users WHERE family_id = ?</code><br>
+          → その家族のメンバー一覧を取得
+        </div>
+      </div>
+      <div class="box-db">
+        otetsudai_users → メンバーリスト（role付き）返却
+      </div>
+
+      <div class="flow-arrow">↓ メンバー選択後</div>
+
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-desc">
+          PIN入力（親は必須、子はオプション）<br>
+          <code>bcrypt.compare(input, pin_hash)</code><br>
+          → PIN照合
+        </div>
+      </div>
+      <div class="box-rpc">
+        PIN照合成功 → セッション情報を生成
+      </div>
+
+      <div class="flow-arrow">↓ 認証成功</div>
+
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-desc">
+          <code>localStorage.setItem('session', JSON.stringify({...}))</code><br>
+          → セッション情報をローカルストレージに保存
+        </div>
+      </div>
+
+      <div style="padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;margin-top:12px;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">セッション構造</div>
+        <div style="font-size:11px;color:#6b7280;font-family:monospace;white-space:pre-wrap;">
+{
+  userId: "uuid",
+  familyId: "uuid",
+  role: "parent" | "child",
+  name: "太郎",
+  familyName: "山田家"
+}</div>
+      </div>
+
+      <div class="flow-arrow">↓ リダイレクト</div>
+
+      <div class="box-api" style="margin-top:8px;">
+        role === 'parent' → <code>/parent</code> へ遷移<br>
+        role === 'child' → <code>/child/[userId]</code> へ遷移
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: 親ダッシュボード                                    -->
+<!-- ============================================================ -->
+<div class="section" id="sec-parent-dashboard">
+  <div class="section-title">
+    <span>5.</span> 親ダッシュボード
+  </div>
+  <p class="section-route">ルート: <code>/parent</code></p>
+
+  <div class="split-panel">
+    <!-- Front -->
+    <div class="panel panel-front">
+      <div class="panel-label panel-label-front">表側 — UI</div>
+      <div class="mock-phone">
+        <div class="mock-notch"></div>
+        <div class="mock-header">
+          <div>
+            <div class="mock-header-title">🏦 おやダッシュボード</div>
+            <div class="text-xs">山田 太郎 さん</div>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <div class="mock-btn mock-btn-sm">📋</div>
+            <div class="mock-btn mock-btn-sm">🚪</div>
+          </div>
+        </div>
+
+        <!-- 4 Stat Cards -->
+        <div class="mock-stat-row mock-stat-row-4">
+          <div class="mock-stat">
+            <div class="mock-stat-value">12</div>
+            <div class="mock-stat-label">承認済</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-value">¥2,450</div>
+            <div class="mock-stat-label">総獲得</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-value">5</div>
+            <div class="mock-stat-label">今週件数</div>
+          </div>
+          <div class="mock-stat">
+            <div class="mock-stat-value">¥750</div>
+            <div class="mock-stat-label">今週支払</div>
+          </div>
+        </div>
+
+        <!-- Pending Task Approvals -->
+        <div class="mock-card">
+          <div class="mock-card-header">⏳ タスク承認待ち <span class="mock-badge" style="background:#fef2f2;border-color:#fca5a5;color:#dc2626;">2</span></div>
+
+          <div style="background:#faf5ff;border:1px solid #ede9fe;border-radius:8px;padding:8px;margin-bottom:6px;">
+            <div class="mock-row">
+              <div>
+                <div style="font-size:12px;font-weight:600;">🍽️ 食器洗い</div>
+                <div class="text-xs">🧒 花子 ・ ¥100</div>
+              </div>
+              <div style="display:flex;gap:4px;">
+                <div class="mock-btn mock-btn-sm mock-btn-primary">✓ 承認</div>
+                <div class="mock-btn mock-btn-sm mock-btn-danger">✗</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#faf5ff;border:1px solid #ede9fe;border-radius:8px;padding:8px;">
+            <div class="mock-row">
+              <div>
+                <div style="font-size:12px;font-weight:600;">👕 洗濯物たたみ</div>
+                <div class="text-xs">🧒 次郎 ・ ¥150</div>
+              </div>
+              <div style="display:flex;gap:4px;">
+                <div class="mock-btn mock-btn-sm mock-btn-primary">✓ 承認</div>
+                <div class="mock-btn mock-btn-sm mock-btn-danger">✗</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Spend Request Approvals -->
+        <div class="mock-card">
+          <div class="mock-card-header">💸 おこづかい申請 <span class="mock-badge" style="background:#fef2f2;border-color:#fca5a5;color:#dc2626;">1</span></div>
+
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:8px;margin-bottom:6px;">
+            <div class="mock-row mb-6">
+              <div>
+                <div style="font-size:12px;font-weight:600;">🧒 花子: ¥300</div>
+                <div class="text-xs">目的: まんが本</div>
+              </div>
+              <div style="display:flex;gap:4px;">
+                <div class="mock-btn mock-btn-sm mock-btn-primary">✓</div>
+                <div class="mock-btn mock-btn-sm mock-btn-danger">✗</div>
+              </div>
+            </div>
+            <div>
+              <div class="text-xs mb-4" style="font-weight:600;color:#9a3412;">却下理由（任意）:</div>
+              <div class="mock-input" style="font-size:10px;">理由を入力...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-divider"></div>
+
+        <!-- Child Wallet Cards -->
+        <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:8px;">💰 こどもの残高</div>
+
+        <div class="mock-card">
+          <div class="mock-row mb-6">
+            <span style="font-weight:600;">🧒 花子</span>
+            <span style="font-weight:700;color:#5b21b6;">¥1,250</span>
+          </div>
+          <div class="mock-cols-2 mb-8">
+            <div style="background:#ede9fe;border-radius:6px;padding:6px;text-align:center;">
+              <div class="text-xs">💳 つかえる</div>
+              <div style="font-weight:700;color:#5b21b6;">¥625</div>
+            </div>
+            <div style="background:#d1fae5;border-radius:6px;padding:6px;text-align:center;">
+              <div class="text-xs">🏦 ちょきん</div>
+              <div style="font-weight:700;color:#059669;">¥625</div>
+            </div>
+          </div>
+          <div class="mock-row" style="font-size:10px;">
+            <span>分配率</span>
+            <div class="mock-progress" style="flex:1;margin:0 8px;">
+              <div class="mock-progress-bar" style="width:50%"></div>
+            </div>
+            <span style="font-weight:600;">50%</span>
+          </div>
+          <div class="text-xs mt-4" style="color:#7c3aed;">← スライダーで分配率調整 →</div>
+        </div>
+
+        <div class="mock-card">
+          <div class="mock-row mb-6">
+            <span style="font-weight:600;">🧒 次郎</span>
+            <span style="font-weight:700;color:#5b21b6;">¥1,000</span>
+          </div>
+          <div class="mock-cols-2 mb-8">
+            <div style="background:#ede9fe;border-radius:6px;padding:6px;text-align:center;">
+              <div class="text-xs">💳 つかえる</div>
+              <div style="font-weight:700;color:#5b21b6;">¥500</div>
+            </div>
+            <div style="background:#d1fae5;border-radius:6px;padding:6px;text-align:center;">
+              <div class="text-xs">🏦 ちょきん</div>
+              <div style="font-weight:700;color:#059669;">¥500</div>
+            </div>
+          </div>
+          <div class="mock-row" style="font-size:10px;">
+            <span>分配率</span>
+            <div class="mock-progress" style="flex:1;margin:0 8px;">
+              <div class="mock-progress-bar" style="width:50%"></div>
+            </div>
+            <span style="font-weight:600;">50%</span>
+          </div>
+          <div class="text-xs mt-4" style="color:#7c3aed;">← スライダーで分配率調整 →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back -->
+    <div class="panel panel-back">
+      <div class="panel-label panel-label-back">裏側 — データフロー</div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin-bottom:10px;">ページ読み込み: 5つの並列クエリ</div>
+
+      <div class="box-db">
+        <strong>Q1:</strong> SELECT COUNT(*) FROM otetsudai_task_logs WHERE status='approved' AND family_id=?<br>
+        → 承認済み件数
+      </div>
+      <div class="box-db">
+        <strong>Q2:</strong> SELECT SUM(amount) FROM otetsudai_transactions WHERE family_id=? AND type='earn'<br>
+        → 総獲得額
+      </div>
+      <div class="box-db">
+        <strong>Q3:</strong> SELECT COUNT(*) FROM otetsudai_task_logs WHERE family_id=? AND created_at >= 今週月曜<br>
+        → 今週の件数
+      </div>
+      <div class="box-db">
+        <strong>Q4:</strong> SELECT SUM(amount) FROM otetsudai_transactions WHERE family_id=? AND created_at >= 今週月曜 AND type='earn'<br>
+        → 今週の支払額
+      </div>
+      <div class="box-db">
+        <strong>Q5:</strong> SELECT * FROM otetsudai_task_logs WHERE status='pending' AND family_id=?<br>
+        JOIN otetsudai_tasks, otetsudai_users<br>
+        → 承認待ちタスク一覧
+      </div>
+
+      <div class="flow-arrow">↓ 追加クエリ</div>
+
+      <div class="box-db">
+        SELECT * FROM otetsudai_spend_requests WHERE status='pending' AND family_id=?<br>
+        → 支出承認待ち一覧
+      </div>
+      <div class="box-db">
+        SELECT w.*, u.name FROM otetsudai_wallets w JOIN otetsudai_users u ON w.user_id = u.id WHERE u.family_id=? AND u.role='child'<br>
+        → 子どもウォレット一覧
+      </div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin:16px 0 10px;">アクション処理:</div>
+
+      <div class="box-api">
+        <strong>タスク承認:</strong><br>
+        UPDATE otetsudai_task_logs SET status='approved'<br>
+        → INSERT otetsudai_transactions (type='earn')<br>
+        → UPDATE otetsudai_wallets (balance増加、split_ratio で分配)
+      </div>
+
+      <div class="box-api">
+        <strong>タスク却下:</strong><br>
+        UPDATE otetsudai_task_logs SET status='rejected'
+      </div>
+
+      <div class="box-api">
+        <strong>支出承認:</strong><br>
+        UPDATE otetsudai_spend_requests SET status='approved'<br>
+        → UPDATE otetsudai_wallets (spending_balance減少)<br>
+        → INSERT otetsudai_transactions (type='spend')
+      </div>
+
+      <div class="box-api">
+        <strong>支出却下:</strong><br>
+        UPDATE otetsudai_spend_requests SET status='rejected', reject_reason=?
+      </div>
+
+      <div class="box-rpc">
+        <strong>分配率変更:</strong><br>
+        UPDATE otetsudai_wallets SET split_ratio=?<br>
+        → spending_balance, saving_balance を再計算
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: タスク管理                                         -->
+<!-- ============================================================ -->
+<div class="section" id="sec-task-mgmt">
+  <div class="section-title">
+    <span>6.</span> タスク管理
+  </div>
+  <p class="section-route">ルート: <code>/parent/tasks</code></p>
+
+  <div class="split-panel">
+    <!-- Front -->
+    <div class="panel panel-front">
+      <div class="panel-label panel-label-front">表側 — UI</div>
+      <div class="mock-phone">
+        <div class="mock-notch"></div>
+        <div class="mock-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="mock-btn mock-btn-sm">← もどる</div>
+            <div class="mock-header-title">📋 タスク管理</div>
+          </div>
+          <div class="mock-btn mock-btn-sm mock-btn-primary">＋ 新規</div>
+        </div>
+
+        <!-- Task list -->
+        <div class="mock-card">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">🍽️ 食器洗い <span class="mock-badge">毎日</span></div>
+              <div class="text-xs mt-4">¥100 ・ 👧👦 みんな</div>
+            </div>
+            <div style="display:flex;gap:2px;">
+              <div class="mock-btn mock-btn-sm">✏️</div>
+              <div class="mock-btn mock-btn-sm">🗑</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-card">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">👕 洗濯物たたみ <span class="mock-badge">毎日</span></div>
+              <div class="text-xs mt-4">¥150 ・ 👧👦 みんな</div>
+            </div>
+            <div style="display:flex;gap:2px;">
+              <div class="mock-btn mock-btn-sm">✏️</div>
+              <div class="mock-btn mock-btn-sm">🗑</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-card">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">🌿 芝刈り <span class="mock-badge">毎週</span></div>
+              <div class="text-xs mt-4">¥1,000 ・ 🧒 花子</div>
+            </div>
+            <div style="display:flex;gap:2px;">
+              <div class="mock-btn mock-btn-sm">✏️</div>
+              <div class="mock-btn mock-btn-sm">🗑</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-card" style="opacity:0.5;">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">🗑️ ゴミ出し <span class="mock-badge">毎週</span> <span class="mock-badge" style="background:#fef2f2;color:#dc2626;">停止中</span></div>
+              <div class="text-xs mt-4">¥200 ・ 👧👦 みんな</div>
+            </div>
+            <div style="display:flex;gap:2px;">
+              <div class="mock-btn mock-btn-sm">▶️</div>
+              <div class="mock-btn mock-btn-sm">🗑</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock-divider"></div>
+
+        <!-- Create dialog -->
+        <div class="text-xs text-center mb-8" style="color:#7c3aed;">▼ 新規作成ダイアログ ▼</div>
+        <div class="mock-card" style="border:2px solid #7c3aed;">
+          <div style="font-size:14px;font-weight:700;color:#5b21b6;margin-bottom:10px;">あたらしいタスク</div>
+          <div class="mb-8">
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">タスク名</div>
+            <div class="mock-input">例: お風呂そうじ</div>
+          </div>
+          <div class="mb-8">
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">せつめい（任意）</div>
+            <div class="mock-input" style="height:40px;">どうやるか書いてね</div>
+          </div>
+          <div class="mock-cols-2 mb-8">
+            <div>
+              <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">ごほうび (¥)</div>
+              <div class="mock-input">100</div>
+            </div>
+            <div>
+              <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">くりかえし</div>
+              <div class="mock-input">▼ 毎日</div>
+            </div>
+          </div>
+          <div class="mb-8">
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">アイコン（自動割当）</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span style="font-size:20px;padding:4px;border:2px solid #7c3aed;border-radius:6px;background:#ede9fe;">🛁</span>
+              <span style="font-size:20px;padding:4px;border:1px solid #d8b4fe;border-radius:6px;">🍽️</span>
+              <span style="font-size:20px;padding:4px;border:1px solid #d8b4fe;border-radius:6px;">🧹</span>
+              <span style="font-size:20px;padding:4px;border:1px solid #d8b4fe;border-radius:6px;">🌿</span>
+              <span style="font-size:20px;padding:4px;border:1px solid #d8b4fe;border-radius:6px;">📚</span>
+              <span style="font-size:20px;padding:4px;border:1px solid #d8b4fe;border-radius:6px;">🐕</span>
+            </div>
+          </div>
+          <div class="mb-10">
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">だれのタスク？</div>
+            <div class="mock-input">▼ みんな</div>
+          </div>
+          <div class="mock-btn mock-btn-primary mock-btn-full">作成する</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back -->
+    <div class="panel panel-back">
+      <div class="panel-label panel-label-back">裏側 — データフロー</div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin-bottom:10px;">タスク一覧取得:</div>
+
+      <div class="box-db">
+        SELECT * FROM otetsudai_tasks WHERE family_id=? ORDER BY is_active DESC, created_at DESC<br>
+        → タスク一覧（アクティブ → 停止中の順）
+      </div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin:16px 0 10px;">CRUD操作:</div>
+
+      <div class="box-api">
+        <strong>CREATE（作成）:</strong><br>
+        INSERT INTO otetsudai_tasks (family_id, name, description, reward, recurrence, assigned_to, icon, is_active)<br>
+        <br>
+        <span style="color:#065f46;font-weight:600;">アイコン自動割当ロジック:</span><br>
+        タスク名のキーワードマッチ:<br>
+        「洗」→🍽️ / 「掃除」「そうじ」→🧹 / 「風呂」→🛁<br>
+        「芝」「庭」→🌿 / 「洗濯」→👕 / 「ゴミ」→🗑️<br>
+        「勉強」「宿題」→📚 / 「犬」「散歩」→🐕<br>
+        マッチなし → ⭐ デフォルト
+      </div>
+
+      <div class="box-api">
+        <strong>UPDATE（更新）:</strong><br>
+        UPDATE otetsudai_tasks SET name=?, reward=?, ... WHERE id=? AND family_id=?
+      </div>
+
+      <div class="box-api">
+        <strong>TOGGLE（一時停止/再開）:</strong><br>
+        UPDATE otetsudai_tasks SET is_active = NOT is_active WHERE id=?
+      </div>
+
+      <div class="box-api">
+        <strong>DELETE（削除）:</strong><br>
+        DELETE FROM otetsudai_tasks WHERE id=? AND family_id=?<br>
+        ※ 関連する task_logs は CASCADE または論理削除
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">くりかえし設定</div>
+        <ul style="font-size:11px;color:#6b7280;padding-left:16px;">
+          <li><strong>once</strong> — 1回のみ</li>
+          <li><strong>daily</strong> — 毎日</li>
+          <li><strong>weekly</strong> — 毎週</li>
+          <li><strong>monthly</strong> — 毎月</li>
+        </ul>
+      </div>
+
+      <div style="margin-top:12px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">割り当て</div>
+        <ul style="font-size:11px;color:#6b7280;padding-left:16px;">
+          <li><code>assigned_to = NULL</code> → みんな（全子ども）</li>
+          <li><code>assigned_to = userId</code> → 特定の子ども</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: 子どもダッシュボード                                 -->
+<!-- ============================================================ -->
+<div class="section" id="sec-child-dashboard">
+  <div class="section-title">
+    <span>7.</span> 子どもダッシュボード
+  </div>
+  <p class="section-route">ルート: <code>/child/[childId]</code></p>
+
+  <div class="split-panel">
+    <!-- Front -->
+    <div class="panel panel-front">
+      <div class="panel-label panel-label-front">表側 — UI</div>
+      <div class="mock-phone">
+        <div class="mock-notch"></div>
+        <div class="mock-header">
+          <div class="mock-header-title">🧒 花子 のバンク</div>
+          <div style="display:flex;gap:4px;">
+            <div class="mock-btn mock-btn-sm">💬</div>
+            <div class="mock-btn mock-btn-sm">🚪</div>
+          </div>
+        </div>
+
+        <!-- Badges -->
+        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+          <span style="font-size:20px;" title="はじめてのおてつだい">🌟</span>
+          <span style="font-size:20px;" title="3日れんぞく">🔥</span>
+          <span style="font-size:20px;" title="1000コインためた">💰</span>
+          <span style="font-size:14px;color:#d8b4fe;padding-top:4px;">+2 more</span>
+        </div>
+
+        <!-- Piggy Bank (dynamic) -->
+        <div class="mock-card" style="text-align:center;background:#faf5ff;">
+          <div style="font-size:12px;color:#7c3aed;margin-bottom:4px;">🐷 大きさ = 残高で変わるよ！</div>
+          <div style="font-size:64px;margin-bottom:4px;transform:scale(1.2);">🐷</div>
+          <div style="font-size:28px;font-weight:800;color:#5b21b6;">¥1,250</div>
+          <div class="text-xs mb-10">ぜんぶのおかね</div>
+
+          <div class="mock-cols-2 mb-10">
+            <div style="background:#fff;border-radius:10px;padding:8px;border:1px solid #ede9fe;">
+              <div class="text-xs">💳 つかえるお金</div>
+              <div style="font-size:18px;font-weight:700;color:#5b21b6;">¥625</div>
+              <div class="mock-btn mock-btn-sm mock-btn-primary mt-4" style="width:100%;">つかう</div>
+            </div>
+            <div style="background:#fff;border-radius:10px;padding:8px;border:1px solid #d1fae5;">
+              <div class="text-xs">🏦 ちょきん</div>
+              <div style="font-size:18px;font-weight:700;color:#059669;">¥625</div>
+              <div class="text-xs mt-4" style="color:#059669;">50%ためてるよ</div>
+            </div>
+          </div>
+
+          <!-- Saving Goal -->
+          <div style="background:#fff;border-radius:10px;padding:10px;border:1px solid #fef3c7;text-align:left;">
+            <div class="mock-row mb-4">
+              <span style="font-size:12px;font-weight:700;color:#d97706;">🎯 ちょきんもくひょう</span>
+              <span class="text-xs">ゲームソフト</span>
+            </div>
+            <div class="mock-row" style="font-size:10px;">
+              <span>¥625 / ¥5,000</span>
+              <span style="font-weight:600;color:#d97706;">12.5%</span>
+            </div>
+            <div class="mock-progress" style="background:#fef3c7;">
+              <div class="mock-progress-bar" style="width:12.5%;background:#f59e0b;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- きょうやること -->
+        <div class="mock-card-header" style="margin-top:12px;">📅 きょうやること</div>
+        <div class="mock-card" style="border-color:#f59e0b;">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">
+                <ruby>食器洗<rt>しょっきあら</rt></ruby>い
+              </div>
+              <div style="margin-top:4px;">
+                <span class="mock-badge">¥100</span>
+              </div>
+            </div>
+            <div class="mock-btn mock-btn-primary" style="padding:8px 14px;font-size:14px;">できた！✓</div>
+          </div>
+        </div>
+
+        <!-- Task List -->
+        <div class="mock-card-header" style="margin-top:8px;">📋 おてつだいリスト</div>
+        <div class="mock-card">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">
+                🍽️ <ruby>食器洗<rt>しょっきあら</rt></ruby>い
+              </div>
+              <div style="margin-top:4px;">
+                <span class="mock-badge">¥100</span>
+                <span class="mock-badge" style="margin-left:4px;">まいにち</span>
+              </div>
+            </div>
+            <div class="mock-btn mock-btn-primary" style="padding:6px 10px;">できた！</div>
+          </div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">
+                👕 <ruby>洗濯物<rt>せんたくもの</rt></ruby>たたみ
+              </div>
+              <div style="margin-top:4px;">
+                <span class="mock-badge">¥150</span>
+                <span class="mock-badge" style="margin-left:4px;">まいにち</span>
+              </div>
+            </div>
+            <div class="mock-btn mock-btn-primary" style="padding:6px 10px;">できた！</div>
+          </div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:13px;font-weight:600;">
+                🌿 <ruby>芝刈<rt>しばか</rt></ruby>り
+              </div>
+              <div style="margin-top:4px;">
+                <span class="mock-badge">¥1,000</span>
+                <span class="mock-badge" style="margin-left:4px;">まいしゅう</span>
+              </div>
+            </div>
+            <div class="mock-btn mock-btn-primary" style="padding:6px 10px;">できた！</div>
+          </div>
+        </div>
+
+        <!-- Coin animation hint -->
+        <div style="text-align:center;margin:12px 0;padding:10px;background:#fef3c7;border-radius:8px;border:1px dashed #f59e0b;">
+          <div style="font-size:24px;">🪙✨🪙✨🪙</div>
+          <div class="text-xs" style="color:#d97706;font-weight:600;">「できた！」を押すとコインアニメーション表示</div>
+        </div>
+
+        <div class="mock-divider"></div>
+
+        <!-- Transaction History -->
+        <div class="mock-card-header">📜 りれき</div>
+        <div class="mock-card">
+          <div class="mock-list-item">
+            <div>
+              <div style="font-size:12px;">💰 食器洗い 承認</div>
+              <div class="text-xs">2026/04/06</div>
+            </div>
+            <span style="font-weight:700;color:#059669;">+¥100</span>
+          </div>
+          <div class="mock-list-item">
+            <div>
+              <div style="font-size:12px;">💸 まんが本 承認</div>
+              <div class="text-xs">2026/04/05</div>
+            </div>
+            <span style="font-weight:700;color:#dc2626;">-¥300</span>
+          </div>
+          <div class="mock-list-item">
+            <div>
+              <div style="font-size:12px;">💰 洗濯物たたみ 承認</div>
+              <div class="text-xs">2026/04/04</div>
+            </div>
+            <span style="font-weight:700;color:#059669;">+¥150</span>
+          </div>
+          <div class="mock-list-item">
+            <div>
+              <div style="font-size:12px;">💰 芝刈り 承認</div>
+              <div class="text-xs">2026/04/03</div>
+            </div>
+            <span style="font-weight:700;color:#059669;">+¥1,000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back -->
+    <div class="panel panel-back">
+      <div class="panel-label panel-label-back">裏側 — データフロー</div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin-bottom:10px;">ページ読み込み: 複数クエリ</div>
+
+      <div class="box-db">
+        <strong>ユーザー情報:</strong><br>
+        SELECT * FROM otetsudai_users WHERE id=childId
+      </div>
+
+      <div class="box-db">
+        <strong>バッジ:</strong><br>
+        SELECT * FROM otetsudai_badges WHERE user_id=childId ORDER BY awarded_at DESC
+      </div>
+
+      <div class="box-db">
+        <strong>ウォレット:</strong><br>
+        SELECT * FROM otetsudai_wallets WHERE user_id=childId
+      </div>
+
+      <div class="box-db">
+        <strong>貯金もくひょう:</strong><br>
+        SELECT * FROM otetsudai_saving_goals WHERE user_id=childId AND is_active=true
+      </div>
+
+      <div class="box-db">
+        <strong>今日のタスク:</strong><br>
+        SELECT t.* FROM otetsudai_tasks t<br>
+        WHERE t.family_id=? AND t.is_active=true<br>
+        AND (t.assigned_to IS NULL OR t.assigned_to=childId)<br>
+        AND NOT EXISTS (今日完了済みログ)
+      </div>
+
+      <div class="box-db">
+        <strong>全タスク:</strong><br>
+        SELECT t.*, tl.status FROM otetsudai_tasks t<br>
+        LEFT JOIN otetsudai_task_logs tl ON ...<br>
+        WHERE (assigned_to IS NULL OR assigned_to=childId)
+      </div>
+
+      <div class="box-db">
+        <strong>取引履歴:</strong><br>
+        SELECT * FROM otetsudai_transactions WHERE user_id=childId<br>
+        ORDER BY created_at DESC LIMIT 20
+      </div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin:16px 0 10px;">アクション:</div>
+
+      <div class="box-api">
+        <strong>「できた！」ボタン:</strong><br>
+        INSERT INTO otetsudai_task_logs (task_id, user_id, status='pending')<br>
+        → 親の承認待ちに追加<br>
+        → クライアント側: コインアニメーション再生
+      </div>
+
+      <div class="box-rpc">
+        <strong>checkAndAwardBadges(userId):</strong><br>
+        タスク完了時に自動チェック:<br>
+        - 初回完了 → 🌟 はじめてのおてつだい<br>
+        - 3日連続 → 🔥 れんぞくチャレンジ<br>
+        - 累計1000円 → 💰 1000コインマスター<br>
+        - 貯金目標達成 → 🐷 ちょきんマスター<br>
+        <br>
+        該当 → INSERT INTO otetsudai_badges
+      </div>
+
+      <div class="box-api">
+        <strong>「つかう」ボタン（支出申請）:</strong><br>
+        → 支出承認フローへ（Section 8参照）
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">🐷 動的ブタサイズ</div>
+        <div style="font-size:11px;color:#6b7280;">
+          残高に応じて CSS transform: scale() を適用:<br>
+          <code>scale = 0.6 + Math.min(balance / 10000, 1) * 0.8</code><br>
+          0円 → scale(0.6) / 5000円 → scale(1.0) / 10000円+ → scale(1.4)
+        </div>
+      </div>
+
+      <div style="margin-top:12px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">AutoRuby（自動ふりがな）</div>
+        <div style="font-size:11px;color:#6b7280;">
+          子ども画面では漢字に自動でルビ（ふりがな）を付与。<br>
+          辞書ベースで変換: 食器洗い → <ruby>食器洗<rt>しょっきあら</rt></ruby>い
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 8: 支出承認フロー                                     -->
+<!-- ============================================================ -->
+<div class="section" id="sec-spend-flow">
+  <div class="section-title">
+    <span>8.</span> 支出承認フロー
+  </div>
+  <p class="section-route">子ども → 親 → 承認/却下 のフロー</p>
+
+  <div class="split-panel">
+    <!-- Front -->
+    <div class="panel panel-front">
+      <div class="panel-label panel-label-front">表側 — UI</div>
+
+      <!-- Child side -->
+      <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:8px;">子ども側: 「つかう」ダイアログ</div>
+      <div class="mock-phone" style="margin-bottom:20px;">
+        <div class="mock-notch"></div>
+        <div class="mock-card" style="border:2px solid #7c3aed;">
+          <div style="font-size:14px;font-weight:700;color:#5b21b6;margin-bottom:10px;">💸 おかねをつかう</div>
+          <div class="mb-8">
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">いくらつかう？(¥)</div>
+            <div class="mock-input" style="font-size:18px;font-weight:700;text-align:center;">300</div>
+          </div>
+          <div class="mb-10">
+            <div class="text-xs mb-4" style="font-weight:600;color:#5b21b6;">なにに使うの？</div>
+            <div class="mock-input">まんが本</div>
+          </div>
+          <div style="background:#fef2f2;padding:8px;border-radius:6px;margin-bottom:10px;">
+            <div class="text-xs" style="color:#dc2626;">
+              つかえるお金: ¥625 → のこり ¥325
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <div class="mock-btn mock-btn-full">やめる</div>
+            <div class="mock-btn mock-btn-primary mock-btn-full">おやにおねがい</div>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin:12px 0;">
+          <div style="background:#d1fae5;border-radius:8px;padding:10px;border:1px solid #34d399;">
+            <div style="font-size:16px;">✅</div>
+            <div style="font-size:12px;color:#065f46;font-weight:600;">おねがいしたよ！おやの承認をまってね</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Parent side -->
+      <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:8px;">親側: 承認/却下</div>
+      <div class="mock-phone">
+        <div class="mock-notch"></div>
+        <div class="mock-card">
+          <div class="mock-card-header">💸 おこづかい申請</div>
+
+          <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:10px;margin-bottom:8px;">
+            <div class="mock-row mb-6">
+              <div>
+                <div style="font-size:13px;font-weight:600;">🧒 花子</div>
+                <div class="text-xs">¥300 — まんが本</div>
+                <div class="text-xs" style="color:#9ca3af;">2026/04/07 14:30</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <div class="mock-btn mock-btn-primary mock-btn-full">✓ 承認する</div>
+              <div class="mock-btn mock-btn-danger mock-btn-full">✗ 却下する</div>
+            </div>
+            <div>
+              <div class="text-xs mb-4" style="font-weight:600;color:#9a3412;">却下理由（任意）:</div>
+              <div class="mock-input" style="font-size:10px;">来月まで待ちましょう</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result states -->
+        <div class="mock-card" style="border-color:#34d399;">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:12px;">🧒 次郎 ・ ¥500 — おかし</div>
+              <div class="text-xs">2026/04/06</div>
+            </div>
+            <span class="mock-badge" style="background:#d1fae5;color:#065f46;border-color:#34d399;">承認済</span>
+          </div>
+        </div>
+        <div class="mock-card" style="border-color:#fca5a5;">
+          <div class="mock-row">
+            <div>
+              <div style="font-size:12px;">🧒 花子 ・ ¥2,000 — ゲーム</div>
+              <div class="text-xs">2026/04/05</div>
+              <div class="text-xs" style="color:#dc2626;">理由: 高すぎます</div>
+            </div>
+            <span class="mock-badge" style="background:#fef2f2;color:#dc2626;border-color:#fca5a5;">却下</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Back -->
+    <div class="panel panel-back">
+      <div class="panel-label panel-label-back">裏側 — データフロー</div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin-bottom:10px;">子ども側 — 申請送信:</div>
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-desc">
+          バリデーション:<br>
+          - amount > 0<br>
+          - amount <= spending_balance<br>
+          - purpose が空でない
+        </div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-desc">
+          <code>POST /api/spend-request</code><br>
+          body: { userId, amount, purpose }
+        </div>
+      </div>
+
+      <div class="box-api">
+        API Route: /api/spend-request<br>
+        → INSERT INTO otetsudai_spend_requests<br>
+        &nbsp;&nbsp;(user_id, amount, purpose, status='pending')
+      </div>
+
+      <div class="flow-arrow">↓ 親に通知（リアルタイム）</div>
+
+      <div class="box-rpc">
+        Supabase Realtime subscription<br>
+        → 親ダッシュボードに即時反映
+      </div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin:20px 0 10px;">親側 — 承認時:</div>
+
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-desc">
+          <code>POST /api/spend-request/approve</code><br>
+          body: { requestId }
+        </div>
+      </div>
+
+      <div class="box-api">
+        トランザクション処理:<br>
+        1. UPDATE otetsudai_spend_requests SET status='approved'<br>
+        2. UPDATE otetsudai_wallets SET spending_balance -= amount<br>
+        3. INSERT otetsudai_transactions (type='spend', amount, description)
+      </div>
+
+      <div style="font-size:13px;font-weight:700;color:#065f46;margin:20px 0 10px;">親側 — 却下時:</div>
+
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-desc">
+          <code>POST /api/spend-request/reject</code><br>
+          body: { requestId, reason? }
+        </div>
+      </div>
+
+      <div class="box-api">
+        UPDATE otetsudai_spend_requests<br>
+        SET status='rejected', reject_reason=?<br>
+        → ウォレット残高は変更なし
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">ステータス遷移</div>
+        <div style="font-size:11px;color:#6b7280;">
+          <code>pending</code> → <code>approved</code> (承認)<br>
+          <code>pending</code> → <code>rejected</code> (却下)<br>
+          ※ 一度決定したステータスは変更不可
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 9: AIチャット                                         -->
+<!-- ============================================================ -->
+<div class="section" id="sec-ai-chat">
+  <div class="section-title">
+    <span>9.</span> AIチャット
+  </div>
+  <p class="section-route">フローティングウィジェット（全画面共通）</p>
+
+  <div class="split-panel">
+    <!-- Front -->
+    <div class="panel panel-front">
+      <div class="panel-label panel-label-front">表側 — UI</div>
+
+      <!-- Child Chat -->
+      <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:8px;">子ども向け: コインくん 🪙</div>
+      <div class="mock-phone" style="margin-bottom:20px;">
+        <div class="mock-notch"></div>
+        <div class="mock-header" style="background:#fef3c7;border-radius:8px;padding:8px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;">🪙 コインくん</div>
+            <div class="text-xs">おかねのことをきいてね！</div>
+          </div>
+          <div class="mock-btn mock-btn-sm">✕</div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <div style="background:#fef3c7;border-radius:12px 12px 12px 0;padding:10px;font-size:12px;max-width:80%;margin-bottom:6px;">
+            🪙 こんにちは！コインくんだよ〜！<br>
+            おかねのこと、なんでもきいてね！😊
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px;text-align:right;">
+          <div style="background:#ede9fe;border-radius:12px 12px 0 12px;padding:10px;font-size:12px;max-width:80%;display:inline-block;">
+            ちょきんって なんでするの？
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <div style="background:#fef3c7;border-radius:12px 12px 12px 0;padding:10px;font-size:12px;max-width:80%;">
+            🪙 いいしつもん！<br>
+            ちょきんは、おおきなものを<br>
+            かうために すこしずつ おかねを<br>
+            ためることだよ！🐷✨<br>
+            <br>
+            たとえば ゲームがほしいとき、<br>
+            まいにち すこしずつ ためると<br>
+            いつか かえるよ！💪
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <div class="mock-input" style="flex:1;font-size:11px;">メッセージをにゅうりょく...</div>
+          <div class="mock-btn mock-btn-primary mock-btn-sm">📤</div>
+        </div>
+
+        <div class="text-xs text-center mt-4" style="color:#d97706;">※ ひらがな中心 + 絵文字で親しみやすく</div>
+      </div>
+
+      <!-- Parent Chat -->
+      <div style="font-size:13px;font-weight:700;color:#5b21b6;margin-bottom:8px;">親向け: アドバイザー 💬</div>
+      <div class="mock-phone">
+        <div class="mock-notch"></div>
+        <div class="mock-header" style="background:#ede9fe;border-radius:8px;padding:8px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:14px;font-weight:700;">💬 アドバイザー</div>
+            <div class="text-xs">子育て・お金教育のご相談</div>
+          </div>
+          <div class="mock-btn mock-btn-sm">✕</div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <div style="background:#ede9fe;border-radius:12px 12px 12px 0;padding:10px;font-size:12px;max-width:80%;margin-bottom:6px;">
+            💬 こんにちは。おてつだいバンクの<br>
+            アドバイザーです。お子様の金融教育に<br>
+            ついて、お気軽にご相談ください。
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px;text-align:right;">
+          <div style="background:#faf5ff;border:1px solid #d8b4fe;border-radius:12px 12px 0 12px;padding:10px;font-size:12px;max-width:80%;display:inline-block;">
+            適切なおこづかいの金額は？
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <div style="background:#ede9fe;border-radius:12px 12px 12px 0;padding:10px;font-size:12px;max-width:80%;">
+            💬 お子様の年齢によって目安が異なります。<br><br>
+            <strong>小学1-2年:</strong> 週100-300円<br>
+            <strong>小学3-4年:</strong> 週300-500円<br>
+            <strong>小学5-6年:</strong> 週500-1,000円<br><br>
+            大切なのは金額よりも「自分で管理する経験」です。
+          </div>
+        </div>
+
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <div class="mock-input" style="flex:1;font-size:11px;">メッセージを入力...</div>
+          <div class="mock-btn mock-btn-primary mock-btn-sm">📤</div>
+        </div>
+
+        <div class="text-xs text-center mt-4" style="color:#5b21b6;">※ 丁寧語で専門的なアドバイス</div>
+      </div>
+
+      <!-- Floating button -->
+      <div style="margin-top:16px;text-align:center;">
+        <div style="display:inline-block;width:56px;height:56px;background:#7c3aed;border-radius:50%;color:#fff;font-size:28px;line-height:56px;box-shadow:0 4px 12px rgba(124,58,237,0.4);">💬</div>
+        <div class="text-xs mt-4">← 右下フローティングボタン</div>
+      </div>
+    </div>
+
+    <!-- Back -->
+    <div class="panel panel-back">
+      <div class="panel-label panel-label-back">裏側 — データフロー</div>
+
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-desc">
+          ユーザーがメッセージ送信<br>
+          <code>POST /api/chat</code><br>
+          body: { message, role, userId, history[] }
+        </div>
+      </div>
+
+      <div class="box-api">
+        API Route: <code>/api/chat</code><br>
+        → Anthropic Claude API 呼び出し
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-desc">
+          ロール別システムプロンプト切り替え:
+        </div>
+      </div>
+
+      <div class="box-rpc">
+        <strong>role === 'child' → コインくん 🪙</strong><br>
+        システムプロンプト:<br>
+        - キャラクター名: コインくん<br>
+        - ひらがな中心（漢字は最小限）<br>
+        - 絵文字を積極的に使用<br>
+        - お金の基本概念をやさしく説明<br>
+        - 励まし・ポジティブなトーン<br>
+        - 短い文章で回答
+      </div>
+
+      <div class="box-rpc">
+        <strong>role === 'parent' → アドバイザー 💬</strong><br>
+        システムプロンプト:<br>
+        - 丁寧語（です・ます調）<br>
+        - 子育て・金融教育の専門知識<br>
+        - 具体的な数値やデータを提示<br>
+        - おてつだいバンクの機能に即したアドバイス<br>
+        - 必要に応じて参考情報を提供
+      </div>
+
+      <div class="flow-arrow">↓</div>
+
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-desc">
+          <code>anthropic.messages.create({</code><br>
+          <code>&nbsp;&nbsp;model: 'claude-sonnet-4-20250514',</code><br>
+          <code>&nbsp;&nbsp;system: systemPrompt,</code><br>
+          <code>&nbsp;&nbsp;messages: history,</code><br>
+          <code>&nbsp;&nbsp;max_tokens: 500</code><br>
+          <code>})</code>
+        </div>
+      </div>
+
+      <div class="box-api">
+        ストリーミングレスポンス → クライアントにSSE配信<br>
+        → チャットUIにリアルタイム表示
+      </div>
+
+      <div style="margin-top:16px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">技術メモ</div>
+        <ul style="font-size:11px;color:#6b7280;padding-left:16px;">
+          <li>会話履歴: クライアントサイドのみ（DBに保存しない）</li>
+          <li>セッション終了で履歴リセット</li>
+          <li>max_tokens: 500（コスト管理）</li>
+          <li>レートリミット: 1分間に10回まで</li>
+          <li>不適切なコンテンツフィルタリング</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 10: DBスキーマ                                        -->
+<!-- ============================================================ -->
+<div class="section" id="sec-db-schema">
+  <div class="section-title">
+    <span>10.</span> DBスキーマ — 全9テーブル
+  </div>
+  <p class="section-route">Supabase PostgreSQL</p>
+
+  <div class="split-panel">
+    <!-- Left column: Tables 1-5 -->
+    <div class="panel panel-back" style="overflow-x:auto;">
+      <div class="panel-label panel-label-back">テーブル 1〜5</div>
+
+      <!-- Table 1 -->
+      <div class="table-name">1. otetsudai_families</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>家族ID</td></tr>
+        <tr><td>family_name</td><td>TEXT NOT NULL</td><td>家族名（例: 山田家）</td></tr>
+        <tr><td class="fk">created_by</td><td>UUID FK → auth.users</td><td>作成者（親）</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>作成日時</td></tr>
+      </table>
+
+      <!-- Table 2 -->
+      <div class="table-name">2. otetsudai_users</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>ユーザーID</td></tr>
+        <tr><td class="fk">family_id</td><td>UUID FK → families</td><td>所属家族</td></tr>
+        <tr><td class="fk">auth_id</td><td>UUID FK → auth.users</td><td>認証ID（親のみ）</td></tr>
+        <tr><td>name</td><td>TEXT NOT NULL</td><td>表示名</td></tr>
+        <tr><td>role</td><td>TEXT CHECK</td><td>'parent' | 'child'</td></tr>
+        <tr><td>pin_hash</td><td>TEXT</td><td>PIN（bcryptハッシュ、任意）</td></tr>
+        <tr><td>avatar_emoji</td><td>TEXT</td><td>アバター絵文字</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>作成日時</td></tr>
+      </table>
+
+      <!-- Table 3 -->
+      <div class="table-name">3. otetsudai_tasks</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>タスクID</td></tr>
+        <tr><td class="fk">family_id</td><td>UUID FK → families</td><td>所属家族</td></tr>
+        <tr><td>name</td><td>TEXT NOT NULL</td><td>タスク名</td></tr>
+        <tr><td>description</td><td>TEXT</td><td>説明（任意）</td></tr>
+        <tr><td>icon</td><td>TEXT</td><td>絵文字アイコン（自動割当）</td></tr>
+        <tr><td>reward</td><td>INTEGER NOT NULL</td><td>報酬額（円）</td></tr>
+        <tr><td>recurrence</td><td>TEXT CHECK</td><td>'once'|'daily'|'weekly'|'monthly'</td></tr>
+        <tr><td class="fk">assigned_to</td><td>UUID FK → users</td><td>担当（NULL=全員）</td></tr>
+        <tr><td>is_active</td><td>BOOLEAN DEFAULT true</td><td>有効フラグ</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>作成日時</td></tr>
+      </table>
+
+      <!-- Table 4 -->
+      <div class="table-name">4. otetsudai_task_logs</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>ログID</td></tr>
+        <tr><td class="fk">task_id</td><td>UUID FK → tasks</td><td>タスク</td></tr>
+        <tr><td class="fk">user_id</td><td>UUID FK → users</td><td>実行した子ども</td></tr>
+        <tr><td>status</td><td>TEXT CHECK</td><td>'pending'|'approved'|'rejected'</td></tr>
+        <tr><td>completed_at</td><td>TIMESTAMPTZ</td><td>完了報告日時</td></tr>
+        <tr><td>approved_at</td><td>TIMESTAMPTZ</td><td>承認日時</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>作成日時</td></tr>
+      </table>
+
+      <!-- Table 5 -->
+      <div class="table-name">5. otetsudai_wallets</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>ウォレットID</td></tr>
+        <tr><td class="fk">user_id</td><td>UUID FK → users</td><td>所有者（子ども）</td></tr>
+        <tr><td>balance</td><td>INTEGER DEFAULT 0</td><td>総残高</td></tr>
+        <tr><td>spending_balance</td><td>INTEGER DEFAULT 0</td><td>使える残高</td></tr>
+        <tr><td>saving_balance</td><td>INTEGER DEFAULT 0</td><td>貯金残高</td></tr>
+        <tr><td>split_ratio</td><td>INTEGER DEFAULT 50</td><td>貯蓄率（0-100%）</td></tr>
+        <tr><td>updated_at</td><td>TIMESTAMPTZ</td><td>更新日時</td></tr>
+      </table>
+    </div>
+
+    <!-- Right column: Tables 6-9 -->
+    <div class="panel panel-back" style="overflow-x:auto;">
+      <div class="panel-label panel-label-back">テーブル 6〜9</div>
+
+      <!-- Table 6 -->
+      <div class="table-name">6. otetsudai_transactions</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>取引ID</td></tr>
+        <tr><td class="fk">user_id</td><td>UUID FK → users</td><td>対象ユーザー</td></tr>
+        <tr><td class="fk">family_id</td><td>UUID FK → families</td><td>所属家族</td></tr>
+        <tr><td>type</td><td>TEXT CHECK</td><td>'earn'|'spend'</td></tr>
+        <tr><td>amount</td><td>INTEGER NOT NULL</td><td>金額</td></tr>
+        <tr><td>description</td><td>TEXT</td><td>説明（タスク名 or 用途）</td></tr>
+        <tr><td class="fk">task_log_id</td><td>UUID FK → task_logs</td><td>関連タスクログ（earn時）</td></tr>
+        <tr><td class="fk">spend_request_id</td><td>UUID FK → spend_requests</td><td>関連支出申請（spend時）</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>取引日時</td></tr>
+      </table>
+
+      <!-- Table 7 -->
+      <div class="table-name">7. otetsudai_spend_requests</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>申請ID</td></tr>
+        <tr><td class="fk">user_id</td><td>UUID FK → users</td><td>申請者（子ども）</td></tr>
+        <tr><td class="fk">family_id</td><td>UUID FK → families</td><td>所属家族</td></tr>
+        <tr><td>amount</td><td>INTEGER NOT NULL</td><td>希望金額</td></tr>
+        <tr><td>purpose</td><td>TEXT NOT NULL</td><td>使用目的</td></tr>
+        <tr><td>status</td><td>TEXT CHECK</td><td>'pending'|'approved'|'rejected'</td></tr>
+        <tr><td>reject_reason</td><td>TEXT</td><td>却下理由（任意）</td></tr>
+        <tr><td>decided_at</td><td>TIMESTAMPTZ</td><td>決定日時</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>申請日時</td></tr>
+      </table>
+
+      <!-- Table 8 -->
+      <div class="table-name">8. otetsudai_badges</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>バッジID</td></tr>
+        <tr><td class="fk">user_id</td><td>UUID FK → users</td><td>獲得者</td></tr>
+        <tr><td>badge_type</td><td>TEXT NOT NULL</td><td>バッジ種類</td></tr>
+        <tr><td>badge_emoji</td><td>TEXT NOT NULL</td><td>絵文字</td></tr>
+        <tr><td>badge_name</td><td>TEXT NOT NULL</td><td>表示名</td></tr>
+        <tr><td>awarded_at</td><td>TIMESTAMPTZ</td><td>獲得日時</td></tr>
+      </table>
+
+      <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px;margin:12px 0;">
+        <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px;">バッジ種類一覧</div>
+        <table style="font-size:11px;width:100%;border-collapse:collapse;">
+          <tr style="border-bottom:1px solid #fde68a;">
+            <td style="padding:4px;">🌟</td>
+            <td style="padding:4px;font-weight:600;">first_task</td>
+            <td style="padding:4px;">はじめてのおてつだい</td>
+            <td style="padding:4px;color:#92400e;">初回タスク完了</td>
+          </tr>
+          <tr style="border-bottom:1px solid #fde68a;">
+            <td style="padding:4px;">🔥</td>
+            <td style="padding:4px;font-weight:600;">streak_3</td>
+            <td style="padding:4px;">れんぞくチャレンジ</td>
+            <td style="padding:4px;color:#92400e;">3日連続完了</td>
+          </tr>
+          <tr style="border-bottom:1px solid #fde68a;">
+            <td style="padding:4px;">💰</td>
+            <td style="padding:4px;font-weight:600;">coins_1000</td>
+            <td style="padding:4px;">1000コインマスター</td>
+            <td style="padding:4px;color:#92400e;">累計1,000円獲得</td>
+          </tr>
+          <tr>
+            <td style="padding:4px;">🐷</td>
+            <td style="padding:4px;font-weight:600;">saving_goal</td>
+            <td style="padding:4px;">ちょきんマスター</td>
+            <td style="padding:4px;color:#92400e;">貯金目標達成</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Table 9 -->
+      <div class="table-name">9. otetsudai_saving_goals</div>
+      <table class="schema-table">
+        <tr><th>カラム</th><th>型</th><th>説明</th></tr>
+        <tr><td class="pk">id</td><td>UUID PK</td><td>目標ID</td></tr>
+        <tr><td class="fk">user_id</td><td>UUID FK → users</td><td>設定者（子ども）</td></tr>
+        <tr><td>goal_name</td><td>TEXT NOT NULL</td><td>目標名（例: ゲームソフト）</td></tr>
+        <tr><td>target_amount</td><td>INTEGER NOT NULL</td><td>目標金額</td></tr>
+        <tr><td>current_amount</td><td>INTEGER DEFAULT 0</td><td>現在の貯金額</td></tr>
+        <tr><td>is_active</td><td>BOOLEAN DEFAULT true</td><td>有効フラグ</td></tr>
+        <tr><td>achieved_at</td><td>TIMESTAMPTZ</td><td>達成日時</td></tr>
+        <tr><td>created_at</td><td>TIMESTAMPTZ</td><td>作成日時</td></tr>
+      </table>
+
+      <div style="margin-top:20px;padding:12px;background:#fff;border-radius:8px;border:1px solid #d1d5db;">
+        <div style="font-size:12px;font-weight:700;color:#6b7280;margin-bottom:6px;">テーブル関連図（簡略）</div>
+        <div style="font-size:11px;color:#6b7280;font-family:monospace;white-space:pre-wrap;line-height:1.8;">
+families ─┬── users ──┬── wallets
+          │           ├── task_logs
+          │           ├── transactions
+          │           ├── spend_requests
+          │           ├── badges
+          │           └── saving_goals
+          └── tasks ──── task_logs</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<footer class="site-footer">
+  おてつだいバンク v0.2 — Wireframe | Updated 2026-04-07<br>
+  <span class="text-xs">Tech Stack: Next.js 16 + Supabase + shadcn/ui + Anthropic Claude API</span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>おてつだいバンク — Mockup v0.2</title>
+<style>
+:root {
+  --amber-50: #fffbeb;
+  --amber-100: #fef3c7;
+  --amber-200: #fde68a;
+  --amber-300: #fcd34d;
+  --amber-400: #fbbf24;
+  --amber-500: #f59e0b;
+  --amber-600: #d97706;
+  --amber-700: #b45309;
+  --amber-800: #92400e;
+  --amber-900: #78350f;
+  --green-50: #ecfdf5;
+  --green-100: #d1fae5;
+  --green-200: #a7f3d0;
+  --green-400: #34d399;
+  --green-500: #10b981;
+  --green-600: #059669;
+  --green-700: #047857;
+  --violet-50: #f5f3ff;
+  --violet-100: #ede9fe;
+  --violet-400: #a78bfa;
+  --violet-500: #8b5cf6;
+  --violet-600: #7c3aed;
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --red-50: #fef2f2;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  --white: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-900);
+  line-height: 1.6;
+}
+
+/* ===== Control Bar ===== */
+.control-bar {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--gray-800);
+  color: var(--white);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.control-bar h1 {
+  font-size: 16px; font-weight: 700; white-space: nowrap; margin-right: 8px;
+}
+.control-bar .clock {
+  font-size: 12px; color: var(--gray-400); margin-right: auto; white-space: nowrap;
+}
+.btn-group { display: flex; gap: 4px; }
+.ctrl-btn {
+  padding: 6px 14px; border-radius: 8px; border: 1px solid var(--gray-600);
+  background: transparent; color: var(--gray-300); font-size: 13px;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  min-height: 36px;
+}
+.ctrl-btn:hover { background: var(--gray-700); color: var(--white); }
+.ctrl-btn.active { background: var(--amber-500); color: var(--white); border-color: var(--amber-500); }
+.page-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+.page-btn {
+  padding: 6px 12px; border-radius: 8px; border: 1px solid var(--gray-600);
+  background: transparent; color: var(--gray-300); font-size: 12px;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  min-height: 36px;
+}
+.page-btn:hover { background: var(--gray-700); }
+.page-btn.active { background: var(--amber-500); color: var(--white); border-color: var(--amber-500); }
+
+/* ===== Screen Container ===== */
+.screen-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ===== Split View ===== */
+.split-view {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+}
+body.front-only .split-view { grid-template-columns: 1fr; }
+body.front-only .back-panel { display: none; }
+
+/* ===== Browser Chrome ===== */
+.browser-frame {
+  border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-lg);
+  background: var(--white);
+}
+.browser-chrome {
+  background: var(--gray-100); padding: 10px 16px;
+  display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.browser-dots { display: flex; gap: 6px; }
+.browser-dots span {
+  width: 12px; height: 12px; border-radius: 50%;
+}
+.browser-dots span:nth-child(1) { background: #ef4444; }
+.browser-dots span:nth-child(2) { background: #f59e0b; }
+.browser-dots span:nth-child(3) { background: #22c55e; }
+.browser-url {
+  flex: 1; background: var(--white); border-radius: 6px;
+  padding: 4px 12px; font-size: 12px; color: var(--gray-500);
+  border: 1px solid var(--gray-200);
+}
+.browser-body { padding: 0; min-height: 500px; overflow-y: auto; max-height: 80vh; }
+.back-panel .browser-frame { border-color: var(--green-200); }
+.back-panel .browser-chrome { background: var(--green-50); border-bottom-color: var(--green-200); }
+.back-panel .browser-body { background: var(--green-50); padding: 20px; }
+.back-panel .browser-url { background: var(--green-100); }
+
+/* ===== Common UI Elements ===== */
+.card {
+  background: var(--white); border-radius: 16px; border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-sm); padding: 20px; margin-bottom: 16px;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 10px 20px; border-radius: 12px; border: none;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; min-height: 44px; min-width: 44px;
+  text-decoration: none;
+}
+.btn-amber { background: var(--amber-500); color: var(--white); }
+.btn-amber:hover { background: var(--amber-600); }
+.btn-outline {
+  background: transparent; border: 2px solid var(--amber-500);
+  color: var(--amber-700);
+}
+.btn-outline:hover { background: var(--amber-50); }
+.btn-green { background: var(--green-500); color: var(--white); }
+.btn-green:hover { background: var(--green-600); }
+.btn-blue { background: var(--blue-500); color: var(--white); }
+.btn-blue:hover { background: var(--blue-600); }
+.btn-violet { background: var(--violet-600); color: var(--white); }
+.btn-violet:hover { background: rgba(124,58,237,0.9); }
+.btn-red { background: var(--red-500); color: var(--white); }
+.btn-sm { padding: 6px 12px; font-size: 13px; min-height: 36px; border-radius: 8px; }
+
+.input {
+  width: 100%; padding: 10px 14px; border-radius: 10px;
+  border: 1px solid var(--gray-300); font-size: 15px;
+  outline: none; transition: border-color 0.2s;
+}
+.input:focus { border-color: var(--amber-500); }
+
+.common-header {
+  background: var(--white); padding: 14px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.common-header h2 { font-size: 18px; font-weight: 700; }
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--red-500); color: var(--white); font-size: 11px;
+  font-weight: 700; width: 22px; height: 22px; border-radius: 50%;
+  margin-left: 6px;
+}
+
+.section-title {
+  font-size: 16px; font-weight: 700; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ===== Back Panel Styles ===== */
+.flow-item {
+  background: var(--white); border-radius: 10px; padding: 12px 16px;
+  margin-bottom: 10px; border-left: 4px solid var(--green-500);
+  font-size: 13px; font-family: 'SF Mono', 'Fira Code', monospace;
+  line-height: 1.8;
+}
+.flow-item code {
+  background: var(--green-100); padding: 2px 6px; border-radius: 4px;
+  font-size: 12px;
+}
+.flow-arrow {
+  text-align: center; color: var(--green-600); font-size: 20px;
+  margin: 4px 0;
+}
+.flow-label {
+  font-weight: 700; color: var(--green-700); margin-bottom: 4px; font-size: 14px;
+}
+.flow-static {
+  text-align: center; color: var(--gray-500); font-size: 14px;
+  padding: 40px; font-style: italic;
+}
+
+/* ===== Screen-specific ===== */
+.landing-bg {
+  background: linear-gradient(135deg, var(--amber-50), #fff7ed);
+  min-height: 600px; padding: 40px 24px; text-align: center;
+}
+.landing-emoji { font-size: 72px; margin-bottom: 16px; }
+.landing-title { font-size: 36px; font-weight: 800; color: var(--amber-800); margin-bottom: 8px; }
+.landing-subtitle { font-size: 16px; color: var(--gray-600); margin-bottom: 32px; }
+.landing-buttons { display: flex; gap: 12px; justify-content: center; margin-bottom: 40px; }
+.feature-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+  max-width: 600px; margin: 0 auto 32px;
+}
+.feature-card {
+  background: var(--white); border-radius: 16px; padding: 20px;
+  border: 1px solid var(--amber-200); text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.feature-card .emoji { font-size: 32px; margin-bottom: 8px; }
+.feature-card .label { font-size: 14px; font-weight: 600; color: var(--amber-800); }
+.landing-footer { color: var(--amber-600); font-size: 14px; cursor: pointer; }
+
+.auth-card {
+  max-width: 400px; margin: 40px auto; padding: 32px;
+  background: var(--white); border-radius: 20px;
+  border: 1px solid var(--gray-200); box-shadow: var(--shadow-lg);
+}
+.auth-card .emoji { font-size: 48px; text-align: center; margin-bottom: 12px; }
+.auth-card h3 { text-align: center; font-size: 20px; margin-bottom: 20px; color: var(--gray-800); }
+.auth-card .input { margin-bottom: 12px; }
+.auth-card .btn { width: 100%; margin-top: 8px; }
+
+.child-row {
+  display: flex; gap: 8px; align-items: center; margin-bottom: 10px;
+}
+.child-row .input { flex: 1; }
+.child-row .pin-input { width: 100px; }
+
+.login-family-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.family-btn {
+  padding: 10px 16px; border-radius: 12px; border: 2px solid var(--amber-300);
+  background: var(--amber-50); cursor: pointer; font-size: 14px; font-weight: 600;
+  transition: all 0.2s; min-height: 44px;
+}
+.family-btn:hover, .family-btn.selected { background: var(--amber-500); color: var(--white); border-color: var(--amber-500); }
+.member-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.member-btn {
+  padding: 10px 16px; border-radius: 12px; border: 2px solid var(--gray-200);
+  background: var(--white); cursor: pointer; font-size: 14px;
+  transition: all 0.2s; min-height: 44px;
+}
+.member-btn:hover, .member-btn.selected { border-color: var(--amber-500); background: var(--amber-50); }
+.pin-display {
+  display: flex; gap: 12px; justify-content: center; margin: 16px 0;
+}
+.pin-dot {
+  width: 48px; height: 56px; border-radius: 12px; border: 2px solid var(--gray-300);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 700; letter-spacing: 4px;
+  background: var(--gray-50);
+}
+.pin-dot.filled { border-color: var(--amber-500); background: var(--amber-50); }
+
+/* Dashboard */
+.dash-content { padding: 20px; background: var(--gray-50); }
+.stat-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;
+}
+@media (min-width: 600px) { .stat-grid { grid-template-columns: repeat(4, 1fr); } }
+.stat-card {
+  background: var(--white); border-radius: 14px; padding: 16px;
+  border: 1px solid var(--gray-200); box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+.stat-card .stat-label { font-size: 12px; color: var(--gray-500); margin-bottom: 4px; }
+.stat-card .stat-value { font-size: 24px; font-weight: 800; }
+.stat-card.amber .stat-value { color: var(--amber-600); }
+.stat-card.green .stat-value { color: var(--green-600); }
+.stat-card.blue .stat-value { color: var(--blue-600); }
+.stat-card.violet .stat-value { color: var(--violet-600); }
+
+.pending-section {
+  background: var(--amber-50); border-radius: 16px; padding: 16px;
+  border: 1px solid var(--amber-200); margin-bottom: 16px;
+}
+.spend-section {
+  background: var(--blue-50); border-radius: 16px; padding: 16px;
+  border: 1px solid var(--blue-100); margin-bottom: 16px;
+}
+.task-item {
+  background: var(--white); border-radius: 12px; padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; border: 1px solid var(--gray-100);
+}
+.task-item .task-info { flex: 1; }
+.task-item .task-name { font-weight: 600; font-size: 14px; }
+.task-item .task-meta { font-size: 12px; color: var(--gray-500); }
+.task-item .task-amount { font-weight: 700; color: var(--amber-600); margin-right: 12px; }
+.task-actions { display: flex; gap: 6px; }
+.action-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: none;
+  cursor: pointer; font-size: 16px; display: flex; align-items: center;
+  justify-content: center; transition: all 0.2s;
+}
+.action-btn.approve { background: var(--green-100); color: var(--green-600); }
+.action-btn.approve:hover { background: var(--green-500); color: var(--white); }
+.action-btn.reject { background: var(--red-50); color: var(--red-500); }
+.action-btn.reject:hover { background: var(--red-500); color: var(--white); }
+
+.wallet-card {
+  background: var(--white); border-radius: 14px; padding: 16px;
+  border: 1px solid var(--gray-200); margin-bottom: 12px;
+}
+.wallet-card h4 { font-size: 15px; margin-bottom: 10px; }
+.split-bar {
+  height: 24px; border-radius: 12px; overflow: hidden;
+  display: flex; margin-bottom: 8px;
+}
+.split-bar .spending { background: var(--blue-400); }
+.split-bar .saving { background: var(--green-400); }
+.split-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--gray-500); margin-bottom: 8px; }
+.slider-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.slider-row input[type="range"] { flex: 1; accent-color: var(--violet-600); }
+.slider-row span { font-size: 12px; color: var(--violet-600); font-weight: 600; min-width: 60px; }
+
+/* Child Dashboard */
+.child-content { padding: 20px; background: var(--gray-50); }
+.badge-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.badge-chip {
+  background: var(--amber-100); color: var(--amber-800); padding: 6px 14px;
+  border-radius: 20px; font-size: 13px; font-weight: 600;
+}
+.piggy-card {
+  background: linear-gradient(135deg, var(--amber-50), #fefce8);
+  border-radius: 20px; padding: 24px; text-align: center;
+  border: 2px solid var(--amber-200); margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.piggy-emoji { font-size: 64px; display: inline-block; transform: scale(1.1); margin-bottom: 8px; }
+.piggy-total { font-size: 36px; font-weight: 800; color: var(--amber-800); margin-bottom: 12px; }
+.piggy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.piggy-cell {
+  background: rgba(255,255,255,0.7); border-radius: 12px; padding: 12px;
+  text-align: center;
+}
+.piggy-cell .label { font-size: 12px; color: var(--gray-600); }
+.piggy-cell .amount { font-size: 20px; font-weight: 700; }
+.piggy-cell .amount.blue { color: var(--blue-600); }
+.piggy-cell .amount.green { color: var(--green-600); }
+
+.goal-card {
+  background: var(--green-50); border-radius: 16px; padding: 16px;
+  border: 1px solid var(--green-200); margin-bottom: 16px;
+}
+.goal-title { font-size: 14px; font-weight: 600; color: var(--green-700); margin-bottom: 8px; }
+.progress-bar {
+  height: 20px; background: var(--gray-200); border-radius: 10px; overflow: hidden;
+  margin-bottom: 4px;
+}
+.progress-fill { height: 100%; background: var(--green-500); border-radius: 10px; transition: width 0.5s; }
+.progress-label { font-size: 12px; color: var(--gray-500); text-align: right; }
+
+.today-card {
+  background: var(--white); border-radius: 16px; padding: 16px;
+  border: 1px solid var(--amber-200); margin-bottom: 16px;
+}
+.daily-task {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid var(--gray-100);
+}
+.daily-task:last-child { border-bottom: none; }
+.daily-task .name { font-size: 15px; }
+.daily-task .done-btn {
+  padding: 6px 14px; border-radius: 10px; border: none;
+  background: var(--green-500); color: var(--white); font-size: 13px;
+  font-weight: 600; cursor: pointer; min-height: 36px;
+}
+
+.tabs { display: flex; gap: 0; margin-bottom: 0; }
+.tab {
+  flex: 1; padding: 10px; text-align: center; font-size: 14px;
+  font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent;
+  color: var(--gray-400); transition: all 0.2s; background: var(--white);
+}
+.tab.active { color: var(--amber-600); border-bottom-color: var(--amber-500); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.task-list-item {
+  display: flex; align-items: center; padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-100); background: var(--white);
+}
+.task-list-item .icon { font-size: 24px; margin-right: 12px; }
+.task-list-item .info { flex: 1; }
+.task-list-item .info .name { font-weight: 600; font-size: 14px; }
+.task-list-item .info .meta { font-size: 12px; color: var(--gray-400); }
+.task-list-item .amount { font-weight: 700; color: var(--amber-600); font-size: 14px; }
+.recurrence-badge {
+  font-size: 10px; background: var(--blue-100); color: var(--blue-600);
+  padding: 2px 8px; border-radius: 6px; margin-left: 6px;
+}
+
+.history-item {
+  display: flex; align-items: center; padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-100); background: var(--white);
+}
+.history-item .desc { flex: 1; font-size: 14px; }
+.history-item .date { font-size: 12px; color: var(--gray-400); margin-right: 12px; }
+.history-item .amount { font-weight: 700; font-size: 14px; }
+.history-item .amount.plus { color: var(--green-600); }
+.history-item .amount.minus { color: var(--red-500); }
+
+.rejected-notice {
+  background: var(--red-50); border-radius: 12px; padding: 14px 16px;
+  border: 1px solid #fecaca; margin-bottom: 16px; font-size: 14px;
+  color: #991b1b;
+}
+
+.spend-dialog {
+  background: var(--white); border-radius: 20px; padding: 24px;
+  border: 1px solid var(--gray-200); box-shadow: var(--shadow-lg);
+  max-width: 360px; margin: 16px auto;
+}
+.spend-dialog h4 { text-align: center; margin-bottom: 16px; font-size: 16px; }
+.spend-dialog .input { margin-bottom: 12px; }
+.spend-dialog .btn { width: 100%; }
+
+/* Chat Widget */
+.chat-widget-area { position: relative; min-height: 600px; background: var(--gray-50); padding: 20px; }
+.chat-fab {
+  position: absolute; bottom: 20px; right: 20px;
+  width: 56px; height: 56px; border-radius: 50%;
+  border: none; font-size: 24px; cursor: pointer;
+  box-shadow: var(--shadow-lg); display: flex;
+  align-items: center; justify-content: center;
+}
+.chat-fab.child { background: var(--amber-500); }
+.chat-fab.parent { background: var(--violet-600); color: var(--white); }
+.chat-panel {
+  position: absolute; bottom: 86px; right: 20px;
+  width: 350px; max-height: 480px;
+  background: var(--white); border-radius: 20px;
+  box-shadow: var(--shadow-lg); border: 1px solid var(--gray-200);
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.chat-header {
+  background: var(--amber-500); color: var(--white);
+  padding: 14px 18px; display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 15px;
+}
+.chat-header .online-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #4ade80;
+}
+.chat-messages { flex: 1; padding: 16px; overflow-y: auto; }
+.chat-msg { margin-bottom: 12px; max-width: 85%; }
+.chat-msg.assistant { margin-right: auto; }
+.chat-msg.user { margin-left: auto; }
+.chat-bubble {
+  padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5;
+}
+.chat-msg.assistant .chat-bubble {
+  background: var(--gray-100); color: var(--gray-800);
+  border-bottom-left-radius: 4px;
+}
+.chat-msg.user .chat-bubble {
+  background: var(--amber-500); color: var(--white);
+  border-bottom-right-radius: 4px;
+}
+.chat-suggestions {
+  display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 12px;
+}
+.suggestion-btn {
+  padding: 6px 12px; border-radius: 20px; border: 1px solid var(--amber-300);
+  background: var(--amber-50); color: var(--amber-700); font-size: 12px;
+  cursor: pointer; transition: all 0.2s;
+}
+.suggestion-btn:hover { background: var(--amber-100); }
+.chat-input-bar {
+  display: flex; gap: 8px; padding: 12px 16px;
+  border-top: 1px solid var(--gray-200);
+}
+.chat-input-bar input {
+  flex: 1; border: 1px solid var(--gray-200); border-radius: 20px;
+  padding: 8px 14px; font-size: 14px; outline: none;
+}
+.chat-input-bar button {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--amber-500); color: var(--white);
+  border: none; cursor: pointer; font-size: 16px;
+}
+
+/* Help page */
+.help-content { padding: 24px; background: var(--white); }
+.help-content h2 { font-size: 24px; text-align: center; margin-bottom: 24px; }
+.quick-start {
+  background: var(--amber-50); border-radius: 16px; padding: 20px;
+  border: 1px solid var(--amber-200); margin-bottom: 24px;
+}
+.step-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--amber-500);
+  color: var(--white); font-weight: 700; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.step-text { font-size: 14px; padding-top: 4px; }
+
+.help-section { margin-bottom: 24px; }
+.help-section h3 { font-size: 18px; margin-bottom: 12px; }
+.help-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0; border-bottom: 1px solid var(--gray-100);
+  font-size: 14px;
+}
+.help-item .emoji { font-size: 20px; }
+
+.faq-item { margin-bottom: 16px; }
+.faq-q {
+  font-weight: 700; font-size: 14px; color: var(--amber-800);
+  margin-bottom: 4px; cursor: pointer;
+}
+.faq-a { font-size: 14px; color: var(--gray-600); padding-left: 16px; }
+
+.reject-input {
+  margin-top: 6px; padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--gray-300); font-size: 12px; width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .split-view { grid-template-columns: 1fr; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .control-bar { padding: 8px 12px; }
+  .page-btns { gap: 2px; }
+  .chat-panel { width: 300px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Control Bar ===== -->
+<div class="control-bar">
+  <h1>おてつだいバンク — Mockup v0.2</h1>
+  <span class="clock" id="clock"></span>
+  <div class="btn-group">
+    <button class="ctrl-btn active" onclick="setView('both')" id="viewBoth">表側 + 裏側</button>
+    <button class="ctrl-btn" onclick="setView('front')" id="viewFront">表側のみ</button>
+  </div>
+  <div class="page-btns">
+    <button class="page-btn active" onclick="showScreen(0)" data-page="0">1. ランディング</button>
+    <button class="page-btn" onclick="showScreen(1)" data-page="1">2. サインアップ</button>
+    <button class="page-btn" onclick="showScreen(2)" data-page="2">3. ログイン</button>
+    <button class="page-btn" onclick="showScreen(3)" data-page="3">4. 親ダッシュ</button>
+    <button class="page-btn" onclick="showScreen(4)" data-page="4">5. 子どもダッシュ</button>
+    <button class="page-btn" onclick="showScreen(5)" data-page="5">6. AIチャット</button>
+    <button class="page-btn" onclick="showScreen(6)" data-page="6">7. ヘルプ</button>
+  </div>
+</div>
+
+<div class="screen-container">
+
+<!-- ========== Screen 1: ランディング ========== -->
+<div class="screen active" id="screen-0">
+  <div class="split-view">
+    <div class="front-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://otetsudai-bank.vercel.app/</div>
+        </div>
+        <div class="browser-body">
+          <div class="landing-bg">
+            <div class="landing-emoji">🏦</div>
+            <h1 class="landing-title">おてつだいバンク</h1>
+            <p class="landing-subtitle">お手伝い × マネー教育アプリ — BusyKid日本版</p>
+            <div class="landing-buttons">
+              <button class="btn btn-amber" style="font-size:18px; padding:14px 32px; box-shadow: var(--shadow-lg);">✨ はじめる</button>
+              <button class="btn btn-outline" style="font-size:18px; padding:14px 32px;">🔑 ログイン</button>
+            </div>
+            <div class="feature-grid">
+              <div class="feature-card">
+                <div class="emoji">📋</div>
+                <div class="label">おてつだいリスト</div>
+              </div>
+              <div class="feature-card">
+                <div class="emoji">🐷</div>
+                <div class="label">ちょきんばこ</div>
+              </div>
+              <div class="feature-card">
+                <div class="emoji">✅</div>
+                <div class="label">おやが承認</div>
+              </div>
+            </div>
+            <div class="landing-footer">📖 つかいかた</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="back-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">裏側: データフロー</div>
+        </div>
+        <div class="browser-body">
+          <div class="flow-static">静的ページ — API通信なし</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Screen 2: サインアップ ========== -->
+<div class="screen" id="screen-1">
+  <div class="split-view">
+    <div class="front-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://otetsudai-bank.vercel.app/signup</div>
+        </div>
+        <div class="browser-body" style="background: var(--gray-50); padding: 20px;">
+          <div class="auth-card">
+            <div class="emoji">✨</div>
+            <h3>おてつだいバンクをはじめよう</h3>
+            <p style="text-align:center; font-size:13px; color:var(--gray-400); margin-bottom:16px;">Step 1 / 2</p>
+            <input class="input" placeholder="メールアドレス" type="email">
+            <input class="input" placeholder="パスワード" type="password">
+            <button class="btn btn-amber">つぎへ →</button>
+          </div>
+
+          <div class="auth-card" style="margin-top:24px; border: 2px dashed var(--amber-300);">
+            <p style="text-align:center; font-size:13px; color:var(--gray-400); margin-bottom:8px;">Step 2 / 2</p>
+            <input class="input" placeholder="ファミリーネーム（例：やまだ家）">
+            <input class="input" placeholder="おやの名前">
+            <button class="btn btn-amber">登録する</button>
+          </div>
+
+          <div style="margin-top:32px; border-top: 2px dashed var(--gray-300); padding-top:24px;">
+            <div class="browser-frame" style="max-width:400px; margin: 0 auto;">
+              <div class="browser-chrome">
+                <div class="browser-dots"><span></span><span></span><span></span></div>
+                <div class="browser-url">.../signup/children</div>
+              </div>
+              <div class="browser-body" style="padding: 24px; background: var(--gray-50);">
+                <div style="text-align:center; margin-bottom:16px;">
+                  <div style="font-size:48px;">🧒</div>
+                  <h3 style="font-size:18px; color:var(--gray-800);">おこさまを登録しよう</h3>
+                </div>
+                <div class="child-row">
+                  <input class="input" placeholder="おこさまの名前" value="はなこ">
+                  <input class="input pin-input" placeholder="PIN" value="1234" type="password">
+                </div>
+                <div class="child-row">
+                  <input class="input" placeholder="おこさまの名前" value="たろう">
+                  <input class="input pin-input" placeholder="PIN" value="5678" type="password">
+                </div>
+                <button style="width:100%; padding:10px; border:2px dashed var(--gray-300); border-radius:12px; background:transparent; color:var(--gray-400); font-size:14px; cursor:pointer; margin-bottom:12px; min-height:44px;">＋ おこさまを追加</button>
+                <button class="btn btn-amber" style="width:100%;">かんりょう！🎉</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="back-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">裏側: データフロー</div>
+        </div>
+        <div class="browser-body">
+          <div class="flow-item">
+            <div class="flow-label">1. 認証</div>
+            <code>supabase.auth.signUp()</code><br>
+            email + password → Supabase Auth
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">2. ファミリー作成</div>
+            <code>INSERT INTO otetsudai_families</code><br>
+            { name: "やまだ家" }
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">3. 親ユーザー作成</div>
+            <code>INSERT INTO otetsudai_users</code><br>
+            { role: "parent", family_id, name }
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">4. 子どもユーザー作成</div>
+            <code>INSERT INTO otetsudai_users</code><br>
+            { role: "child", pin_hash, family_id } × N人
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">5. ウォレット初期化</div>
+            <code>INSERT INTO otetsudai_wallets</code><br>
+            { user_id, balance: 0, split_ratio: 30 } × N人
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Screen 3: ログイン ========== -->
+<div class="screen" id="screen-2">
+  <div class="split-view">
+    <div class="front-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://otetsudai-bank.vercel.app/login</div>
+        </div>
+        <div class="browser-body" style="background: var(--gray-50); padding: 20px;">
+          <div class="auth-card">
+            <div class="emoji">🏦</div>
+            <h3>ログイン</h3>
+
+            <p style="font-size:13px; color:var(--gray-500); margin-bottom:8px;">おうちを選んでね</p>
+            <div class="login-family-btns">
+              <button class="family-btn selected">🏠 やまだ家</button>
+              <button class="family-btn">🏠 たなか家</button>
+            </div>
+
+            <p style="font-size:13px; color:var(--gray-500); margin-bottom:8px;">だれ？</p>
+            <div class="member-btns">
+              <button class="member-btn selected">👨‍👩‍👧‍👦 山田太郎</button>
+              <button class="member-btn">🧒 はなこ</button>
+              <button class="member-btn">🧒 たろう</button>
+            </div>
+
+            <p style="font-size:13px; color:var(--gray-500); margin-bottom:8px;">PINをいれてね</p>
+            <div class="pin-display">
+              <div class="pin-dot filled">●</div>
+              <div class="pin-dot filled">●</div>
+              <div class="pin-dot">　</div>
+              <div class="pin-dot">　</div>
+            </div>
+
+            <button class="btn btn-amber" style="width:100%; margin-top:16px;">ログイン</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="back-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">裏側: データフロー</div>
+        </div>
+        <div class="browser-body">
+          <div class="flow-item">
+            <div class="flow-label">1. ファミリー一覧取得</div>
+            <code>SELECT * FROM otetsudai_families</code><br>
+            → ファミリー選択ボタン表示
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">2. メンバー一覧取得</div>
+            <code>SELECT * FROM otetsudai_users WHERE family_id = ?</code><br>
+            → メンバーボタン表示
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">3. PIN照合</div>
+            <code>PIN check (client-side)</code><br>
+            入力PIN → bcrypt比較
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">4. セッション保存</div>
+            <code>localStorage.setItem('session', ...)</code><br>
+            { userId, role, familyId, name }
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">5. リダイレクト</div>
+            role === 'parent' → <code>/parent</code><br>
+            role === 'child' → <code>/child/[childId]</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Screen 4: 親ダッシュボード ========== -->
+<div class="screen" id="screen-3">
+  <div class="split-view">
+    <div class="front-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://otetsudai-bank.vercel.app/parent</div>
+        </div>
+        <div class="browser-body">
+          <div class="common-header">
+            <h2>🏦 おやダッシュボード <span class="badge">3</span></h2>
+            <button class="btn btn-sm btn-amber">📋 タスク管理</button>
+          </div>
+          <div class="dash-content">
+            <!-- Stats -->
+            <div class="stat-grid">
+              <div class="stat-card amber">
+                <div class="stat-label">承認済み</div>
+                <div class="stat-value">12</div>
+              </div>
+              <div class="stat-card green">
+                <div class="stat-label">総獲得</div>
+                <div class="stat-value">¥5,400</div>
+              </div>
+              <div class="stat-card blue">
+                <div class="stat-label">今週の件数</div>
+                <div class="stat-value">5</div>
+              </div>
+              <div class="stat-card violet">
+                <div class="stat-label">今週の支払い</div>
+                <div class="stat-value">¥2,100</div>
+              </div>
+            </div>
+
+            <!-- Pending Tasks -->
+            <div class="pending-section">
+              <div class="section-title">⏳ 承認待ちタスク</div>
+              <div class="task-item">
+                <div class="task-info">
+                  <div class="task-name">🍽️ 食器洗い</div>
+                  <div class="task-meta">はなこ・4/7 15:30</div>
+                </div>
+                <div class="task-amount">¥100</div>
+                <div class="task-actions">
+                  <button class="action-btn approve">✓</button>
+                  <button class="action-btn reject">✗</button>
+                </div>
+              </div>
+              <div class="task-item">
+                <div class="task-info">
+                  <div class="task-name">👕 洗濯物たたみ</div>
+                  <div class="task-meta">たろう・4/7 14:00</div>
+                </div>
+                <div class="task-amount">¥150</div>
+                <div class="task-actions">
+                  <button class="action-btn approve">✓</button>
+                  <button class="action-btn reject">✗</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Spend Requests -->
+            <div class="spend-section">
+              <div class="section-title">💸 おつかいリクエスト</div>
+              <div class="task-item">
+                <div class="task-info">
+                  <div class="task-name">¥500 おかしをかいたい</div>
+                  <div class="task-meta">はなこ・4/7 10:00</div>
+                </div>
+                <div class="task-actions">
+                  <button class="action-btn approve">✓</button>
+                  <button class="action-btn reject">✗</button>
+                </div>
+              </div>
+              <input class="reject-input" placeholder="却下理由を入力...">
+            </div>
+
+            <!-- Child Wallets -->
+            <div class="section-title">👛 おこさまの残高</div>
+
+            <div class="wallet-card">
+              <h4>🧒 はなこ — ¥1,250</h4>
+              <div class="split-bar">
+                <div class="spending" style="width:70%"></div>
+                <div class="saving" style="width:30%"></div>
+              </div>
+              <div class="split-labels">
+                <span>💳 つかえる: ¥870</span>
+                <span>🏦 ちょきん: ¥380</span>
+              </div>
+              <div class="slider-row">
+                <span>ちょきん比率</span>
+                <input type="range" min="0" max="100" value="30">
+                <span>30%</span>
+              </div>
+              <button class="btn btn-sm btn-violet" style="margin-top:8px;">⚙️ 分割比率を変更</button>
+            </div>
+
+            <div class="wallet-card">
+              <h4>🧒 たろう — ¥800</h4>
+              <div class="split-bar">
+                <div class="spending" style="width:70%"></div>
+                <div class="saving" style="width:30%"></div>
+              </div>
+              <div class="split-labels">
+                <span>💳 つかえる: ¥560</span>
+                <span>🏦 ちょきん: ¥240</span>
+              </div>
+              <div class="slider-row">
+                <span>ちょきん比率</span>
+                <input type="range" min="0" max="100" value="30">
+                <span>30%</span>
+              </div>
+              <button class="btn btn-sm btn-violet" style="margin-top:8px;">⚙️ 分割比率を変更</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="back-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">裏側: データフロー</div>
+        </div>
+        <div class="browser-body">
+          <div class="flow-item">
+            <div class="flow-label">初期ロード（5並列クエリ）</div>
+            <code>SELECT * FROM otetsudai_users WHERE family_id = ?</code><br>
+            <code>SELECT * FROM otetsudai_wallets WHERE user_id IN (?)</code><br>
+            <code>SELECT * FROM otetsudai_task_logs WHERE status = 'pending'</code><br>
+            <code>SELECT * FROM otetsudai_task_logs WHERE status = 'approved'</code><br>
+            <code>SELECT * FROM otetsudai_spend_requests WHERE status = 'pending'</code>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">タスク承認</div>
+            <code>UPDATE otetsudai_task_logs SET status = 'approved'</code><br>
+            → ウォレット更新:<br>
+            <code>UPDATE otetsudai_wallets SET balance = balance + amount</code><br>
+            → トランザクション記録:<br>
+            <code>INSERT INTO otetsudai_transactions</code><br>
+            { type: 'earn', amount, task_id }
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">タスク却下</div>
+            <code>UPDATE otetsudai_task_logs SET status = 'rejected'</code>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">支出リクエスト却下</div>
+            <code>UPDATE otetsudai_spend_requests SET status = 'rejected', reason = ?</code><br>
+            → 却下理由が子どもに表示される
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">分割比率変更</div>
+            <code>UPDATE otetsudai_wallets SET split_ratio = ?</code><br>
+            → spending / saving の再計算
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Screen 5: 子どもダッシュボード ========== -->
+<div class="screen" id="screen-4">
+  <div class="split-view">
+    <div class="front-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://otetsudai-bank.vercel.app/child/hanako-123</div>
+        </div>
+        <div class="browser-body">
+          <div class="common-header">
+            <h2>🧒 はなこ のバンク</h2>
+          </div>
+          <div class="child-content">
+            <!-- Badges -->
+            <div class="badge-row">
+              <span class="badge-chip">🌟 はじめて</span>
+              <span class="badge-chip">🔥 3日連続</span>
+            </div>
+
+            <!-- Rejected notice -->
+            <div class="rejected-notice">
+              ❌ 却下されたリクエスト: ¥2,000 ゲーム → おかねがたりないよ
+            </div>
+
+            <!-- Piggy Bank -->
+            <div class="piggy-card">
+              <div class="piggy-emoji">🐷✨</div>
+              <div class="piggy-total">¥1,250</div>
+              <div class="piggy-grid">
+                <div class="piggy-cell">
+                  <div class="label">💳 つかえるお金</div>
+                  <div class="amount blue">¥870</div>
+                  <button class="btn btn-sm btn-blue" style="margin-top:8px;">🛒 つかう</button>
+                </div>
+                <div class="piggy-cell">
+                  <div class="label">🏦 ちょきん</div>
+                  <div class="amount green">¥380</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Saving Goal -->
+            <div class="goal-card">
+              <div class="goal-title">🎯 貯金目標: ゲームソフト ¥5,000</div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 7.6%;"></div>
+              </div>
+              <div class="progress-label">7.6% (¥380 / ¥5,000)</div>
+            </div>
+
+            <!-- Today's Tasks -->
+            <div class="today-card">
+              <div class="section-title">☀️ きょうやること</div>
+              <div class="daily-task">
+                <span class="name">🍽️ 食器洗い</span>
+                <button class="done-btn">できた！</button>
+              </div>
+              <div class="daily-task">
+                <span class="name">👕 洗濯物たたみ</span>
+                <button class="done-btn">できた！</button>
+              </div>
+              <div class="daily-task">
+                <span class="name">👟 靴揃え</span>
+                <button class="done-btn">できた！</button>
+              </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="card" style="padding:0; overflow:hidden;">
+              <div class="tabs">
+                <div class="tab active" onclick="switchTab(this, 'tasks-tab')">📋 おてつだい</div>
+                <div class="tab" onclick="switchTab(this, 'history-tab')">📜 履歴</div>
+              </div>
+              <div class="tab-content active" id="tasks-tab">
+                <div class="task-list-item">
+                  <span class="icon">🍽️</span>
+                  <div class="info">
+                    <div class="name">食器洗い <span class="recurrence-badge">毎日</span></div>
+                    <div class="meta">食事のあと食器をあらう</div>
+                  </div>
+                  <span class="amount">¥100</span>
+                </div>
+                <div class="task-list-item">
+                  <span class="icon">👕</span>
+                  <div class="info">
+                    <div class="name">洗濯物たたみ <span class="recurrence-badge">毎日</span></div>
+                    <div class="meta">きれいにたたんでしまう</div>
+                  </div>
+                  <span class="amount">¥150</span>
+                </div>
+                <div class="task-list-item">
+                  <span class="icon">👟</span>
+                  <div class="info">
+                    <div class="name">靴揃え <span class="recurrence-badge">毎日</span></div>
+                    <div class="meta">玄関のくつをそろえる</div>
+                  </div>
+                  <span class="amount">¥50</span>
+                </div>
+                <div class="task-list-item">
+                  <span class="icon">🧹</span>
+                  <div class="info">
+                    <div class="name">部屋の掃除 <span class="recurrence-badge">週1</span></div>
+                    <div class="meta">じぶんの部屋をきれいにする</div>
+                  </div>
+                  <span class="amount">¥300</span>
+                </div>
+                <div class="task-list-item">
+                  <span class="icon">🐕</span>
+                  <div class="info">
+                    <div class="name">犬の散歩</div>
+                    <div class="meta">ポチをおさんぽに連れていく</div>
+                  </div>
+                  <span class="amount">¥200</span>
+                </div>
+              </div>
+              <div class="tab-content" id="history-tab">
+                <div class="history-item">
+                  <span class="desc">🍽️ 食器洗い</span>
+                  <span class="date">4/7</span>
+                  <span class="amount plus">+¥100</span>
+                </div>
+                <div class="history-item">
+                  <span class="desc">👕 洗濯物たたみ</span>
+                  <span class="date">4/6</span>
+                  <span class="amount plus">+¥150</span>
+                </div>
+                <div class="history-item">
+                  <span class="desc">🛒 おかし購入</span>
+                  <span class="date">4/5</span>
+                  <span class="amount minus">-¥200</span>
+                </div>
+                <div class="history-item">
+                  <span class="desc">👟 靴揃え</span>
+                  <span class="date">4/5</span>
+                  <span class="amount plus">+¥50</span>
+                </div>
+                <div class="history-item">
+                  <span class="desc">🧹 部屋の掃除</span>
+                  <span class="date">4/4</span>
+                  <span class="amount plus">+¥300</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Spend Dialog -->
+            <div class="spend-dialog">
+              <h4>🛒 おかいものリクエスト</h4>
+              <input class="input" placeholder="いくら？（例：500）" type="number">
+              <input class="input" placeholder="なにをかいたい？">
+              <button class="btn btn-blue">おやにおねがいする</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="back-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">裏側: データフロー</div>
+        </div>
+        <div class="browser-body">
+          <div class="flow-item">
+            <div class="flow-label">初期ロード（6並列クエリ）</div>
+            <code>SELECT * FROM otetsudai_tasks WHERE family_id = ?</code><br>
+            <code>SELECT * FROM otetsudai_wallets WHERE user_id = ?</code><br>
+            <code>SELECT * FROM otetsudai_transactions WHERE user_id = ? ORDER BY created_at DESC</code><br>
+            <code>SELECT * FROM otetsudai_spend_requests WHERE user_id = ?</code><br>
+            <code>SELECT * FROM otetsudai_badges WHERE user_id = ?</code><br>
+            <code>SELECT * FROM otetsudai_saving_goals WHERE user_id = ?</code>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">「できた！」ボタン</div>
+            <code>handleComplete(taskId, childId)</code><br>
+            → <code>INSERT INTO otetsudai_task_logs</code><br>
+            { task_id, user_id, status: 'pending' }<br>
+            → <code>checkAndAwardBadges(childId)</code><br>
+            連続日数チェック、初回完了チェック
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">「つかう」リクエスト</div>
+            <code>POST /api/spend-request</code><br>
+            { userId, amount, purpose }<br>
+            → <code>INSERT INTO otetsudai_spend_requests</code><br>
+            { status: 'pending', amount, purpose }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Screen 6: AIチャット ========== -->
+<div class="screen" id="screen-5">
+  <div class="split-view">
+    <div class="front-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://otetsudai-bank.vercel.app/child/hanako-123 (フローティングウィジェット)</div>
+        </div>
+        <div class="browser-body">
+          <div class="chat-widget-area">
+            <p style="text-align:center; color:var(--gray-400); padding-top:40px; font-size:14px;">（ページコンテンツの上に重なるウィジェット）</p>
+
+            <!-- Parent FAB -->
+            <div style="position:absolute; bottom:20px; left:20px;">
+              <button class="chat-fab parent" style="position:static;">💬</button>
+              <p style="font-size:11px; color:var(--gray-400); text-align:center; margin-top:4px;">親用</p>
+            </div>
+
+            <!-- Child Chat Panel -->
+            <div class="chat-panel">
+              <div class="chat-header">
+                🪙 コインくん <span class="online-dot"></span>
+              </div>
+              <div class="chat-messages">
+                <div class="chat-msg assistant">
+                  <div class="chat-bubble">こんにちは！🪙 コインくんだよ。<br>なんでもきいてね！</div>
+                </div>
+                <div class="chat-msg user">
+                  <div class="chat-bubble">おてつだいのコツをおしえて</div>
+                </div>
+                <div class="chat-msg assistant">
+                  <div class="chat-bubble">いいしつもんだね！✨<br><br>おてつだいのコツは3つあるよ：<br><br>1️⃣ まいにちおなじ時間にやる ⏰<br>2️⃣ さいしょはかんたんなものから 🌱<br>3️⃣ おわったら「できた！」ボタン 🎉<br><br>がんばってね！💪</div>
+                </div>
+              </div>
+              <div class="chat-suggestions">
+                <button class="suggestion-btn">おてつだいのコツ</button>
+                <button class="suggestion-btn">ちょきんってなに？</button>
+              </div>
+              <div class="chat-input-bar">
+                <input placeholder="メッセージを入力...">
+                <button>↑</button>
+              </div>
+            </div>
+
+            <!-- Child FAB -->
+            <button class="chat-fab child">🪙</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="back-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">裏側: データフロー</div>
+        </div>
+        <div class="browser-body">
+          <div class="flow-item">
+            <div class="flow-label">APIリクエスト</div>
+            <code>POST /api/chat</code><br>
+            { message: "おてつだいのコツをおしえて", role: "child" }
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">Anthropic API呼び出し</div>
+            <code>Anthropic Claude claude-sonnet-4-20250514</code><br>
+            model: claude-sonnet-4-20250514<br>
+            max_tokens: 500
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">子ども用システムプロンプト</div>
+            「コインくん」キャラクター設定：<br>
+            ・やさしいひらがな中心<br>
+            ・絵文字を適度に使う<br>
+            ・お金の教育を楽しく<br>
+            ・年齢に合わせた説明
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-item">
+            <div class="flow-label">親用システムプロンプト</div>
+            「AIアドバイザー」設定：<br>
+            ・マネー教育のアドバイス<br>
+            ・タスク設定のヒント<br>
+            ・年齢別おすすめ額<br>
+            ・丁寧語で対応
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Screen 7: ヘルプ ========== -->
+<div class="screen" id="screen-6">
+  <div class="split-view">
+    <div class="front-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">https://otetsudai-bank.vercel.app/help</div>
+        </div>
+        <div class="browser-body">
+          <div class="help-content">
+            <h2>📖 つかいかた</h2>
+
+            <!-- Quick Start -->
+            <div class="quick-start">
+              <div class="section-title">🚀 かんたんスタート</div>
+              <div class="step-row">
+                <div class="step-num">1</div>
+                <div class="step-text"><strong>アカウントをつくろう</strong> — メールアドレスとパスワードで登録。おこさまのなまえとPINを設定します。</div>
+              </div>
+              <div class="step-row">
+                <div class="step-num">2</div>
+                <div class="step-text"><strong>おてつだいを設定</strong> — おやがタスクと金額を登録。毎日・毎週の繰り返しも設定できます。</div>
+              </div>
+              <div class="step-row">
+                <div class="step-num">3</div>
+                <div class="step-text"><strong>おてつだい開始！</strong> — おこさまが「できた！」を押し、おやが承認すると報酬が入ります。</div>
+              </div>
+            </div>
+
+            <!-- Child Section -->
+            <div class="help-section">
+              <h3>🧒 おこさま向け機能</h3>
+              <div class="help-item"><span class="emoji">🐷</span> ちょきんばこ — おかねがたまるようすが見えるよ</div>
+              <div class="help-item"><span class="emoji">📋</span> おてつだいリスト — きょうやることがわかるよ</div>
+              <div class="help-item"><span class="emoji">✅</span> できた！ボタン — おてつだいがおわったらおすボタン</div>
+              <div class="help-item"><span class="emoji">📜</span> りれき — いままでのおてつだいとおかねの記録</div>
+              <div class="help-item"><span class="emoji">🪙</span> コインくん — わからないことはAIに聞いてね</div>
+            </div>
+
+            <!-- Parent Section -->
+            <div class="help-section">
+              <h3>👨‍👩‍👧‍👦 おや向け機能</h3>
+              <div class="help-item"><span class="emoji">⏳</span> 承認待ち — おこさまのタスク完了を確認・承認</div>
+              <div class="help-item"><span class="emoji">💰</span> 残高 — おこさまの残高と貯金/使う比率を管理</div>
+              <div class="help-item"><span class="emoji">📋</span> タスク管理 — おてつだいの追加・編集・削除</div>
+              <div class="help-item"><span class="emoji">💬</span> AIアドバイザー — マネー教育のコツをAIに相談</div>
+            </div>
+
+            <!-- FAQ -->
+            <div class="help-section">
+              <h3>❓ よくあるしつもん</h3>
+              <div class="faq-item">
+                <div class="faq-q">Q. おこさまは何人まで登録できますか？</div>
+                <div class="faq-a">A. 1ファミリーにつき最大10人まで登録できます。</div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-q">Q. PINを忘れた場合は？</div>
+                <div class="faq-a">A. おやアカウントからPINをリセットできます。設定画面から変更してください。</div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-q">Q. 貯金と使えるお金の比率は変えられますか？</div>
+                <div class="faq-a">A. はい。おやダッシュボードのスライダーで自由に変更できます。</div>
+              </div>
+              <div class="faq-item">
+                <div class="faq-q">Q. 実際のお金のやり取りはありますか？</div>
+                <div class="faq-a">A. アプリ内のポイントとして管理されます。実際の受け渡しはご家庭で行ってください。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="back-panel">
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <div class="browser-dots"><span></span><span></span><span></span></div>
+          <div class="browser-url">裏側: データフロー</div>
+        </div>
+        <div class="browser-body">
+          <div class="flow-static">静的ページ — API通信なし</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /screen-container -->
+
+<script>
+// ===== Screen Navigation =====
+function showScreen(index) {
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.page-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('screen-' + index).classList.add('active');
+  document.querySelector('[data-page="' + index + '"]').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== View Toggle =====
+function setView(mode) {
+  var both = document.getElementById('viewBoth');
+  var front = document.getElementById('viewFront');
+  if (mode === 'front') {
+    document.body.classList.add('front-only');
+    both.classList.remove('active');
+    front.classList.add('active');
+  } else {
+    document.body.classList.remove('front-only');
+    both.classList.add('active');
+    front.classList.remove('active');
+  }
+}
+
+// ===== Tab Switching =====
+function switchTab(tabEl, contentId) {
+  var parent = tabEl.closest('.card');
+  parent.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  parent.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
+  tabEl.classList.add('active');
+  document.getElementById(contentId).classList.add('active');
+}
+
+// ===== Auto-updating Clock =====
+function updateClock() {
+  var now = new Date();
+  function pad(n) { return String(n).padStart(2, '0'); }
+  var str = now.getFullYear() + '/' + pad(now.getMonth() + 1) + '/' + pad(now.getDate())
+    + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+  document.getElementById('clock').textContent = str;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ===== Keyboard navigation =====
+document.addEventListener('keydown', function(e) {
+  if (e.key >= '1' && e.key <= '7') {
+    showScreen(parseInt(e.key) - 1);
+  }
+});
+</script>
+
+</body>
+</html>
