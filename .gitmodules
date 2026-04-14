@@ -1,0 +1,12 @@
+[submodule "ai-strategy-agent"]
+	path = ai-strategy-agent
+	url = https://github.com/TK20260401/ai-strategy-agent.git
+[submodule "otetsudai-bank"]
+	path = otetsudai-bank
+	url = https://github.com/TK20260401/otetsudai-bank.git
+[submodule "report-hub"]
+	path = report-hub
+	url = https://github.com/TK20260401/report-hub.git
+[submodule "roi-simulator"]
+	path = roi-simulator
+	url = https://github.com/TK20260401/roi-simulator.git
