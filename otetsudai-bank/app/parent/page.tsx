@@ -956,12 +956,12 @@ export default function ParentDashboard() {
         ) : (
           <Card className="border-red-300 bg-red-50">
             <CardContent className="p-4">
-              <p className="text-sm font-semibold text-red-600 mb-2">⚠️ アカウントさくじょ</p>
+              <p className="text-sm font-semibold text-red-600 mb-2">⚠️ アカウント<R k="削除" r="さくじょ" /></p>
               <p className="text-xs text-red-500 mb-3">
-                さくじょすると、かぞくの ぜんデータ（クエスト・ウォレット・りれき）が なくなります。このそうさは とりけせません。
+                <R k="削除" r="さくじょ" />すると、<R k="家族" r="かぞく" />の <R k="全" r="ぜん" />データ（クエスト・ウォレット・<R k="履歴" r="りれき" />）が なくなります。この<R k="操作" r="そうさ" />は <R k="取" r="と" />り<R k="消" r="け" />せません。
               </p>
               <p className="text-xs text-muted-foreground mb-2">
-                かくにんのため「削除する」と にゅうりょく してください：
+                <R k="確認" r="かくにん" />のため「<R k="削除" r="さくじょ" />する」と <R k="入力" r="にゅうりょく" /> してください：
               </p>
               <Input
                 value={deleteConfirmText}
