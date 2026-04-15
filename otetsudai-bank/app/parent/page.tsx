@@ -18,6 +18,7 @@ import { ApprovalDialog } from "@/components/approval-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { R } from "@/components/ruby-text";
 
 /** メールアドレス形式なら表示名として不適切と判断 */
 function displayName(name: string | undefined | null): string {
@@ -400,13 +401,13 @@ export default function ParentDashboard() {
               ようこそ クエストマスター！
             </p>
             <p className="text-sm text-muted-foreground">
-              まずは おこさまを 追加して<br />冒険を はじめましょう！
+              まずは お<R k="子" r="こ" />さまを <R k="追加" r="ついか" />して<br /><R k="冒険" r="ぼうけん" />を はじめましょう！
             </p>
             <Button
               className="bg-amber-500 hover:bg-amber-600 text-white text-base h-12 px-8"
               onClick={() => setAddChildOpen(true)}
             >
-              ＋ おこさまを ついか
+              ＋ お<R k="子" r="こ" />さまを <R k="追加" r="ついか" />
             </Button>
           </CardContent>
         </Card>
@@ -418,7 +419,7 @@ export default function ParentDashboard() {
               クエストを つくって<br />冒険を はじめよう！
             </p>
             <p className="text-sm text-muted-foreground">
-              おこさまが ちょうせんする クエスト（おてつだい）を つくりましょう
+              お<R k="子" r="こ" />さまが <R k="挑戦" r="ちょうせん" />する クエスト（お<R k="手伝" r="てつだ" />い）を つくりましょう
             </p>
             <Link href="/parent/tasks">
               <Button className="bg-emerald-500 hover:bg-emerald-600 text-white text-base h-12 px-8">
@@ -796,7 +797,7 @@ export default function ParentDashboard() {
       {children.length > 0 && (
         <>
           <h2 className="text-base font-bold text-amber-800 mb-3 flex items-center gap-1.5">
-            💰 おこさまの ざんだか
+            💰 お<R k="子" r="こ" />さまの <R k="残高" r="ざんだか" />
           </h2>
           <div className="grid gap-3">
             {children.map((child) => {
@@ -882,7 +883,7 @@ export default function ParentDashboard() {
                           setTempInvestRatio(wallet?.invest_ratio ?? 0);
                         }}
                       >
-                        ⚙️ ぶんかつひりつを へんこう
+                        ⚙️ <R k="分割比率" r="ぶんかつひりつ" />を <R k="変更" r="へんこう" />
                       </Button>
                     )}
                   </CardContent>
@@ -900,7 +901,7 @@ export default function ParentDashboard() {
           className="w-full mt-3 border-dashed border-amber-300 text-amber-600 h-12 text-base"
           onClick={() => setAddChildOpen(true)}
         >
-          ＋ おこさまを ついか
+          ＋ お<R k="子" r="こ" />さまを <R k="追加" r="ついか" />
         </Button>
       )}
       <AddChildDialog

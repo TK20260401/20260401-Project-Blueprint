@@ -88,9 +88,9 @@ export function AddChildDialog({ open, onClose, familyId, onAdded }: Props) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle>🧒 おこさまを ついか</DialogTitle>
+          <DialogTitle>🧒 お<R k="子" r="こ" />さまを <R k="追加" r="ついか" /></DialogTitle>
           <DialogDescription>
-            あたらしい おこさまを かぞくに ついかします
+            <R k="新" r="あたら" />しい お<R k="子" r="こ" />さまを <R k="家族" r="かぞく" />に <R k="追加" r="ついか" />します
           </DialogDescription>
         </DialogHeader>
 
