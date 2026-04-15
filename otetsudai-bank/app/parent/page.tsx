@@ -951,7 +951,7 @@ export default function ParentDashboard() {
             className="text-xs text-red-400 hover:text-red-600 hover:bg-red-50"
             onClick={() => setShowDeleteConfirm(true)}
           >
-            🗑️ アカウントを さくじょ する
+            🗑️ アカウントを <R k="削除" r="さくじょ" /> する
           </Button>
         ) : (
           <Card className="border-red-300 bg-red-50">
@@ -990,7 +990,7 @@ export default function ParentDashboard() {
                     router.push("/login");
                   }}
                 >
-                  {deleting ? "さくじょちゅう..." : "かんぜんに さくじょする"}
+                  {deleting ? "削除中..." : "完全に 削除する"}
                 </Button>
               </div>
             </CardContent>
