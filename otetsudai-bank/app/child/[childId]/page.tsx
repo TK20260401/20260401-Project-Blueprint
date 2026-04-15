@@ -56,7 +56,7 @@ export default function ChildDashboard({
   const [pendingPayments, setPendingPayments] = useState<SpendRequest[]>([]);
   const [paidRecent, setPaidRecent] = useState<SpendRequest[]>([]);
   const [investOrderOpen, setInvestOrderOpen] = useState(false);
-  const [weeklySummary, setWeeklySummary] = useState({ quests: 0, earned: 0 });
+  const [weeklySummary, setWeeklySummary] = useState({ quests: 0, earned: 0, streak: 0 });
 
   const session = getSession();
 
@@ -158,11 +158,37 @@ export default function ChildDashboard({
       .eq("child_id", childId)
       .eq("status", "approved")
       .gte("approved_at", weekStart.toISOString());
+    // ストリーク計算
+    const { data: streakLogs } = await supabase
+      .from("otetsudai_task_logs")
+      .select("approved_at")
+      .eq("child_id", childId)
+      .eq("status", "approved")
+      .not("approved_at", "is", null)
+      .order("approved_at", { ascending: false })
+      .limit(90);
+    let streak = 0;
+    if (streakLogs && streakLogs.length > 0) {
+      const days = new Set(
+        streakLogs.map((l: { approved_at: string }) => new Date(l.approved_at).toDateString())
+      );
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const check = new Date(today);
+      if (!days.has(check.toDateString())) {
+        check.setDate(check.getDate() - 1);
+      }
+      while (days.has(check.toDateString())) {
+        streak++;
+        check.setDate(check.getDate() - 1);
+      }
+    }
     setWeeklySummary({
       quests: weeklyLogs?.length || 0,
       earned: (weeklyLogs || []).reduce(
         (sum: number, log: { task?: { reward_amount: number } }) => sum + (log.task?.reward_amount || 0), 0
       ),
+      streak,
     });
 
     // Filter transactions by this child's wallet
@@ -282,6 +308,12 @@ export default function ChildDashboard({
                 <p className="text-2xl font-bold text-amber-700">¥{weeklySummary.earned.toLocaleString()}</p>
                 <p className="text-xs text-muted-foreground"><R k="稼" r="かせ" />いだ</p>
               </div>
+              {weeklySummary.streak > 0 && (
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-amber-700">🔥{weeklySummary.streak}</p>
+                  <p className="text-xs text-muted-foreground"><R k="連続" r="れんぞく" /><R k="日" r="にち" /></p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
