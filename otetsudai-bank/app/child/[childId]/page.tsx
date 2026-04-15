@@ -270,6 +270,7 @@ export default function ChildDashboard({
     <div className="min-h-screen px-4 py-4 max-w-lg mx-auto" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <AnnouncementBanner role="child" />
       <CommonHeader title={`🧒 ${session?.name} のバンク`} />
+      <p className="text-xs text-muted-foreground mb-3 -mt-4">{new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "long" })}</p>
 
       {/* レベル表示 */}
       <LevelDisplay childId={childId} />

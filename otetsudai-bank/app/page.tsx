@@ -85,6 +85,12 @@ export default function LandingPage() {
 
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="text-center py-4 text-xs text-muted-foreground space-x-4">
+        <a href="/terms" className="hover:underline">利用規約</a>
+        <a href="/privacy" className="hover:underline">プライバシーポリシー</a>
+      </footer>
     </div>
   );
 }
