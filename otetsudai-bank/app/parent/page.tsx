@@ -473,10 +473,10 @@ export default function ParentDashboard() {
                   {/* やりなおしプリセット理由 */}
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { label: "🔄 やりなおし", reason: "" },
-                      { label: "もうすこし ていねいに", reason: "もうすこし ていねいに やってみよう" },
-                      { label: "さいごまで やろう", reason: "さいごまで やりきろう！" },
-                      { label: "じかんを かけてね", reason: "もうすこし じかんを かけてみよう" },
+                      { label: "🔄 やり直し", reason: "" },
+                      { label: "もう少し 丁寧に", reason: "もう少し 丁寧に やってみよう" },
+                      { label: "最後まで やろう", reason: "最後まで やりきろう！" },
+                      { label: "時間を かけてね", reason: "もう少し 時間を かけてみよう" },
                     ].map((preset) => (
                       <button
                         key={preset.label}
@@ -529,10 +529,10 @@ export default function ParentDashboard() {
                   {/* やりなおしプリセット理由 */}
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { label: "🔄 いまは やめておこう", reason: "" },
-                      { label: "たかすぎるよ", reason: "きんがくを みなおしてみよう" },
-                      { label: "りゆうを くわしく", reason: "もうすこし くわしく おしえてね" },
-                      { label: "ためてからね", reason: "もうすこし ためてからにしよう" },
+                      { label: "🔄 今は やめておこう", reason: "" },
+                      { label: "高すぎるよ", reason: "金額を 見直してみよう" },
+                      { label: "理由を くわしく", reason: "もう少し くわしく 教えてね" },
+                      { label: "貯めてからね", reason: "もう少し 貯めてからにしよう" },
                     ].map((preset) => (
                       <button
                         key={preset.label}
