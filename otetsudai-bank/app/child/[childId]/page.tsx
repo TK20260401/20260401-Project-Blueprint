@@ -56,6 +56,7 @@ export default function ChildDashboard({
   const [pendingPayments, setPendingPayments] = useState<SpendRequest[]>([]);
   const [paidRecent, setPaidRecent] = useState<SpendRequest[]>([]);
   const [investOrderOpen, setInvestOrderOpen] = useState(false);
+  const [weeklySummary, setWeeklySummary] = useState({ quests: 0, earned: 0 });
 
   const session = getSession();
 
@@ -147,6 +148,22 @@ export default function ChildDashboard({
       .eq("proposal_status", "pending");
     setPendingProposals(count || 0);
 
+    // 週次サマリー
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+    const { data: weeklyLogs } = await supabase
+      .from("otetsudai_task_logs")
+      .select("*, task:otetsudai_tasks(reward_amount)")
+      .eq("child_id", childId)
+      .eq("status", "approved")
+      .gte("approved_at", weekStart.toISOString());
+    setWeeklySummary({
+      quests: weeklyLogs?.length || 0,
+      earned: (weeklyLogs || []).reduce(
+        (sum: number, log: { task?: { reward_amount: number } }) => sum + (log.task?.reward_amount || 0), 0
+      ),
+    });
 
     // Filter transactions by this child's wallet
     if (walletRes.data) {
@@ -250,6 +267,25 @@ export default function ChildDashboard({
           </div>
         )}
       </div>
+
+      {/* 週次サマリー */}
+      {weeklySummary.quests > 0 && (
+        <Card className="mb-4 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
+          <CardContent className="p-4">
+            <p className="text-sm font-bold text-amber-800 mb-2">📊 こんしゅうの きろく</p>
+            <div className="flex justify-around">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-700">{weeklySummary.quests}</p>
+                <p className="text-xs text-muted-foreground">クエスト</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-700">¥{weeklySummary.earned.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground"><R k="稼" r="かせ" />いだ</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Piggy Bank */}
       <Card className="mb-4 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">

@@ -738,12 +738,12 @@ export default function ParentDashboard() {
         </Card>
       )}
 
-      {/* ──── おしはらいまち（承認済み・未送金） ──── */}
+      {/* ──── お支払いまち（承認済み・未送金） ──── */}
       {unpaidSpends.length > 0 && (
         <Card className="mb-4 border-orange-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              💸 おしはらい まち
+              💸 お支払い まち
               <Badge className="bg-orange-500">{unpaidSpends.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -763,7 +763,7 @@ export default function ParentDashboard() {
                     </p>
                   </div>
                   <p className="text-[11px] text-muted-foreground mb-2">
-                    どうやって おしはらい しましたか？
+                    どうやって お支払い しましたか？
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {[
