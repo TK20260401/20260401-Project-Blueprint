@@ -18,7 +18,6 @@ import { ApprovalDialog } from "@/components/approval-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AnnouncementBanner } from "@/components/announcement-banner";
-import { R } from "@/components/ruby-text";
 
 /** メールアドレス形式なら表示名として不適切と判断 */
 function displayName(name: string | undefined | null): string {
@@ -401,13 +400,13 @@ export default function ParentDashboard() {
               ようこそ クエストマスター！
             </p>
             <p className="text-sm text-muted-foreground">
-              まずは お<R k="子" r="こ" />さまを <R k="追加" r="ついか" />して<br /><R k="冒険" r="ぼうけん" />を はじめましょう！
+              まずは お子さまを 追加して<br />冒険を はじめましょう！
             </p>
             <Button
               className="bg-amber-500 hover:bg-amber-600 text-white text-base h-12 px-8"
               onClick={() => setAddChildOpen(true)}
             >
-              ＋ お<R k="子" r="こ" />さまを <R k="追加" r="ついか" />
+              ＋ お子さまを 追加
             </Button>
           </CardContent>
         </Card>
@@ -419,7 +418,7 @@ export default function ParentDashboard() {
               クエストを つくって<br />冒険を はじめよう！
             </p>
             <p className="text-sm text-muted-foreground">
-              お<R k="子" r="こ" />さまが <R k="挑戦" r="ちょうせん" />する クエスト（お<R k="手伝" r="てつだ" />い）を つくりましょう
+              お子さまが 挑戦する クエスト（お手伝い）を つくりましょう
             </p>
             <Link href="/parent/tasks">
               <Button className="bg-emerald-500 hover:bg-emerald-600 text-white text-base h-12 px-8">
@@ -434,7 +433,7 @@ export default function ParentDashboard() {
       {totalPending > 0 && (
         <div className="mb-4 p-3 rounded-2xl bg-amber-100/70 border border-amber-200 text-center">
           <p className="text-lg font-bold text-amber-800">
-            📬 {totalPending}<R k="件" r="けん" />の <R k="承認待" r="しょうにんま" />ち！
+            📬 {totalPending}件の 承認待ち！
           </p>
         </div>
       )}
@@ -467,7 +466,7 @@ export default function ParentDashboard() {
                       className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3 flex-shrink-0 ml-2"
                       onClick={() => setApprovalTarget(log)}
                     >
-                      ✓ <R k="承認" r="しょうにん" />
+                      ✓ 承認
                     </Button>
                   </div>
                   {/* やりなおしプリセット理由 */}
@@ -606,7 +605,7 @@ export default function ParentDashboard() {
                       className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1 h-9"
                       onClick={() => handleApproveProposal(proposal.id)}
                     >
-                      ✓ <R k="承認" r="しょうにん" />
+                      ✓ 承認
                     </Button>
                     <Button
                       size="sm"
@@ -706,7 +705,7 @@ export default function ParentDashboard() {
                       className="bg-green-500 hover:bg-green-600 text-white flex-1 h-9"
                       onClick={() => handleApproveInvestOrder(order)}
                     >
-                      ✓ <R k="承認" r="しょうにん" />
+                      ✓ 承認
                     </Button>
                     <Button
                       size="sm"
@@ -733,7 +732,7 @@ export default function ParentDashboard() {
               おつかれさま！
             </p>
             <p className="text-sm text-muted-foreground">
-              <R k="承認待" r="しょうにんま" />ちは ありません
+              承認待ちは ありません
             </p>
           </CardContent>
         </Card>
@@ -797,7 +796,7 @@ export default function ParentDashboard() {
       {children.length > 0 && (
         <>
           <h2 className="text-base font-bold text-amber-800 mb-3 flex items-center gap-1.5">
-            💰 お<R k="子" r="こ" />さまの <R k="残高" r="ざんだか" />
+            💰 お子さまの 残高
           </h2>
           <div className="grid gap-3">
             {children.map((child) => {
@@ -883,7 +882,7 @@ export default function ParentDashboard() {
                           setTempInvestRatio(wallet?.invest_ratio ?? 0);
                         }}
                       >
-                        ⚙️ <R k="分割比率" r="ぶんかつひりつ" />を <R k="変更" r="へんこう" />
+                        ⚙️ 分割比率を 変更
                       </Button>
                     )}
                   </CardContent>
@@ -901,7 +900,7 @@ export default function ParentDashboard() {
           className="w-full mt-3 border-dashed border-amber-300 text-amber-600 h-12 text-base"
           onClick={() => setAddChildOpen(true)}
         >
-          ＋ お<R k="子" r="こ" />さまを <R k="追加" r="ついか" />
+          ＋ お子さまを 追加
         </Button>
       )}
       <AddChildDialog
@@ -914,7 +913,7 @@ export default function ParentDashboard() {
       {/* 累計情報（さりげなく小さく表示） */}
       {stats.totalApproved > 0 && (
         <p className="text-center text-xs text-muted-foreground mt-6">
-          これまでの <R k="承認" r="しょうにん" />: {stats.totalApproved}<R k="件" r="けん" /> ・ <R k="総額" r="そうがく" /> ¥{stats.totalEarned.toLocaleString()}
+          これまでの 承認: {stats.totalApproved}件 ・ 総額 ¥{stats.totalEarned.toLocaleString()}
         </p>
       )}
 
@@ -951,17 +950,17 @@ export default function ParentDashboard() {
             className="text-xs text-red-400 hover:text-red-600 hover:bg-red-50"
             onClick={() => setShowDeleteConfirm(true)}
           >
-            🗑️ アカウントを <R k="削除" r="さくじょ" /> する
+            🗑️ アカウントを 削除 する
           </Button>
         ) : (
           <Card className="border-red-300 bg-red-50">
             <CardContent className="p-4">
-              <p className="text-sm font-semibold text-red-600 mb-2">⚠️ アカウント<R k="削除" r="さくじょ" /></p>
+              <p className="text-sm font-semibold text-red-600 mb-2">⚠️ アカウント削除</p>
               <p className="text-xs text-red-500 mb-3">
-                <R k="削除" r="さくじょ" />すると、<R k="家族" r="かぞく" />の <R k="全" r="ぜん" />データ（クエスト・ウォレット・<R k="履歴" r="りれき" />）が なくなります。この<R k="操作" r="そうさ" />は <R k="取" r="と" />り<R k="消" r="け" />せません。
+                削除すると、家族の 全データ（クエスト・ウォレット・履歴）が なくなります。この操作は 取り消せません。
               </p>
               <p className="text-xs text-muted-foreground mb-2">
-                <R k="確認" r="かくにん" />のため「<R k="削除" r="さくじょ" />する」と <R k="入力" r="にゅうりょく" /> してください：
+                確認のため「削除する」と 入力 してください：
               </p>
               <Input
                 value={deleteConfirmText}
