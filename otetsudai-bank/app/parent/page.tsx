@@ -55,6 +55,7 @@ export default function ParentDashboard() {
     childName: string;
   }>({ open: false, amount: 0, purpose: "", childName: "" });
   const [taskCount, setTaskCount] = useState(0);
+  const [weeklySummary, setWeeklySummary] = useState({ quests: 0, earned: 0 });
 
   const session = getSession();
 
@@ -167,6 +168,18 @@ export default function ParentDashboard() {
     setStats({
       totalApproved: approved.length,
       totalEarned: approved.reduce((sum: number, l: TaskLog & { task: Task }) => sum + (l.task?.reward_amount || 0), 0),
+    });
+
+    // 週次サマリー
+    const weekStart = new Date();
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+    weekStart.setHours(0, 0, 0, 0);
+    const weeklyApproved = approved.filter(
+      (l: TaskLog) => l.approved_at && new Date(l.approved_at) >= weekStart
+    );
+    setWeeklySummary({
+      quests: weeklyApproved.length,
+      earned: weeklyApproved.reduce((sum: number, l: TaskLog & { task: Task }) => sum + (l.task?.reward_amount || 0), 0),
     });
 
     setLoading(false);
@@ -428,6 +441,25 @@ export default function ParentDashboard() {
           </CardContent>
         </Card>
       ) : null}
+
+      {/* ──── 週次サマリー ──── */}
+      {weeklySummary.quests > 0 && (
+        <Card className="mb-4 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
+          <CardContent className="p-4">
+            <p className="text-sm font-bold text-amber-800 mb-2">📊 今週の家族記録</p>
+            <div className="flex justify-around">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-700">{weeklySummary.quests}</p>
+                <p className="text-xs text-muted-foreground">クエスト完了</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-amber-700">¥{weeklySummary.earned.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">支払い</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ──── 承認待ちサマリー ──── */}
       {totalPending > 0 && (
