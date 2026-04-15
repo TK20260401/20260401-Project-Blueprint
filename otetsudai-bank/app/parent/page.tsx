@@ -434,7 +434,7 @@ export default function ParentDashboard() {
       {totalPending > 0 && (
         <div className="mb-4 p-3 rounded-2xl bg-amber-100/70 border border-amber-200 text-center">
           <p className="text-lg font-bold text-amber-800">
-            📬 {totalPending}けんの しょうにんまち！
+            📬 {totalPending}<R k="件" r="けん" />の <R k="承認待" r="しょうにんま" />ち！
           </p>
         </div>
       )}
@@ -467,7 +467,7 @@ export default function ParentDashboard() {
                       className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3 flex-shrink-0 ml-2"
                       onClick={() => setApprovalTarget(log)}
                     >
-                      ✓ しょうにん
+                      ✓ <R k="承認" r="しょうにん" />
                     </Button>
                   </div>
                   {/* やりなおしプリセット理由 */}
@@ -606,7 +606,7 @@ export default function ParentDashboard() {
                       className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1 h-9"
                       onClick={() => handleApproveProposal(proposal.id)}
                     >
-                      ✓ しょうにん
+                      ✓ <R k="承認" r="しょうにん" />
                     </Button>
                     <Button
                       size="sm"
@@ -706,7 +706,7 @@ export default function ParentDashboard() {
                       className="bg-green-500 hover:bg-green-600 text-white flex-1 h-9"
                       onClick={() => handleApproveInvestOrder(order)}
                     >
-                      ✓ しょうにん
+                      ✓ <R k="承認" r="しょうにん" />
                     </Button>
                     <Button
                       size="sm"
@@ -733,7 +733,7 @@ export default function ParentDashboard() {
               おつかれさま！
             </p>
             <p className="text-sm text-muted-foreground">
-              しょうにんまちは ありません
+              <R k="承認待" r="しょうにんま" />ちは ありません
             </p>
           </CardContent>
         </Card>
@@ -914,7 +914,7 @@ export default function ParentDashboard() {
       {/* 累計情報（さりげなく小さく表示） */}
       {stats.totalApproved > 0 && (
         <p className="text-center text-xs text-muted-foreground mt-6">
-          これまでの しょうにん: {stats.totalApproved}けん ・ そうがく ¥{stats.totalEarned.toLocaleString()}
+          これまでの <R k="承認" r="しょうにん" />: {stats.totalApproved}<R k="件" r="けん" /> ・ <R k="総額" r="そうがく" /> ¥{stats.totalEarned.toLocaleString()}
         </p>
       )}
 
