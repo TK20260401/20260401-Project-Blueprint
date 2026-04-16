@@ -142,6 +142,18 @@ export type StockPrice = {
   updated_at: string;
 };
 
+export type FamilyMessage = {
+  id: string;
+  family_id: string;
+  sender_id: string;
+  recipient_id: string;
+  stamp_id: string | null;
+  message: string | null;
+  created_at: string;
+  sender?: User;
+  recipient?: User;
+};
+
 export type InvestOrder = {
   id: string;
   child_id: string;

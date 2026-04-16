@@ -24,8 +24,10 @@ import CoinAnimation from "@/components/coin-animation";
 import { SelfQuestForm } from "@/components/self-quest-form";
 import { LevelDisplay } from "@/components/level-display";
 import { StampNotifications } from "@/components/stamp-notifications";
+import { FamilyStampRelay } from "@/components/family-stamp-relay";
 import { checkAndAwardBadges } from "@/lib/badges";
 import { InvestPortfolio } from "@/components/invest-portfolio";
+import { MoneyTree } from "@/components/money-tree";
 import { InvestOrderDialog } from "@/components/invest-order-dialog";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 
@@ -278,6 +280,11 @@ export default function ChildDashboard({
       {/* おやからのスタンプ通知 */}
       <StampNotifications childId={childId} />
 
+      {/* ファミリースタンプリレー */}
+      {session?.familyId && (
+        <FamilyStampRelay userId={childId} familyId={session.familyId} />
+      )}
+
       {/* 装備（バッジ）表示 — 常時表示 */}
       <div className="mb-3">
         {badges.length > 0 ? (
@@ -374,6 +381,13 @@ export default function ChildDashboard({
         goals={savingGoals}
         onUpdate={loadData}
       />
+
+      {/* ふやすの木 */}
+      {wallet && (
+        <div className="mb-4">
+          <MoneyTree investBalance={wallet.invest_balance ?? 0} />
+        </div>
+      )}
 
       {/* 投資ポートフォリオ（全員に常時表示） */}
       {wallet && (

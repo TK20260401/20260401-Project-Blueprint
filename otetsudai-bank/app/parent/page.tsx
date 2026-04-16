@@ -18,6 +18,7 @@ import { ApprovalDialog } from "@/components/approval-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { FamilyStampRelay } from "@/components/family-stamp-relay";
 
 /** メールアドレス形式なら表示名として不適切と判断 */
 function displayName(name: string | undefined | null): string {
@@ -705,6 +706,11 @@ export default function ParentDashboard() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* ──── ファミリースタンプリレー ──── */}
+      {session?.familyId && (
+        <FamilyStampRelay userId={session.userId} familyId={session.familyId} isParent />
       )}
 
       {/* ──── 投資注文 ──── */}
