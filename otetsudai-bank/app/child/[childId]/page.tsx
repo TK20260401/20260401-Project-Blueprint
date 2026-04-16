@@ -535,7 +535,7 @@ export default function ChildDashboard({
                       <div>
                         <p className="text-sm font-medium">
                           {tx.type === "earn"
-                            ? "💰"
+                            ? "🪙"
                             : tx.type === "spend"
                               ? "🛒"
                               : "🏦"}{" "}
@@ -563,7 +563,7 @@ export default function ChildDashboard({
       {pendingPayments.length > 0 && (
         <Card className="mt-4 border-orange-200 bg-orange-50">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-orange-700 mb-2">💰 <R k="親" r="おや" />が お<R k="金" r="かね" />を <R k="準備" r="じゅんび" /> しているよ</p>
+            <p className="text-sm font-semibold text-orange-700 mb-2">🪙 <R k="親" r="おや" />が お<R k="金" r="かね" />を <R k="準備" r="じゅんび" /> しているよ</p>
             {pendingPayments.map((sp) => (
               <div key={sp.id} className="text-sm mb-1 p-2 rounded-lg bg-white/60">
                 <span className="font-bold text-orange-800">¥{sp.amount.toLocaleString()}</span>

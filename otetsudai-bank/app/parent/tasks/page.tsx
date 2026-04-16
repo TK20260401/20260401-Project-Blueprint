@@ -163,7 +163,7 @@ export default function TaskManagement() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="title">クエスト名</Label>
+                <Label htmlFor="title">⚔️ クエスト名</Label>
                 <Input
                   id="title"
                   value={form.title}
@@ -172,7 +172,7 @@ export default function TaskManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="description">せつめい（任意）</Label>
+                <Label htmlFor="description">📝 せつめい（任意）</Label>
                 <Textarea
                   id="description"
                   value={form.description}
@@ -185,7 +185,7 @@ export default function TaskManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="reward">ごほうび (¥)</Label>
+                  <Label htmlFor="reward">🪙 ごほうび (¥)</Label>
                   <Input
                     id="reward"
                     type="number"
@@ -201,7 +201,7 @@ export default function TaskManagement() {
                   />
                 </div>
                 <div>
-                  <Label>くりかえし</Label>
+                  <Label>🔄 くりかえし</Label>
                   <Select
                     value={form.recurrence}
                     onValueChange={(v) =>
@@ -223,7 +223,7 @@ export default function TaskManagement() {
                 </div>
               </div>
               <div>
-                <Label>だれのクエスト？</Label>
+                <Label>👤 だれのクエスト？</Label>
                 <Select
                   value={form.assigned_child_id}
                   onValueChange={(v) =>
@@ -298,9 +298,13 @@ export default function TaskManagement() {
                         </p>
                       )}
                       <div className="flex items-center gap-3 text-sm">
-                        <span className="text-amber-600 font-semibold">
-                          ¥{task.reward_amount.toLocaleString()}
-                        </span>
+                        <button
+                          type="button"
+                          className="text-amber-600 font-semibold hover:underline cursor-pointer"
+                          onClick={() => openEdit(task)}
+                        >
+                          🪙 ¥{task.reward_amount.toLocaleString()}
+                        </button>
                         {assignedChild && (
                           <span className="text-muted-foreground">
                             🧒 {assignedChild.name}

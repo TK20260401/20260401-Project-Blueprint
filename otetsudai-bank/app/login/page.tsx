@@ -11,13 +11,13 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { R } from "@/components/ruby-text";
 
-type LoginMode = "family" | "admin";
+type LoginMode = "select" | "family" | "admin";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified");
-  const initialMode = searchParams.get("mode") === "admin" ? "admin" : "family";
+  const initialMode: LoginMode = searchParams.get("mode") === "admin" ? "admin" : "select";
   const [loginMode, setLoginMode] = useState<LoginMode>(initialMode);
   const [families, setFamilies] = useState<Family[]>([]);
   const [selectedFamily, setSelectedFamily] = useState<Family | null>(null);
@@ -253,7 +253,7 @@ export default function LoginPage() {
               size="sm"
               className="w-full text-slate-500"
               onClick={() => {
-                setLoginMode("family");
+                setLoginMode("select");
                 setError("");
                 setAdminEmail("");
                 setAdminPassword("");
@@ -262,6 +262,73 @@ export default function LoginPage() {
             >
               ← もどる
             </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // モード選択画面
+  if (loginMode === "select") {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <Card className="w-full max-w-md shadow-xl border-amber-200">
+          <CardHeader className="text-center">
+            <div className="text-5xl mb-2">⚔️</div>
+            <CardTitle className="text-2xl font-bold text-emerald-800">
+              おこづかいクエスト
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              クエストをクリアしてコインを<R k="稼" r="かせ" />ごう！
+            </p>
+            <div className="flex gap-2 mt-2 justify-center">
+              <Link href="/signup">
+                <Button variant="outline" size="sm" className="border-amber-300 text-amber-600 hover:bg-amber-50">
+                  ✨ <R k="初" r="はじ" />めての<R k="方" r="かた" />
+                </Button>
+              </Link>
+              <Link href="/help">
+                <Button variant="outline" size="sm" className="border-gray-200 text-gray-500 hover:bg-gray-50">
+                  📖 <R k="使" r="つか" />い<R k="方" r="かた" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {verified === "true" && (
+              <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-3 text-center">
+                <p className="text-sm font-semibold text-emerald-700">✅ メール<R k="認証" r="にんしょう" />が<R k="完了" r="かんりょう" />しました</p>
+                <p className="text-xs text-emerald-600 mt-1">ログインしてください</p>
+              </div>
+            )}
+            {verified === "error" && (
+              <div className="bg-red-50 border border-red-300 rounded-lg p-3 text-center">
+                <p className="text-sm font-semibold text-red-700"><R k="認証" r="にんしょう" />リンクが<R k="無効" r="むこう" />です</p>
+                <p className="text-xs text-red-600 mt-1">リンクの<R k="有効期限" r="ゆうこうきげん" />が<R k="切" r="き" />れている<R k="可能性" r="かのうせい" />があります</p>
+              </div>
+            )}
+            <Label className="text-base font-semibold text-center block">
+              どちらでログインする？
+            </Label>
+            <div className="grid gap-3">
+              <button
+                className="w-full px-6 py-5 rounded-2xl text-lg font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
+                onClick={() => setLoginMode("family")}
+              >
+                <span className="text-3xl" aria-hidden="true">🧒</span>
+                <span>こどもモード</span>
+              </button>
+              <button
+                className="w-full px-6 py-5 rounded-2xl text-lg font-bold bg-violet-500 hover:bg-violet-600 text-white shadow-md transition-all hover:scale-[1.02] flex items-center justify-center gap-3"
+                onClick={() => {
+                  setLoginMode("admin");
+                  setError("");
+                }}
+              >
+                <span className="text-3xl" aria-hidden="true">👨‍👩‍👧‍👦</span>
+                <span>おやモード</span>
+              </button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -279,32 +346,8 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground">
             クエストをクリアしてコインを<R k="稼" r="かせ" />ごう！
           </p>
-          <div className="flex gap-2 mt-2 justify-center">
-            <Link href="/signup">
-              <Button variant="outline" size="sm" className="border-amber-300 text-amber-600 hover:bg-amber-50">
-                ✨ <R k="初" r="はじ" />めての<R k="方" r="かた" />
-              </Button>
-            </Link>
-            <Link href="/help">
-              <Button variant="outline" size="sm" className="border-gray-200 text-gray-500 hover:bg-gray-50">
-                📖 <R k="使" r="つか" />い<R k="方" r="かた" />
-              </Button>
-            </Link>
-          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {verified === "true" && (
-            <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-3 text-center">
-              <p className="text-sm font-semibold text-emerald-700">✅ メール認証が完了しました</p>
-              <p className="text-xs text-emerald-600 mt-1">ログインしてください</p>
-            </div>
-          )}
-          {verified === "error" && (
-            <div className="bg-red-50 border border-red-300 rounded-lg p-3 text-center">
-              <p className="text-sm font-semibold text-red-700">認証リンクが無効です</p>
-              <p className="text-xs text-red-600 mt-1">リンクの有効期限が切れている可能性があります</p>
-            </div>
-          )}
           {!selectedFamily ? (
             <>
               <Label className="text-base font-semibold">
@@ -417,22 +460,26 @@ export default function LoginPage() {
                 className="w-full h-12 text-lg bg-amber-500 hover:bg-amber-600 text-white"
                 onClick={handleLogin}
               >
-                ログイン
+                クエストをはじめる！
               </Button>
             </>
           )}
         </CardContent>
-        {/* 管理者ログインリンク（控えめに配置） */}
         <div className="text-center pb-4">
-          <button
-            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-slate-500"
             onClick={() => {
-              setLoginMode("admin");
+              setLoginMode("select");
+              setSelectedFamily(null);
+              setSelectedUser(null);
+              setMembers([]);
               setError("");
             }}
           >
-            🔧 管理者ログイン
-          </button>
+            ← モードをえらびなおす
+          </Button>
         </div>
       </Card>
 

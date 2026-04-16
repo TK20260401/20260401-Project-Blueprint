@@ -828,7 +828,7 @@ export default function ParentDashboard() {
       {children.length > 0 && (
         <>
           <h2 className="text-base font-bold text-amber-800 mb-3 flex items-center gap-1.5">
-            💰 お子さまの 残高
+            🪙 お子さまの 残高
           </h2>
           <div className="grid gap-3">
             {children.map((child) => {
@@ -856,7 +856,7 @@ export default function ParentDashboard() {
                     {/* 3色残高 */}
                     <div className="grid grid-cols-3 gap-1.5 text-sm mb-3">
                       <div className="bg-red-50 rounded-lg p-2 text-center border border-red-100">
-                        <div className="text-base" aria-hidden="true">💰</div>
+                        <div className="text-base" aria-hidden="true">🪙</div>
                         <p className="text-[10px] text-red-500 font-semibold">使う</p>
                         <p className="font-bold text-red-600 text-sm">
                           ¥{wallet?.spending_balance.toLocaleString() || 0}

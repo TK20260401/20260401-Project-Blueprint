@@ -137,7 +137,7 @@ export default function HelpPage() {
             </div>
           </div>
           <div className="flex items-start gap-2">
-            <span className="text-lg">💰</span>
+            <span className="text-lg">🪙</span>
             <div>
               <p className="font-semibold">子どもの残高</p>
               <p className="text-muted-foreground">

@@ -37,7 +37,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
             <div className="bg-red-50 rounded-xl p-4 border-2 border-red-200 shadow-sm">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white text-xl" aria-hidden="true">💰</div>
+                <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white text-xl" aria-hidden="true">🪙</div>
                 <h3 className="font-bold text-red-700"><R k="使" r="つか" />う</h3>
               </div>
               <p className="text-xs text-red-600/80">

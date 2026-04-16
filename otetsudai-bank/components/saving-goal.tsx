@@ -20,10 +20,24 @@ export default function SavingGoalSection({ childId, savingBalance, goals, onUpd
   const [showAdd, setShowAdd] = useState(false);
   const [title, setTitle] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
+  const [titleError, setTitleError] = useState("");
+  const [amountError, setAmountError] = useState("");
 
   async function handleAdd() {
+    let hasError = false;
+    setTitleError("");
+    setAmountError("");
+
+    if (!title.trim()) {
+      setTitleError("なまえを いれてね");
+      hasError = true;
+    }
     const amount = parseInt(targetAmount);
-    if (!title.trim() || !amount || amount <= 0) return;
+    if (!targetAmount || !amount || amount <= 0) {
+      setAmountError("きんがくを いれてね");
+      hasError = true;
+    }
+    if (hasError) return;
 
     await supabase.from("otetsudai_saving_goals").insert({
       child_id: childId,
@@ -88,22 +102,28 @@ export default function SavingGoalSection({ childId, savingBalance, goals, onUpd
               </Button>
             ) : (
               <div className="space-y-2">
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="例: ゲームソフト"
-                  className="text-sm"
-                />
-                <div className="flex gap-2">
+                <div>
                   <Input
-                    type="number"
-                    min={1}
-                    value={targetAmount}
-                    onChange={(e) => setTargetAmount(e.target.value)}
-                    placeholder="金額"
-                    className="text-sm"
+                    value={title}
+                    onChange={(e) => { setTitle(e.target.value); setTitleError(""); }}
+                    placeholder="例: ゲームソフト"
+                    className={`text-sm ${titleError ? "border-red-400 ring-1 ring-red-400" : ""}`}
                   />
-                  <span className="text-sm text-muted-foreground self-center"><R k="円" r="えん" /></span>
+                  {titleError && <p className="text-xs text-red-500 mt-0.5">{titleError}</p>}
+                </div>
+                <div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      value={targetAmount}
+                      onChange={(e) => { setTargetAmount(e.target.value); setAmountError(""); }}
+                      placeholder="金額"
+                      className={`text-sm ${amountError ? "border-red-400 ring-1 ring-red-400" : ""}`}
+                    />
+                    <span className="text-sm text-muted-foreground self-center"><R k="円" r="えん" /></span>
+                  </div>
+                  {amountError && <p className="text-xs text-red-500 mt-0.5">{amountError}</p>}
                 </div>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" onClick={() => setShowAdd(false)}>やめる</Button>
