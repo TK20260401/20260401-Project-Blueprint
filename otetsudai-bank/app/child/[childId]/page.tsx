@@ -28,6 +28,7 @@ import { FamilyStampRelay } from "@/components/family-stamp-relay";
 import { checkAndAwardBadges } from "@/lib/badges";
 import { InvestPortfolio } from "@/components/invest-portfolio";
 import { MoneyTree } from "@/components/money-tree";
+import { FamilyChallengeCard } from "@/components/family-challenge-card";
 import { InvestOrderDialog } from "@/components/invest-order-dialog";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 
@@ -59,6 +60,8 @@ export default function ChildDashboard({
   const [paidRecent, setPaidRecent] = useState<SpendRequest[]>([]);
   const [investOrderOpen, setInvestOrderOpen] = useState(false);
   const [weeklySummary, setWeeklySummary] = useState({ quests: 0, earned: 0, streak: 0 });
+  const [activeChallenge, setActiveChallenge] = useState<import("@/lib/types").FamilyChallenge | null>(null);
+  const [familyChildren, setFamilyChildren] = useState<import("@/lib/types").User[]>([]);
 
   const session = getSession();
 
@@ -202,6 +205,28 @@ export default function ChildDashboard({
       );
     }
 
+    // 家族チャレンジ + メンバー取得
+    if (session?.familyId) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const [chRes, memRes] = await Promise.all([
+        supabase
+          .from("otetsudai_family_challenges")
+          .select("*")
+          .eq("family_id", session.familyId)
+          .lte("start_date", todayStr)
+          .gte("end_date", todayStr)
+          .order("created_at", { ascending: false })
+          .limit(1),
+        supabase
+          .from("otetsudai_users")
+          .select("*")
+          .eq("family_id", session.familyId)
+          .eq("role", "child"),
+      ]);
+      setActiveChallenge(chRes.data?.[0] || null);
+      setFamilyChildren(memRes.data || []);
+    }
+
     setLoading(false);
   }, [childId, session?.familyId]);
 
@@ -279,6 +304,15 @@ export default function ChildDashboard({
 
       {/* おやからのスタンプ通知 */}
       <StampNotifications childId={childId} />
+
+      {/* 家族チャレンジ */}
+      {activeChallenge && session?.familyId && (
+        <FamilyChallengeCard
+          challenge={activeChallenge}
+          children={familyChildren}
+          familyId={session.familyId}
+        />
+      )}
 
       {/* ファミリースタンプリレー */}
       {session?.familyId && (

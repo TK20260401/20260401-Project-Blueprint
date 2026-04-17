@@ -19,6 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { FamilyStampRelay } from "@/components/family-stamp-relay";
+import { MonthlyReport } from "@/components/monthly-report";
+import { FamilyAdventureMap } from "@/components/family-adventure-map";
+import { FamilyChallengeCard } from "@/components/family-challenge-card";
 
 /** メールアドレス形式なら表示名として不適切と判断 */
 function displayName(name: string | undefined | null): string {
@@ -57,6 +60,8 @@ export default function ParentDashboard() {
   }>({ open: false, amount: 0, purpose: "", childName: "" });
   const [taskCount, setTaskCount] = useState(0);
   const [weeklySummary, setWeeklySummary] = useState({ quests: 0, earned: 0 });
+  const [familyName, setFamilyName] = useState("");
+  const [activeChallenge, setActiveChallenge] = useState<import("@/lib/types").FamilyChallenge | null>(null);
 
   const session = getSession();
 
@@ -72,6 +77,28 @@ export default function ParentDashboard() {
     const childList = childData || [];
     setChildren(childList);
     const childIds = childList.map((c: User) => c.id);
+
+    // 家族名取得
+    if (session.familyId) {
+      const { data: famData } = await supabase
+        .from("otetsudai_families")
+        .select("name")
+        .eq("id", session.familyId)
+        .single();
+      if (famData) setFamilyName(famData.name);
+
+      // アクティブな家族チャレンジ
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const { data: challengeData } = await supabase
+        .from("otetsudai_family_challenges")
+        .select("*")
+        .eq("family_id", session.familyId)
+        .lte("start_date", todayStr)
+        .gte("end_date", todayStr)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      setActiveChallenge(challengeData?.[0] || null);
+    }
 
     // クエスト数を取得
     const { count: tCount } = await supabase
@@ -830,6 +857,26 @@ export default function ParentDashboard() {
 
       <Separator className="my-6" />
 
+      {/* ──── 冒険の地図 ──── */}
+      {children.length > 0 && (
+        <FamilyAdventureMap
+          familyName={familyName || "かぞく"}
+          children={children}
+          wallets={wallets}
+        />
+      )}
+
+      {/* ──── 家族チャレンジ ──── */}
+      {session?.familyId && (
+        <FamilyChallengeCard
+          challenge={activeChallenge}
+          children={children}
+          familyId={session.familyId}
+          isParent
+          onCreated={loadData}
+        />
+      )}
+
       {/* ──── 子供カード ──── */}
       {children.length > 0 && (
         <>
@@ -923,6 +970,9 @@ export default function ParentDashboard() {
                         ⚙️ 分割比率を 変更
                       </Button>
                     )}
+
+                    {/* 月次レポート */}
+                    <MonthlyReport child={child} wallet={wallet || null} />
                   </CardContent>
                 </Card>
               );
