@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { PixelChatIcon, PixelLetterIcon } from "@/components/pixel-icons";
 import { R } from "@/components/ruby-text";
 
 type Props = {
@@ -83,8 +84,8 @@ export function FamilyStampRelay({ userId, familyId, isParent }: Props) {
     <>
       <Card className="mb-4 border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50">
         <CardContent className="p-4">
-          <p className="text-sm font-bold text-emerald-700 mb-3">
-            💬 {isParent ? "パーティチャット" : <><R k="家族" r="かぞく" />の メッセージ</>}
+          <p className="text-sm font-bold text-emerald-700 mb-3 flex items-center gap-1">
+            <PixelChatIcon size={18} /> {isParent ? "パーティチャット" : <><R k="家族" r="かぞく" />の メッセージ</>}
           </p>
 
           {messages.length === 0 ? (
@@ -135,7 +136,7 @@ export function FamilyStampRelay({ userId, familyId, isParent }: Props) {
             className="w-full mt-3 border-emerald-300 text-emerald-700 hover:bg-emerald-100"
             onClick={() => setDialogOpen(true)}
           >
-            💌 エールを {isParent ? "送る" : "おくる"}
+            <span className="flex items-center gap-1"><PixelLetterIcon size={16} /> エールを {isParent ? "送る" : "おくる"}</span>
           </Button>
         </CardContent>
       </Card>
@@ -144,7 +145,7 @@ export function FamilyStampRelay({ userId, familyId, isParent }: Props) {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>💌 エールを {isParent ? "送る" : "おくる"}</DialogTitle>
+            <DialogTitle><span className="flex items-center gap-1"><PixelLetterIcon size={20} /> エールを {isParent ? "送る" : "おくる"}</span></DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -205,7 +206,7 @@ export function FamilyStampRelay({ userId, familyId, isParent }: Props) {
               disabled={!canSend || sending}
               onClick={handleSend}
             >
-              {sending ? "送信中..." : "📣 エールを送る！"}
+              {sending ? "送信中..." : <span className="flex items-center gap-1"><PixelLetterIcon size={16} /> エールを送る！</span>}
             </Button>
 
             <p className="text-[11px] text-muted-foreground text-center">

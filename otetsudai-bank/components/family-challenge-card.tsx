@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { PixelTargetIcon, PixelConfettiIcon, PixelGiftIcon } from "@/components/pixel-icons";
 import type { FamilyChallenge, User } from "@/lib/types";
 
 type Props = {
@@ -96,7 +97,7 @@ export function FamilyChallengeCard({
             disabled={creating}
             onClick={handleCreate}
           >
-            {creating ? "作成中..." : "🎯 今週のチャレンジを作る"}
+            {creating ? "作成中..." : <span className="flex items-center gap-1"><PixelTargetIcon size={16} /> 今週のチャレンジを作る</span>}
           </Button>
         </CardContent>
       </Card>
@@ -112,7 +113,7 @@ export function FamilyChallengeCard({
     <Card className={`mb-4 ${isComplete ? "border-green-300 bg-gradient-to-r from-green-50 to-emerald-50" : "border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50"}`}>
       <CardContent className="p-4">
         <p className="text-sm font-bold text-center text-amber-700 mb-1">
-          {isComplete ? "🎉 家族チャレンジ達成！" : "🎯 家族チャレンジ"}
+          <span className="flex items-center justify-center gap-1">{isComplete ? <><PixelConfettiIcon size={16} /> 家族チャレンジ達成！</> : <><PixelTargetIcon size={16} /> 家族チャレンジ</>}</span>
         </p>
         <p className="text-base font-bold text-center text-gray-800 mb-3">
           「{challenge.title}」
@@ -146,7 +147,7 @@ export function FamilyChallengeCard({
 
         {/* ボーナス */}
         <p className="text-xs font-bold text-amber-600 text-center mt-2">
-          🎁 達成ボーナス: みんなに {challenge.bonus_amount}円！
+          <span className="flex items-center justify-center gap-1"><PixelGiftIcon size={16} /> 達成ボーナス: みんなに {challenge.bonus_amount}円！</span>
         </p>
         {!isComplete && (
           <p className="text-[11px] text-center text-gray-500 mt-1">
@@ -155,7 +156,7 @@ export function FamilyChallengeCard({
         )}
         {isComplete && (
           <p className="text-xs font-bold text-green-600 text-center mt-1">
-            みんなで達成した！ おめでとう！ 🎊
+            <span className="flex items-center justify-center gap-1">みんなで達成した！ おめでとう！ <PixelConfettiIcon size={16} /></span>
           </p>
         )}
       </CardContent>

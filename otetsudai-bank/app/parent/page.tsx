@@ -22,6 +22,7 @@ import { FamilyStampRelay } from "@/components/family-stamp-relay";
 import { MonthlyReport } from "@/components/monthly-report";
 import { FamilyAdventureMap } from "@/components/family-adventure-map";
 import { FamilyChallengeCard } from "@/components/family-challenge-card";
+import { PixelCrossedSwordsIcon, PixelScrollIcon, PixelHourglassIcon, PixelCartIcon, PixelStarIcon, PixelChatIcon, PixelSeedlingIcon, PixelConfettiIcon, PixelBarChartIcon, PixelLetterIcon, PixelCoinIcon, PixelPiggyIcon, PixelChartIcon, PixelTrashIcon, PixelWarningIcon } from "@/components/pixel-icons";
 
 /** メールアドレス形式なら表示名として不適切と判断 */
 function displayName(name: string | undefined | null): string {
@@ -420,13 +421,13 @@ export default function ParentDashboard() {
     <div className="min-h-screen p-4 max-w-2xl mx-auto">
       <AnnouncementBanner role="parent" />
       <CommonHeader
-        title="⚔️ クエストマスター"
+        title={<span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={22} /> クエストマスター</span>}
         userName={displayName(session?.name)}
         pendingCount={totalPending}
         rightActions={
           <Link href="/parent/tasks">
             <Button variant="outline" size="sm" className="border-amber-300">
-              📋 クエスト管理
+              <span className="flex items-center gap-1"><PixelScrollIcon size={16} /> クエスト管理</span>
             </Button>
           </Link>
         }
@@ -454,7 +455,7 @@ export default function ParentDashboard() {
       ) : taskCount === 0 && totalPending === 0 ? (
         <Card className="mb-6 border-dashed border-2 border-emerald-300 bg-emerald-50/50">
           <CardContent className="py-8 text-center space-y-3">
-            <div className="text-5xl">⚔️</div>
+            <div className="text-5xl flex justify-center"><PixelCrossedSwordsIcon size={48} /></div>
             <p className="text-lg font-bold text-emerald-800">
               クエストを つくって<br />冒険を はじめよう！
             </p>
@@ -463,7 +464,7 @@ export default function ParentDashboard() {
             </p>
             <Link href="/parent/tasks">
               <Button className="bg-emerald-500 hover:bg-emerald-600 text-white text-base h-12 px-8">
-                📋 クエストを つくる
+                <span className="flex items-center gap-1"><PixelScrollIcon size={16} /> クエストを つくる</span>
               </Button>
             </Link>
           </CardContent>
@@ -474,7 +475,7 @@ export default function ParentDashboard() {
       {weeklySummary.quests > 0 && (
         <Card className="mb-4 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
           <CardContent className="p-4">
-            <p className="text-sm font-bold text-amber-800 mb-2">📊 今週の家族記録</p>
+            <p className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-1"><PixelBarChartIcon size={18} /> 今週の家族記録</p>
             <div className="flex justify-around">
               <div className="text-center">
                 <p className="text-2xl font-bold text-amber-700">{weeklySummary.quests}</p>
@@ -492,8 +493,8 @@ export default function ParentDashboard() {
       {/* ──── 承認待ちサマリー ──── */}
       {totalPending > 0 && (
         <div className="mb-4 p-3 rounded-2xl bg-amber-100/70 border border-amber-200 text-center">
-          <p className="text-lg font-bold text-amber-800">
-            📬 {totalPending}件の 承認待ち！
+          <p className="text-lg font-bold text-amber-800 flex items-center justify-center gap-1">
+            <PixelLetterIcon size={20} /> {totalPending}件の 承認待ち！
           </p>
         </div>
       )}
@@ -503,7 +504,7 @@ export default function ParentDashboard() {
         <Card className="mb-4 border-amber-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              ⏳ クエスト かんりょう
+              <PixelHourglassIcon size={18} /> クエスト かんりょう
               <Badge variant="destructive">{pendingLogs.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -559,7 +560,7 @@ export default function ParentDashboard() {
         <Card className="mb-4 border-blue-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              🛒 つかいたい リクエスト
+              <PixelCartIcon size={18} /> つかいたい リクエスト
               <Badge variant="destructive">{pendingSpends.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -615,7 +616,7 @@ export default function ParentDashboard() {
         <Card className="mb-4 border-emerald-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              ✨ クエスト ていあん
+              <PixelStarIcon size={18} /> クエスト ていあん
               <Badge variant="destructive">{questProposals.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -633,7 +634,7 @@ export default function ParentDashboard() {
                     </p>
                     {proposal.proposal_message && (
                       <p className="text-xs text-emerald-600 mt-1">
-                        💬 「{proposal.proposal_message}」
+                        <span className="inline-flex items-center gap-0.5"><PixelChatIcon size={14} /> 「{proposal.proposal_message}」</span>
                       </p>
                     )}
                   </div>
@@ -688,7 +689,7 @@ export default function ParentDashboard() {
         <Card className="mb-4 border-blue-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              💬 こどもからの メッセージ
+              <PixelChatIcon size={18} /> こどもからの メッセージ
               <Badge variant="destructive">{childMessages.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -745,7 +746,7 @@ export default function ParentDashboard() {
         <Card className="mb-4 border-green-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              🌱 とうし ちゅうもん
+              <PixelSeedlingIcon size={18} /> とうし ちゅうもん
               <Badge className="bg-green-500">{pendingInvestOrders.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -792,7 +793,7 @@ export default function ParentDashboard() {
       {totalPending === 0 && children.length > 0 && taskCount > 0 && (
         <Card className="mb-4 border-emerald-100 bg-emerald-50/30">
           <CardContent className="py-8 text-center">
-            <div className="text-4xl mb-2">🎉</div>
+            <div className="text-4xl mb-2 flex justify-center"><PixelConfettiIcon size={40} /></div>
             <p className="font-bold text-emerald-700">
               おつかれさま！
             </p>
@@ -808,7 +809,7 @@ export default function ParentDashboard() {
         <Card className="mb-4 border-orange-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              💸 お支払い まち
+              <PixelCoinIcon size={18} /> お支払い まち
               <Badge className="bg-orange-500">{unpaidSpends.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -881,7 +882,7 @@ export default function ParentDashboard() {
       {children.length > 0 && (
         <>
           <h2 className="text-base font-bold text-amber-800 mb-3 flex items-center gap-1.5">
-            🪙 お子さまの 残高
+            <PixelCoinIcon size={18} /> お子さまの 残高
           </h2>
           <div className="grid gap-3">
             {children.map((child) => {
@@ -909,21 +910,21 @@ export default function ParentDashboard() {
                     {/* 3色残高 */}
                     <div className="grid grid-cols-3 gap-1.5 text-sm mb-3">
                       <div className="bg-red-50 rounded-lg p-2 text-center border border-red-100">
-                        <div className="text-base" aria-hidden="true">🪙</div>
+                        <div className="text-base flex justify-center" aria-hidden="true"><PixelCoinIcon size={20} /></div>
                         <p className="text-[10px] text-red-500 font-semibold">使う</p>
                         <p className="font-bold text-red-600 text-sm">
                           ¥{wallet?.spending_balance.toLocaleString() || 0}
                         </p>
                       </div>
                       <div className="bg-blue-50 rounded-lg p-2 text-center border border-blue-100">
-                        <div className="text-base" aria-hidden="true">🐷</div>
+                        <div className="text-base flex justify-center" aria-hidden="true"><PixelPiggyIcon size={20} /></div>
                         <p className="text-[10px] text-blue-500 font-semibold">貯める</p>
                         <p className="font-bold text-blue-600 text-sm">
                           ¥{wallet?.saving_balance.toLocaleString() || 0}
                         </p>
                       </div>
                       <div className="bg-green-50 rounded-lg p-2 text-center border border-green-100">
-                        <div className="text-base" aria-hidden="true">🌱</div>
+                        <div className="text-base flex justify-center" aria-hidden="true"><PixelSeedlingIcon size={20} /></div>
                         <p className="text-[10px] text-green-500 font-semibold">増やす</p>
                         <p className="font-bold text-green-600 text-sm">
                           ¥{wallet?.invest_balance?.toLocaleString() || 0}
@@ -1038,12 +1039,12 @@ export default function ParentDashboard() {
             className="text-xs text-red-400 hover:text-red-600 hover:bg-red-50"
             onClick={() => setShowDeleteConfirm(true)}
           >
-            🗑️ アカウントを 削除 する
+            <span className="flex items-center gap-1"><PixelTrashIcon size={14} /> アカウントを 削除 する</span>
           </Button>
         ) : (
           <Card className="border-red-300 bg-red-50">
             <CardContent className="p-4">
-              <p className="text-sm font-semibold text-red-600 mb-2">⚠️ アカウント削除</p>
+              <p className="text-sm font-semibold text-red-600 mb-2 flex items-center gap-1"><PixelWarningIcon size={16} /> アカウント削除</p>
               <p className="text-xs text-red-500 mb-3">
                 削除すると、家族の 全データ（クエスト・ウォレット・履歴）が なくなります。この操作は 取り消せません。
               </p>

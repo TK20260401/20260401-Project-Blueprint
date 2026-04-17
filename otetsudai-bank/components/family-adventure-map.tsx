@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
+import { PixelMapIcon, PixelFlameIcon, PixelCoinIcon } from "@/components/pixel-icons";
 import type { User, Wallet } from "@/lib/types";
 
 const LEVEL_THRESHOLDS = [0, 100, 500, 1500, 3000, 5000, 10000];
@@ -74,8 +75,8 @@ export function FamilyAdventureMap({ familyName, children: kids, wallets }: Prop
   return (
     <Card className="mb-4 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">
       <CardContent className="p-4">
-        <p className="text-base font-bold text-amber-800 text-center mb-3">
-          🗺️ {familyName}の ぼうけんちず
+        <p className="text-base font-bold text-amber-800 text-center mb-3 flex items-center justify-center gap-1">
+          <PixelMapIcon size={20} /> {familyName}の ぼうけんちず
         </p>
 
         {/* メンバー横並び */}
@@ -110,7 +111,7 @@ export function FamilyAdventureMap({ familyName, children: kids, wallets }: Prop
           </div>
           <div className="text-center">
             <p className="text-sm font-bold text-gray-800">
-              {stats.familyStreak > 0 ? `🔥${stats.familyStreak}` : "—"}
+              {stats.familyStreak > 0 ? <span className="flex items-center justify-center gap-0.5"><PixelFlameIcon size={14} />{stats.familyStreak}</span> : "—"}
             </p>
             <p className="text-[9px] text-muted-foreground">連続日</p>
           </div>

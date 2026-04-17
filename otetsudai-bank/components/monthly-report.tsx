@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
+import { PixelBarChartIcon, PixelTargetIcon, PixelCoinIcon, PixelFlameIcon, PixelCrossedSwordsIcon, PixelConfettiIcon, PixelPiggyIcon, PixelLightbulbIcon } from "@/components/pixel-icons";
 import type { User, Wallet } from "@/lib/types";
 
 type Props = {
@@ -111,46 +112,46 @@ export function MonthlyReport({ child, wallet }: Props) {
   return (
     <Card className="mt-3 border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50">
       <CardContent className="p-4">
-        <p className="text-sm font-bold text-purple-700 text-center">
-          📊 {child.name}の成長レポート
+        <p className="text-sm font-bold text-purple-700 text-center flex items-center justify-center gap-1">
+          <PixelBarChartIcon size={18} /> {child.name}の成長レポート
         </p>
         <p className="text-[11px] text-muted-foreground text-center mb-3">{label}</p>
 
         <div className="grid grid-cols-2 gap-2 mb-3">
-          <div className="bg-white/60 rounded-xl p-2 text-center">
-            <span className="text-lg">🎯</span>
+          <div className="bg-white/60 rounded-xl p-2 text-center flex flex-col items-center">
+            <PixelTargetIcon size={20} />
             <p className="text-base font-bold text-gray-800">{data.questsCompleted}</p>
             <p className="text-[10px] text-muted-foreground">クエスト</p>
           </div>
-          <div className="bg-white/60 rounded-xl p-2 text-center">
-            <span className="text-lg">💰</span>
+          <div className="bg-white/60 rounded-xl p-2 text-center flex flex-col items-center">
+            <PixelCoinIcon size={20} />
             <p className="text-base font-bold text-gray-800">¥{data.totalEarned.toLocaleString()}</p>
             <p className="text-[10px] text-muted-foreground">稼いだ</p>
           </div>
-          <div className="bg-white/60 rounded-xl p-2 text-center">
-            <span className="text-lg">🔥</span>
+          <div className="bg-white/60 rounded-xl p-2 text-center flex flex-col items-center">
+            <PixelFlameIcon size={20} />
             <p className="text-base font-bold text-gray-800">{data.maxStreak}日</p>
             <p className="text-[10px] text-muted-foreground">最高連続</p>
           </div>
-          <div className="bg-white/60 rounded-xl p-2 text-center">
-            <span className="text-lg">⚔️</span>
+          <div className="bg-white/60 rounded-xl p-2 text-center flex flex-col items-center">
+            <PixelCrossedSwordsIcon size={20} />
             <p className="text-base font-bold text-gray-800">
               Lv.{data.levelStart === data.levelEnd ? data.levelEnd : `${data.levelStart}→${data.levelEnd}`}
             </p>
             <p className="text-[10px] text-muted-foreground">
-              {data.levelEnd > data.levelStart ? "🎉 UP!" : "レベル"}
+              {data.levelEnd > data.levelStart ? <span className="flex items-center gap-0.5"><PixelConfettiIcon size={12} /> UP!</span> : "レベル"}
             </p>
           </div>
         </div>
 
         {data.savingGoalsTotal > 0 && (
-          <p className="text-xs text-center text-amber-700 font-bold mb-2">
-            🐷 貯金目標: {data.savingGoalsAchieved}/{data.savingGoalsTotal} 達成
+          <p className="text-xs text-center text-amber-700 font-bold mb-2 flex items-center justify-center gap-1">
+            <PixelPiggyIcon size={16} /> 貯金目標: {data.savingGoalsAchieved}/{data.savingGoalsTotal} 達成
           </p>
         )}
 
         <div className="bg-white/50 rounded-xl p-3">
-          <p className="text-[11px] font-bold text-gray-600 mb-1">💡 コメント:</p>
+          <p className="text-[11px] font-bold text-gray-600 mb-1 flex items-center gap-1"><PixelLightbulbIcon size={14} /> コメント:</p>
           <p className="text-xs text-gray-700">「{comment}」</p>
         </div>
       </CardContent>
