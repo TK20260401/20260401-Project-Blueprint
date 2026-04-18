@@ -137,7 +137,7 @@ export default function SignupPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
                     aria-label={showPassword ? "パスワードを隠す" : "パスワードを表示"}
                   >
                     {showPassword ? "🙈" : "👁️"}
@@ -194,7 +194,7 @@ export default function SignupPage() {
             <Link href="/login" className="text-sm text-amber-600 hover:underline block">
               すでにアカウントをお持ちのかた →
             </Link>
-            <Link href="/login?mode=admin" className="text-xs text-slate-400 hover:text-slate-600 transition-colors block">
+            <Link href="/login?mode=admin" className="text-xs text-muted-foreground hover:text-primary transition-colors block">
               🔧 管理者ログイン
             </Link>
           </div>
