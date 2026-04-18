@@ -35,6 +35,10 @@ import { AnnouncementBanner } from "@/components/announcement-banner";
 import { PixelCrossedSwordsIcon, PixelBarChartIcon, PixelFlameIcon, PixelChestOpenIcon, PixelCartIcon, PixelPiggyIcon, PixelSeedlingIcon, PixelCoinIcon, PixelScrollIcon, PixelStarIcon, PixelLightbulbIcon, PixelLetterIcon, PixelRefreshIcon, PixelConfettiIcon, PixelShieldIcon, PixelChatIcon } from "@/components/pixel-icons";
 import QuestCardFrame from "@/components/quest-card-frame";
 import { getQuestCardTier } from "@/lib/rpg-stats";
+import PetDisplay from "@/components/pet-display";
+import EggDropAnimation from "@/components/egg-drop-animation";
+import { getActivePet, processQuestCompletionForPets, hatchEgg, type PetType, type PetQuestResult } from "@/lib/pets";
+import type { Pet } from "@/lib/types";
 
 export default function ChildDashboard({
   params,
@@ -57,6 +61,9 @@ export default function ChildDashboard({
   const [savingGoals, setSavingGoals] = useState<SavingGoal[]>([]);
   const [badges, setBadges] = useState<BadgeType[]>([]);
   const [showCoinAnim, setShowCoinAnim] = useState(false);
+  const [activePet, setActivePet] = useState<Pet | null>(null);
+  const [eggDrop, setEggDrop] = useState<PetType | null>(null);
+  const [petResult, setPetResult] = useState<PetQuestResult | null>(null);
   const [selfQuestOpen, setSelfQuestOpen] = useState(false);
   const [pendingProposals, setPendingProposals] = useState(0);
   const [rejectedLogs, setRejectedLogs] = useState<(TaskLog & { task?: Task })[]>([]);
@@ -231,6 +238,10 @@ export default function ChildDashboard({
       setFamilyChildren(memRes.data || []);
     }
 
+    // ペット読み込み
+    const pet = await getActivePet(childId);
+    setActivePet(pet);
+
     setLoading(false);
   }, [childId, session?.familyId]);
 
@@ -254,6 +265,13 @@ export default function ChildDashboard({
     setSubmitting(null);
     setShowCoinAnim(true);
     await checkAndAwardBadges(childId);
+
+    // ペット処理
+    if (session?.familyId) {
+      const result = await processQuestCompletionForPets(childId, session.familyId);
+      setPetResult(result);
+    }
+
     loadData();
   }
 
@@ -305,6 +323,19 @@ export default function ChildDashboard({
 
       {/* レベル表示 */}
       <LevelDisplay childId={childId} />
+
+      {/* ペット表示 */}
+      <div className="mb-3 flex justify-center">
+        <PetDisplay
+          pet={activePet}
+          onTapEgg={async () => {
+            if (activePet) {
+              await hatchEgg(activePet.id);
+              loadData();
+            }
+          }}
+        />
+      </div>
 
       {/* おやからのスタンプ通知 */}
       <StampNotifications childId={childId} />
@@ -738,8 +769,23 @@ export default function ChildDashboard({
       <RewardSequence
         show={showCoinAnim}
         level={wallet ? getLevelProgress(wallet.spending_balance + wallet.saving_balance + (wallet.invest_balance ?? 0)).current.level : 1}
-        onComplete={() => setShowCoinAnim(false)}
+        onComplete={() => {
+          setShowCoinAnim(false);
+          if (petResult?.eggDropped) {
+            setEggDrop(petResult.eggDropped);
+            setPetResult(null);
+          }
+        }}
       />
+
+      {/* 卵ドロップ演出 */}
+      {eggDrop && (
+        <EggDropAnimation
+          show
+          petType={eggDrop}
+          onComplete={() => { setEggDrop(null); loadData(); }}
+        />
+      )}
     </div>
   );
 }
