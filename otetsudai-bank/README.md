@@ -368,6 +368,7 @@ parent/child: 家族ベース認証
 | v0.14.0 | 2026-04-17 | 月次レポート（子供ごとの成長統計+自動コメント）、ファミリーダッシュボード（冒険の地図）、家族チャレンジウィーク（協力型週間目標+進捗バー+達成ボーナス） |
 | v0.15.0 | 2026-04-17 | Habitica風ピクセルアートSVG全画面導入。PixelIcons(38種)+PixelHeroSvg(戦士・魔法使い)をモバイル・Web両版に追加。全UIアイコンをSVGピクセルアートに置換 |
 | v0.16.0 | 2026-04-18 | RPG演出強化。CharacterSvg(7段階レベルキャラ)・MoneyTree SVG(4段階成長)をWeb版に移植、LevelUpModal/BadgeUnlockModalのSVG化(ピクセルスパークル・メダルフレーム・RPGバナー)、FamilyChallengeCardにボスモンスターSVG、FamilyAdventureMapにワールドマップ背景SVG、クエストクリアバナーRPG化、Web版LevelDisplayにCharacterSvg+RPG風EXPバー導入。TestFlightフィードバック#1全項目完了確認+ドキュメント同期 |
+| v0.17.0 | 2026-04-18 | Habitica風リッチRPG SVG全面実装。アイテムSVG基盤(金銀銅貨・宝石3色・鍵・宝袋)、RPGクエストカードフレーム(bronze/silver/gold 3段階装飾ボーダー)、HP/MP/EXPゲージ(3色RPGステータスバー)、装備ステータス表示(ATK/DEF/LCK)、宝箱オープン演出、バトルシーン+小モンスター4種(スライム/コウモリ/ゴブリン/キノコ)、RPG報酬シーケンス(バトル→宝箱→獲得表示)、ダンジョンフロア進行マップ(ボス/宝物/通常フロア)。全8機能をモバイル・Web両版で同時実装。RPGステータス算出ロジック(rpg-stats.ts)追加 |
 
 ## Getting Started
 
