@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import SavingGoalSection from "@/components/saving-goal";
 import BadgeDisplay from "@/components/badge-display";
-import TreasureChestAnimation from "@/components/treasure-chest-animation";
+import RewardSequence from "@/components/reward-sequence";
+import { getLevelProgress } from "@/lib/levels";
 import { SelfQuestForm } from "@/components/self-quest-form";
 import { LevelDisplay } from "@/components/level-display";
 import { StampNotifications } from "@/components/stamp-notifications";
@@ -734,7 +735,11 @@ export default function ChildDashboard({
         </DialogContent>
       </Dialog>
 
-      <TreasureChestAnimation show={showCoinAnim} onComplete={() => setShowCoinAnim(false)} />
+      <RewardSequence
+        show={showCoinAnim}
+        level={wallet ? getLevelProgress(wallet.spending_balance + wallet.saving_balance + (wallet.invest_balance ?? 0)).current.level : 1}
+        onComplete={() => setShowCoinAnim(false)}
+      />
     </div>
   );
 }
