@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { R } from "@/components/ruby-text";
+import { PixelTargetIcon, PixelConfettiIcon, PixelCrownIcon, PixelCheckIcon } from "@/components/pixel-icons";
 
 type Props = {
   childId: string;
@@ -70,7 +71,7 @@ export default function SavingGoalSection({ childId, savingBalance, goals, onUpd
     <Card className="mt-3 border-green-200 bg-green-50/50">
       <CardContent className="p-4">
         <p className="text-sm font-semibold text-green-700 mb-2">
-          🎯 <R k="貯金目標" r="ちょきんもくひょう" />
+          <span className="flex items-center gap-1"><PixelTargetIcon size={16} /> <R k="貯金目標" r="ちょきんもくひょう" /></span>
         </p>
 
         {activeGoal ? (
@@ -85,7 +86,7 @@ export default function SavingGoalSection({ childId, savingBalance, goals, onUpd
             <p className="text-xs text-muted-foreground text-right">{progress}%</p>
             {progress >= 100 && (
               <div className="text-center mt-2 text-lg animate-bounce">
-                🎉 <R k="目標達成" r="もくひょうたっせい" />！すごい！
+                <span className="flex items-center gap-1"><PixelConfettiIcon size={14} /> <R k="目標達成" r="もくひょうたっせい" />！すごい！</span>
               </div>
             )}
           </div>
@@ -136,10 +137,10 @@ export default function SavingGoalSection({ childId, savingBalance, goals, onUpd
 
         {achievedGoals.length > 0 && (
           <div className="mt-3 pt-2 border-t border-green-200">
-            <p className="text-xs text-green-500 mb-1"><R k="達成済" r="たっせいず" />み 🏆</p>
+            <p className="text-xs text-green-500 mb-1 flex items-center gap-0.5"><R k="達成済" r="たっせいず" />み <PixelCrownIcon size={12} /></p>
             {achievedGoals.map((g) => (
               <p key={g.id} className="text-xs text-muted-foreground">
-                ✅ {g.title}（¥{g.target_amount.toLocaleString()}）
+                <span className="inline-flex items-center gap-0.5"><PixelCheckIcon size={12} /> {g.title}（¥{g.target_amount.toLocaleString()}）</span>
               </p>
             ))}
           </div>
