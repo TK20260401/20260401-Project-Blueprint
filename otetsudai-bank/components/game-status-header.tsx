@@ -73,13 +73,14 @@ export default function GameStatusHeader({
         {/* 戻るボタン */}
         {backHref && (
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            className="h-9 w-9 p-0 flex-shrink-0 text-primary hover:bg-primary/10"
+            className="h-9 px-2 flex-shrink-0 gap-1 border-primary bg-primary/10 text-primary hover:bg-primary/20"
             onClick={() => router.push(backHref)}
             aria-label="TOPにもどる"
           >
-            <PixelHouseIcon size={16} />
+            <PixelHouseIcon size={14} />
+            <span className="text-[10px] font-bold">TOP</span>
           </Button>
         )}
 
