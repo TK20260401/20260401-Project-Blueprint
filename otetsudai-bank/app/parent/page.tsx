@@ -10,7 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import CommonHeader from "@/components/common-header";
+import GameStatusHeader from "@/components/game-status-header";
+import RpgCard from "@/components/rpg-card";
+import RpgButton from "@/components/rpg-button";
 import RewardSplitSlider from "@/components/reward-split-slider";
 import { PaymentLinkDialog } from "@/components/payment-link";
 import { AddChildDialog } from "@/components/add-child-dialog";
@@ -420,14 +422,19 @@ export default function ParentDashboard() {
   return (
     <div className="min-h-screen p-4 max-w-2xl mx-auto">
       <AnnouncementBanner role="parent" />
-      <CommonHeader
-        title={<span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={22} /> クエストマスター</span>}
+      <GameStatusHeader
+        title={<span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={18} /> クエストマスター</span>}
         userName={displayName(session?.name)}
+        level={Math.max(1, children.length)}
+        hp={Math.min(100, totalPending === 0 && children.length > 0 ? 100 : Math.max(30, 100 - totalPending * 10))}
+        mp={Math.min(10, children.length * 2)}
+        exp={Math.min(100, Math.round((weeklySummary.quests / Math.max(1, children.length * 7)) * 100))}
+        gold={stats.totalEarned}
         pendingCount={totalPending}
         rightActions={
           <Link href="/parent/tasks">
-            <Button variant="outline" size="sm" className="border-amber-300">
-              <span className="flex items-center gap-1"><PixelScrollIcon size={16} /> クエスト管理</span>
+            <Button variant="outline" size="sm" className="h-7 px-2 text-[10px] border-primary/60 text-primary hover:bg-primary/10">
+              <span className="flex items-center gap-0.5"><PixelScrollIcon size={12} /> 管理</span>
             </Button>
           </Link>
         }
@@ -435,65 +442,63 @@ export default function ParentDashboard() {
 
       {/* ──── ウェルカム / 空状態 ──── */}
       {children.length === 0 ? (
-        <Card className="mb-6 border-dashed border-2 border-amber-300 bg-amber-50/50">
-          <CardContent className="py-10 text-center space-y-3">
+        <RpgCard tier="gold" className="mb-6">
+          <div className="py-8 text-center space-y-3">
             <div className="text-5xl">👨‍👩‍👧‍👦</div>
-            <p className="text-lg font-bold text-amber-800">
+            <p className="text-lg font-bold text-primary drop-shadow-[0_1px_6px_rgba(255,166,35,0.45)]">
               ようこそ クエストマスター！
             </p>
             <p className="text-sm text-muted-foreground">
               まずは お子さまを 追加して<br />冒険を はじめましょう！
             </p>
-            <Button
-              className="bg-amber-500 hover:bg-amber-600 text-white text-base h-12 px-8"
-              onClick={() => setAddChildOpen(true)}
-            >
+            <RpgButton tier="gold" size="lg" onClick={() => setAddChildOpen(true)}>
               ＋ お子さまを 追加
-            </Button>
-          </CardContent>
-        </Card>
+            </RpgButton>
+          </div>
+        </RpgCard>
       ) : taskCount === 0 && totalPending === 0 ? (
-        <Card className="mb-6 border-dashed border-2 border-emerald-300 bg-emerald-50/50">
-          <CardContent className="py-8 text-center space-y-3">
+        <RpgCard tier="gold" className="mb-6">
+          <div className="py-6 text-center space-y-3">
             <div className="text-5xl flex justify-center"><PixelCrossedSwordsIcon size={48} /></div>
-            <p className="text-lg font-bold text-emerald-800">
+            <p className="text-lg font-bold text-[#58d68d]">
               クエストを つくって<br />冒険を はじめよう！
             </p>
             <p className="text-sm text-muted-foreground">
               お子さまが 挑戦する クエスト（お手伝い）を つくりましょう
             </p>
             <Link href="/parent/tasks">
-              <Button className="bg-emerald-500 hover:bg-emerald-600 text-white text-base h-12 px-8">
-                <span className="flex items-center gap-1"><PixelScrollIcon size={16} /> クエストを つくる</span>
-              </Button>
+              <RpgButton tier="emerald" size="lg">
+                <PixelScrollIcon size={16} /> クエストを つくる
+              </RpgButton>
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </RpgCard>
       ) : null}
 
       {/* ──── 週次サマリー ──── */}
       {weeklySummary.quests > 0 && (
-        <Card className="mb-4 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
-          <CardContent className="p-4">
-            <p className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-1"><PixelBarChartIcon size={18} /> 今週の家族記録</p>
-            <div className="flex justify-around">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-amber-700">{weeklySummary.quests}</p>
-                <p className="text-xs text-muted-foreground">クエスト完了</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-amber-700">¥{weeklySummary.earned.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">支払い</p>
-              </div>
+        <RpgCard
+          tier="violet"
+          className="mb-4"
+          title={<><PixelBarChartIcon size={18} /> 今週の家族記録</>}
+        >
+          <div className="flex justify-around py-1">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-accent">{weeklySummary.quests}</p>
+              <p className="text-xs text-muted-foreground">クエスト完了</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-accent">¥{weeklySummary.earned.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">支払い</p>
+            </div>
+          </div>
+        </RpgCard>
       )}
 
       {/* ──── 承認待ちサマリー ──── */}
       {totalPending > 0 && (
-        <div className="mb-4 p-3 rounded-2xl bg-amber-100/70 border border-amber-200 text-center">
-          <p className="text-lg font-bold text-amber-800 flex items-center justify-center gap-1">
+        <div className="mb-4 p-3 rounded-2xl bg-primary/10 border border-primary/40 text-center">
+          <p className="text-lg font-bold text-primary flex items-center justify-center gap-1">
             <PixelLetterIcon size={20} /> {totalPending}件の 承認待ち！
           </p>
         </div>
@@ -501,19 +506,16 @@ export default function ParentDashboard() {
 
       {/* ──── クエスト完了 承認キュー ──── */}
       {pendingLogs.length > 0 && (
-        <Card className="mb-4 border-amber-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <PixelHourglassIcon size={18} /> クエスト かんりょう
-              <Badge variant="destructive">{pendingLogs.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+        <RpgCard
+          tier="gold"
+          className="mb-4"
+          title={<><PixelHourglassIcon size={18} /> クエスト かんりょう <Badge variant="destructive">{pendingLogs.length}</Badge></>}
+        >
+          <div className="space-y-3">
               {pendingLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-3 rounded-xl bg-amber-50 border border-amber-100"
+                  className="p-3 rounded-xl bg-secondary/60 border border-primary/40"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="min-w-0 flex-1">
@@ -524,7 +526,7 @@ export default function ParentDashboard() {
                     </div>
                     <Button
                       size="sm"
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3 flex-shrink-0 ml-2"
+                      className="bg-[#2ecc71] hover:bg-[#27ae60] text-white h-9 px-3 flex-shrink-0 ml-2"
                       onClick={() => setApprovalTarget(log)}
                     >
                       <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> 承認</span>
@@ -541,7 +543,7 @@ export default function ParentDashboard() {
                       <button
                         key={preset.label}
                         type="button"
-                        className="text-[11px] px-2.5 py-1 rounded-full border border-amber-200 text-amber-700 bg-white hover:bg-amber-100 active:scale-95 transition-all"
+                        className="text-[11px] px-2.5 py-1 rounded-full border border-primary/40 text-primary bg-secondary/60 hover:bg-primary/20 active:scale-95 transition-all"
                         onClick={() => handleReject(log.id, preset.reason)}
                       >
                         {preset.label}
@@ -550,37 +552,33 @@ export default function ParentDashboard() {
                   </div>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </RpgCard>
       )}
 
       {/* ──── 支出リクエスト ──── */}
       {pendingSpends.length > 0 && (
-        <Card className="mb-4 border-blue-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <PixelCartIcon size={18} /> つかいたい リクエスト
-              <Badge variant="destructive">{pendingSpends.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
+        <RpgCard
+          tier="silver"
+          className="mb-4"
+          title={<><PixelCartIcon size={18} /> つかいたい リクエスト <Badge variant="destructive">{pendingSpends.length}</Badge></>}
+        >
+          <div className="space-y-2">
               {pendingSpends.map((spend) => (
                 <div
                   key={spend.id}
-                  className="p-3 rounded-xl bg-blue-50 border border-blue-100"
+                  className="p-3 rounded-xl bg-secondary/60 border border-[#3498db]/40"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-sm">¥{spend.amount.toLocaleString()} — {spend.purpose}</p>
+                      <p className="font-bold text-sm text-card-foreground">¥{spend.amount.toLocaleString()} — {spend.purpose}</p>
                       <p className="text-xs text-muted-foreground">
                         🧒 {displayName(spend.child?.name)}
                       </p>
                     </div>
                     <Button
                       size="sm"
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3 flex-shrink-0 ml-2"
+                      className="bg-[#2ecc71] hover:bg-[#27ae60] text-white h-9 px-3 flex-shrink-0 ml-2"
                       onClick={() => handleApproveSpend(spend)}
                     >
                       <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> OK</span>
@@ -597,7 +595,7 @@ export default function ParentDashboard() {
                       <button
                         key={preset.label}
                         type="button"
-                        className="text-[11px] px-2.5 py-1 rounded-full border border-blue-200 text-blue-700 bg-white hover:bg-blue-100 active:scale-95 transition-all"
+                        className="text-[11px] px-2.5 py-1 rounded-full border border-[#3498db]/40 text-[#5dade2] bg-secondary/60 hover:bg-[#3498db]/20 active:scale-95 transition-all"
                         onClick={() => handleRejectSpend(spend.id, preset.reason)}
                       >
                         {preset.label}
@@ -606,34 +604,30 @@ export default function ParentDashboard() {
                   </div>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </RpgCard>
       )}
 
       {/* ──── じぶんクエスト提案 ──── */}
       {questProposals.length > 0 && (
-        <Card className="mb-4 border-emerald-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <PixelStarIcon size={18} /> クエスト ていあん
-              <Badge variant="destructive">{questProposals.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
+        <RpgCard
+          tier="gold"
+          className="mb-4"
+          title={<><PixelStarIcon size={18} /> クエスト ていあん <Badge variant="destructive">{questProposals.length}</Badge></>}
+        >
+          <div className="space-y-2">
               {questProposals.map((proposal) => (
                 <div
                   key={proposal.id}
-                  className="p-3 rounded-xl bg-emerald-50 border border-emerald-100"
+                  className="p-3 rounded-xl bg-secondary/60 border border-[#2ecc71]/40"
                 >
                   <div className="mb-2">
-                    <p className="font-bold text-sm">{proposal.title}</p>
+                    <p className="font-bold text-sm text-card-foreground">{proposal.title}</p>
                     <p className="text-xs text-muted-foreground">
                       🧒 {displayName(proposal.child?.name)}
                     </p>
                     {proposal.proposal_message && (
-                      <p className="text-xs text-emerald-600 mt-1">
+                      <p className="text-xs text-[#58d68d] mt-1">
                         <span className="inline-flex items-center gap-0.5"><PixelChatIcon size={14} /> 「{proposal.proposal_message}」</span>
                       </p>
                     )}
@@ -655,7 +649,7 @@ export default function ParentDashboard() {
                     />
                     <span className="text-xs text-muted-foreground">えん</span>
                     {(proposalRewards[proposal.id] ?? proposal.reward_amount) !== proposal.reward_amount && (
-                      <span className="text-[10px] text-amber-500">
+                      <span className="text-[10px] text-primary">
                         （もと: ¥{proposal.reward_amount}）
                       </span>
                     )}
@@ -663,7 +657,7 @@ export default function ParentDashboard() {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1 h-9"
+                      className="bg-[#2ecc71] hover:bg-[#27ae60] text-white flex-1 h-9"
                       onClick={() => handleApproveProposal(proposal.id)}
                     >
                       <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> 承認</span>
@@ -671,7 +665,7 @@ export default function ParentDashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-amber-200 text-amber-600 hover:bg-amber-50 flex-1 h-9"
+                      className="border-primary/60 text-primary hover:bg-primary/10 flex-1 h-9"
                       onClick={() => handleRejectProposal(proposal.id)}
                     >
                       <span className="flex items-center gap-0.5"><PixelRefreshIcon size={12} /> こんどにしよう</span>
@@ -679,38 +673,34 @@ export default function ParentDashboard() {
                   </div>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </RpgCard>
       )}
 
       {/* ──── 子供からのメッセージ ──── */}
       {childMessages.length > 0 && (
-        <Card className="mb-4 border-blue-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <PixelChatIcon size={18} /> こどもからの メッセージ
-              <Badge variant="destructive">{childMessages.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
+        <RpgCard
+          tier="silver"
+          className="mb-4"
+          title={<><PixelChatIcon size={18} /> こどもからの メッセージ <Badge variant="destructive">{childMessages.length}</Badge></>}
+        >
+          <div className="space-y-2">
               {childMessages.map((msg: { id: string; message: string; stamp: string | null; created_at: string; from_user?: { name: string } | { name: string }[] }) => {
                 const fromName = Array.isArray(msg.from_user) ? msg.from_user[0]?.name : msg.from_user?.name;
                 return (
                   <div
                     key={msg.id}
-                    className="p-3 rounded-xl bg-blue-50 border border-blue-100"
+                    className="p-3 rounded-xl bg-secondary/60 border border-[#3498db]/40"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-2 flex-1 min-w-0">
                         {msg.stamp && <span className="text-2xl flex-shrink-0">{msg.stamp}</span>}
                         <div className="min-w-0">
-                          <p className="text-xs font-semibold text-blue-800">
+                          <p className="text-xs font-semibold text-[#5dade2]">
                             🧒 {displayName(fromName)}
                           </p>
                           {msg.message && (
-                            <p className="text-sm text-blue-700 whitespace-pre-wrap mt-0.5 break-words">
+                            <p className="text-sm text-card-foreground whitespace-pre-wrap mt-0.5 break-words">
                               {msg.message}
                             </p>
                           )}
@@ -722,7 +712,7 @@ export default function ParentDashboard() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-blue-400 hover:text-blue-600 text-xs flex-shrink-0"
+                        className="text-[#5dade2] hover:text-[#5dade2] hover:bg-[#3498db]/10 text-xs flex-shrink-0"
                         onClick={() => handleMarkRead(msg.id)}
                       >
                         <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> よんだ</span>
@@ -731,9 +721,8 @@ export default function ParentDashboard() {
                   </div>
                 );
               })}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </RpgCard>
       )}
 
       {/* ──── ファミリースタンプリレー ──── */}
@@ -743,23 +732,20 @@ export default function ParentDashboard() {
 
       {/* ──── 投資注文 ──── */}
       {pendingInvestOrders.length > 0 && (
-        <Card className="mb-4 border-green-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <PixelSeedlingIcon size={18} /> とうし ちゅうもん
-              <Badge className="bg-green-500">{pendingInvestOrders.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <RpgCard
+          tier="violet"
+          className="mb-4"
+          title={<><PixelSeedlingIcon size={18} /> とうし ちゅうもん <Badge className="bg-[#2ecc71] text-white">{pendingInvestOrders.length}</Badge></>}
+        >
             <div className="space-y-2">
               {pendingInvestOrders.map((order) => (
                 <div
                   key={order.id}
-                  className="p-3 rounded-xl bg-green-50 border border-green-100"
+                  className="p-3 rounded-xl bg-secondary/60 border border-[#2ecc71]/40"
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold text-sm">{order.name}（{order.symbol}）</p>
+                      <p className="font-bold text-sm text-card-foreground">{order.name}（{order.symbol}）</p>
                       <p className="text-xs text-muted-foreground">
                         🧒 {displayName(order.child?.name)} ・ ¥{order.amount.toLocaleString()}
                       </p>
@@ -768,7 +754,7 @@ export default function ParentDashboard() {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      className="bg-green-500 hover:bg-green-600 text-white flex-1 h-9"
+                      className="bg-[#2ecc71] hover:bg-[#27ae60] text-white flex-1 h-9"
                       onClick={() => handleApproveInvestOrder(order)}
                     >
                       <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> 承認</span>
@@ -776,7 +762,7 @@ export default function ParentDashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="border-amber-200 text-amber-600 hover:bg-amber-50 flex-1 h-9"
+                      className="border-primary/60 text-primary hover:bg-primary/10 flex-1 h-9"
                       onClick={() => handleRejectInvestOrder(order.id)}
                     >
                       <span className="flex items-center gap-0.5"><PixelRefreshIcon size={12} /> こんどにしよう</span>
@@ -784,44 +770,40 @@ export default function ParentDashboard() {
                   </div>
                 </div>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </RpgCard>
       )}
 
       {/* ──── 承認待ちゼロの場合 ──── */}
       {totalPending === 0 && children.length > 0 && taskCount > 0 && (
-        <Card className="mb-4 border-emerald-100 bg-emerald-50/30">
-          <CardContent className="py-8 text-center">
+        <RpgCard tier="violet" className="mb-4">
+          <div className="py-6 text-center">
             <div className="text-4xl mb-2 flex justify-center"><PixelConfettiIcon size={40} /></div>
-            <p className="font-bold text-emerald-700">
+            <p className="font-bold text-[#58d68d] drop-shadow-[0_1px_6px_rgba(46,204,113,0.4)]">
               おつかれさま！
             </p>
             <p className="text-sm text-muted-foreground">
               承認待ちは ありません
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </RpgCard>
       )}
 
       {/* ──── お支払いまち（承認済み・未送金） ──── */}
       {unpaidSpends.length > 0 && (
-        <Card className="mb-4 border-orange-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <PixelCoinIcon size={18} /> お支払い まち
-              <Badge className="bg-orange-500">{unpaidSpends.length}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+        <RpgCard
+          tier="gold"
+          className="mb-4"
+          title={<><PixelCoinIcon size={18} /> お支払い まち <Badge className="bg-primary text-primary-foreground">{unpaidSpends.length}</Badge></>}
+        >
+          <div className="space-y-3">
               {unpaidSpends.map((spend) => (
                 <div
                   key={spend.id}
-                  className="p-3 rounded-xl bg-orange-50 border border-orange-100"
+                  className="p-3 rounded-xl bg-secondary/60 border border-primary/40"
                 >
                   <div className="mb-2">
-                    <p className="font-bold text-sm">
+                    <p className="font-bold text-sm text-card-foreground">
                       ¥{spend.amount.toLocaleString()} — {spend.purpose}
                     </p>
                     <p className="text-xs text-muted-foreground">
@@ -842,7 +824,7 @@ export default function ParentDashboard() {
                       <button
                         key={opt.method}
                         type="button"
-                        className="text-[11px] px-3 py-1.5 rounded-full border border-orange-200 text-orange-700 bg-white hover:bg-orange-100 active:scale-95 transition-all"
+                        className="text-[11px] px-3 py-1.5 rounded-full border border-primary/40 text-primary bg-secondary/60 hover:bg-primary/20 active:scale-95 transition-all"
                         onClick={() => handleMarkPaid(spend.id, opt.method)}
                       >
                         {opt.icon} {opt.label}
@@ -852,8 +834,7 @@ export default function ParentDashboard() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+        </RpgCard>
       )}
 
       <Separator className="my-6" />
@@ -881,7 +862,7 @@ export default function ParentDashboard() {
       {/* ──── 子供カード ──── */}
       {children.length > 0 && (
         <>
-          <h2 className="text-base font-bold text-amber-800 mb-3 flex items-center gap-1.5">
+          <h2 className="text-base font-bold text-primary mb-3 flex items-center gap-1.5">
             <PixelCoinIcon size={18} /> お子さまの 残高
           </h2>
           <div className="grid gap-3">
@@ -892,12 +873,12 @@ export default function ParentDashboard() {
                 : 0;
 
               return (
-                <Card key={child.id} className="border-amber-200">
-                  <CardContent className="p-4">
+                <RpgCard key={child.id} tier="gold">
+                  <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="font-bold text-base">🧒 {displayName(child.name)}</span>
+                      <span className="font-bold text-base text-card-foreground">🧒 {displayName(child.name)}</span>
                       {total > 0 ? (
-                        <span className="text-xl font-bold text-amber-700">
+                        <span className="text-xl font-bold text-primary drop-shadow-[0_1px_6px_rgba(255,166,35,0.4)]">
                           ¥{total.toLocaleString()}
                         </span>
                       ) : (
@@ -909,24 +890,24 @@ export default function ParentDashboard() {
 
                     {/* 3色残高 */}
                     <div className="grid grid-cols-3 gap-1.5 text-sm mb-3">
-                      <div className="bg-red-50 rounded-lg p-2 text-center border border-red-100">
+                      <div className="bg-secondary/60 rounded-lg p-2 text-center border border-[#e74c3c]/40">
                         <div className="text-base flex justify-center" aria-hidden="true"><PixelCoinIcon size={20} /></div>
-                        <p className="text-[10px] text-red-500 font-semibold">使う</p>
-                        <p className="font-bold text-red-600 text-sm">
+                        <p className="text-[10px] text-[#ff6b6b] font-semibold">使う</p>
+                        <p className="font-bold text-[#ff6b6b] text-sm">
                           ¥{wallet?.spending_balance.toLocaleString() || 0}
                         </p>
                       </div>
-                      <div className="bg-blue-50 rounded-lg p-2 text-center border border-blue-100">
+                      <div className="bg-secondary/60 rounded-lg p-2 text-center border border-[#3498db]/40">
                         <div className="text-base flex justify-center" aria-hidden="true"><PixelPiggyIcon size={20} /></div>
-                        <p className="text-[10px] text-blue-500 font-semibold">貯める</p>
-                        <p className="font-bold text-blue-600 text-sm">
+                        <p className="text-[10px] text-[#5dade2] font-semibold">貯める</p>
+                        <p className="font-bold text-[#5dade2] text-sm">
                           ¥{wallet?.saving_balance.toLocaleString() || 0}
                         </p>
                       </div>
-                      <div className="bg-green-50 rounded-lg p-2 text-center border border-green-100">
+                      <div className="bg-secondary/60 rounded-lg p-2 text-center border border-[#2ecc71]/40">
                         <div className="text-base flex justify-center" aria-hidden="true"><PixelSeedlingIcon size={20} /></div>
-                        <p className="text-[10px] text-green-500 font-semibold">増やす</p>
-                        <p className="font-bold text-green-600 text-sm">
+                        <p className="text-[10px] text-[#58d68d] font-semibold">増やす</p>
+                        <p className="font-bold text-[#58d68d] text-sm">
                           ¥{wallet?.invest_balance?.toLocaleString() || 0}
                         </p>
                       </div>
@@ -934,7 +915,7 @@ export default function ParentDashboard() {
 
                     {/* 分割比率設定 */}
                     {editingRatio === child.id ? (
-                      <div className="p-4 rounded-xl bg-white border-2 border-amber-200">
+                      <div className="p-4 rounded-xl bg-secondary/60 border-2 border-primary/40">
                         <RewardSplitSlider
                           saveRatio={tempSaveRatio}
                           investRatio={tempInvestRatio}
@@ -945,7 +926,7 @@ export default function ParentDashboard() {
                         />
                         <div className="flex gap-2 mt-4">
                           <Button size="sm" variant="ghost" onClick={() => setEditingRatio(null)}>キャンセル</Button>
-                          <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white" onClick={async () => {
+                          <Button size="sm" className="bg-primary hover:bg-accent text-primary-foreground" onClick={async () => {
                             if (wallet) {
                               await supabase.from("otetsudai_wallets").update({
                                 save_ratio: tempSaveRatio,
@@ -961,7 +942,7 @@ export default function ParentDashboard() {
                     ) : (
                       <Button
                         variant="ghost" size="sm"
-                        className="w-full text-xs text-amber-600 hover:bg-amber-50"
+                        className="w-full text-xs text-primary hover:bg-primary/10"
                         onClick={() => {
                           setEditingRatio(child.id);
                           setTempSaveRatio(wallet?.save_ratio ?? wallet?.split_ratio ?? 30);
@@ -974,8 +955,8 @@ export default function ParentDashboard() {
 
                     {/* 月次レポート */}
                     <MonthlyReport child={child} wallet={wallet || null} />
-                  </CardContent>
-                </Card>
+                  </div>
+                </RpgCard>
               );
             })}
           </div>
@@ -984,13 +965,11 @@ export default function ParentDashboard() {
 
       {/* おこさま追加 */}
       {children.length > 0 && children.length < 5 && (
-        <Button
-          variant="outline"
-          className="w-full mt-3 border-dashed border-amber-300 text-amber-600 h-12 text-base"
-          onClick={() => setAddChildOpen(true)}
-        >
-          ＋ お子さまを 追加
-        </Button>
+        <div className="mt-3">
+          <RpgButton tier="gold" size="md" fullWidth onClick={() => setAddChildOpen(true)}>
+            ＋ お子さまを 追加
+          </RpgButton>
+        </div>
       )}
       <AddChildDialog
         open={addChildOpen}
@@ -1031,21 +1010,21 @@ export default function ParentDashboard() {
       />
 
       {/* アカウント削除 */}
-      <div className="mt-8 pt-4 border-t border-gray-200">
+      <div className="mt-8 pt-4 border-t border-border">
         {!showDeleteConfirm ? (
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs text-red-400 hover:text-red-600 hover:bg-red-50"
+            className="text-xs text-[#ff6b6b] hover:text-[#ff6b6b] hover:bg-[#e74c3c]/10"
             onClick={() => setShowDeleteConfirm(true)}
           >
             <span className="flex items-center gap-1"><PixelTrashIcon size={14} /> アカウントを 削除 する</span>
           </Button>
         ) : (
-          <Card className="border-red-300 bg-red-50">
+          <Card className="border-[#e74c3c]/60 bg-card">
             <CardContent className="p-4">
-              <p className="text-sm font-semibold text-red-600 mb-2 flex items-center gap-1"><PixelWarningIcon size={16} /> アカウント削除</p>
-              <p className="text-xs text-red-500 mb-3">
+              <p className="text-sm font-semibold text-[#ff6b6b] mb-2 flex items-center gap-1"><PixelWarningIcon size={16} /> アカウント削除</p>
+              <p className="text-xs text-[#ff6b6b]/80 mb-3">
                 削除すると、家族の 全データ（クエスト・ウォレット・履歴）が なくなります。この操作は 取り消せません。
               </p>
               <p className="text-xs text-muted-foreground mb-2">
@@ -1063,7 +1042,7 @@ export default function ParentDashboard() {
                 </Button>
                 <Button
                   size="sm"
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="bg-[#e74c3c] hover:bg-[#c0392b] text-white"
                   disabled={deleteConfirmText !== "削除する" || deleting}
                   onClick={async () => {
                     if (!session) return;

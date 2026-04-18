@@ -17,14 +17,19 @@ export function MoneyTree({ investBalance, isParent }: Props) {
     : 100;
 
   return (
-    <div className="flex flex-col items-center p-4 bg-gradient-to-b from-emerald-50 to-green-50 rounded-2xl border border-emerald-200">
+    <div
+      className="flex flex-col items-center p-4 rounded-2xl border-2 border-[#2ecc71]/50 bg-card"
+      style={{
+        boxShadow: "0 0 16px rgba(46,204,113,0.28), inset 0 0 0 1px rgba(94,232,158,0.2)",
+      }}
+    >
       {/* 木のビジュアル（SVG） */}
       <div className="relative mb-2">
         <MoneyTreeSvg stage={stage} size={120} />
       </div>
 
       {/* ステージ名 */}
-      <p className="text-sm font-bold text-emerald-700">
+      <p className="text-sm font-bold text-[#58d68d] drop-shadow-[0_1px_4px_rgba(46,204,113,0.4)]">
         {isParent ? `ふやすの木: ${label}` : (
           <>ふやすの<R k="木" r="き" />: {label}</>
         )}
@@ -42,7 +47,7 @@ export function MoneyTree({ investBalance, isParent }: Props) {
           </p>
         </div>
       ) : (
-        <p className="text-xs text-amber-600 font-bold mt-1">
+        <p className="text-xs text-accent font-bold mt-1 drop-shadow-[0_1px_4px_rgba(249,195,59,0.4)]">
           {isParent ? "最大まで成長した!" : (
             <><R k="最大" r="さいだい" />まで <R k="成長" r="せいちょう" />した!</>
           )}

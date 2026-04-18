@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import RpgCard from "@/components/rpg-card";
 import { Button } from "@/components/ui/button";
 import { R } from "@/components/ruby-text";
 import { PixelSeedlingIcon, PixelRefreshIcon, PixelHourglassIcon, PixelChartIcon, PixelChartDownIcon, PixelTargetIcon } from "@/components/pixel-icons";
@@ -137,14 +137,15 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
   const isCoolingDown = cooldownRemain > 0;
 
   return (
-    <Card className="border-green-200">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center justify-between">
+    <RpgCard
+      tier="violet"
+      title={
+        <div className="flex items-center justify-between w-full">
           <span className="flex items-center gap-1"><PixelSeedlingIcon size={18} /> <R k="投資" r="とうし" />ポートフォリオ</span>
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs text-green-600 disabled:opacity-50"
+            className="text-xs text-[#58d68d] disabled:opacity-50 hover:bg-[#2ecc71]/10"
             onClick={handleSync}
             disabled={syncing || isCoolingDown}
           >
@@ -156,28 +157,28 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
               <span className="flex items-center gap-0.5"><PixelRefreshIcon size={12} /> <R k="最新" r="さいしん" /><R k="価格" r="かかく" /></span>
             )}
           </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* 同期メッセージ */}
-        {syncMessage && (
-          <div
-            className={`text-xs text-center p-2 rounded-lg mb-3 ${
-              syncMessage.type === "success"
-                ? "bg-green-100 text-green-700"
-                : "bg-red-100 text-red-700"
-            }`}
-          >
-            {syncMessage.text}
-          </div>
-        )}
+        </div>
+      }
+    >
+      {/* 同期メッセージ */}
+      {syncMessage && (
+        <div
+          className={`text-xs text-center p-2 rounded-lg mb-3 ${
+            syncMessage.type === "success"
+              ? "bg-[#2ecc71]/15 text-[#58d68d] border border-[#2ecc71]/40"
+              : "bg-[#e74c3c]/15 text-[#ff6b6b] border border-[#e74c3c]/40"
+          }`}
+        >
+          {syncMessage.text}
+        </div>
+      )}
 
-        {/* 総評価額 */}
-        <div className="bg-green-50 rounded-xl p-3 mb-3 text-center border border-green-100">
-          <p className="text-xs text-green-600 font-semibold"><R k="増" r="ふ" />やすウォレット</p>
-          <p className="text-2xl font-bold text-green-700">
-            ¥{investBalance.toLocaleString()}
-          </p>
+      {/* 総評価額 */}
+      <div className="bg-secondary/60 rounded-xl p-3 mb-3 text-center border border-[#2ecc71]/40">
+        <p className="text-xs text-[#58d68d] font-semibold"><R k="増" r="ふ" />やすウォレット</p>
+        <p className="text-2xl font-bold text-[#58d68d] drop-shadow-[0_1px_6px_rgba(46,204,113,0.4)]">
+          ¥{investBalance.toLocaleString()}
+        </p>
           {lastSync && (
             <p className="text-[10px] text-muted-foreground mt-1">
               <R k="最終" r="さいしゅう" /><R k="更新" r="こうしん" />: {new Date(lastSync).toLocaleString("ja-JP")}
@@ -193,8 +194,8 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
               <br />
               「<R k="株" r="かぶ" />を <R k="買" r="か" />いたい！」ボタンで <R k="始" r="はじ" />めよう！
             </p>
-            <div className="bg-green-50 rounded-lg p-3 text-left text-xs text-green-800 space-y-2 border border-green-100">
-              <p className="font-semibold text-green-700 flex items-center gap-1"><PixelSeedlingIcon size={14} /> <R k="投資" r="とうし" />の <R k="基本" r="きほん" /></p>
+            <div className="bg-secondary/60 rounded-lg p-3 text-left text-xs text-card-foreground space-y-2 border border-[#2ecc71]/40">
+              <p className="font-semibold text-[#58d68d] flex items-center gap-1"><PixelSeedlingIcon size={14} /> <R k="投資" r="とうし" />の <R k="基本" r="きほん" /></p>
               <p>
                 <R k="株" r="かぶ" />は「お<R k="店" r="みせ" />の <R k="一部" r="いちぶ" />を <R k="持" r="も" />つ」こと。
                 <br />
@@ -225,21 +226,21 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
               return (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-white border border-green-100"
+                  className="flex items-center justify-between p-3 rounded-lg bg-secondary/60 border border-[#2ecc71]/40"
                 >
                   <div>
-                    <p className="font-semibold text-sm">{p.name}</p>
+                    <p className="font-semibold text-sm text-card-foreground">{p.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {p.symbol} ・ {p.shares.toFixed(2)}かぶ
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-sm">
+                    <p className="font-bold text-sm text-card-foreground">
                       ¥{(p.current_value || 0).toLocaleString()}
                     </p>
                     <p
                       className={`text-xs font-semibold ${
-                        isUp ? "text-green-600" : "text-red-600"
+                        isUp ? "text-[#58d68d]" : "text-[#ff6b6b]"
                       }`}
                     >
                       <span className="inline-flex items-center gap-0.5">{isUp ? <PixelChartIcon size={12} /> : <PixelChartDownIcon size={12} />} ¥{Math.abs(amount).toLocaleString()} ({percent})</span>
@@ -250,7 +251,6 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
             })}
           </div>
         )}
-      </CardContent>
-    </Card>
+    </RpgCard>
   );
 }

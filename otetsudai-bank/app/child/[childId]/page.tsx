@@ -8,7 +8,9 @@ import type { Task, TaskLog, Wallet, Transaction, SpendRequest, SavingGoal, Badg
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTaskIcon } from "@/lib/task-icons";
 
-import CommonHeader from "@/components/common-header";
+import GameStatusHeader from "@/components/game-status-header";
+import RpgCard from "@/components/rpg-card";
+import RpgButton from "@/components/rpg-button";
 import { R, AutoRuby } from "@/components/ruby-text";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +38,12 @@ import { PixelCrossedSwordsIcon, PixelBarChartIcon, PixelFlameIcon, PixelChestOp
 import QuestCardFrame from "@/components/quest-card-frame";
 import { getQuestCardTier } from "@/lib/rpg-stats";
 import PetDisplay from "@/components/pet-display";
+import PetManagementDialog from "@/components/pet-management-dialog";
+import TrophyCaseDialog from "@/components/trophy-case-dialog";
+import DailyLoginModal from "@/components/daily-login-modal";
+import { getDailyLoginStatus } from "@/lib/daily-login";
+import ShopDialog from "@/components/shop-dialog";
+import { getEquippedTitle, RARITY_COLORS, type ShopItem } from "@/lib/shop";
 import EggDropAnimation from "@/components/egg-drop-animation";
 import { getActivePet, processQuestCompletionForPets, hatchEgg, type PetType, type PetQuestResult } from "@/lib/pets";
 import type { Pet } from "@/lib/types";
@@ -62,6 +70,12 @@ export default function ChildDashboard({
   const [badges, setBadges] = useState<BadgeType[]>([]);
   const [showCoinAnim, setShowCoinAnim] = useState(false);
   const [activePet, setActivePet] = useState<Pet | null>(null);
+  const [petManageOpen, setPetManageOpen] = useState(false);
+  const [trophyOpen, setTrophyOpen] = useState(false);
+  const [dailyLoginOpen, setDailyLoginOpen] = useState(false);
+  const [dailyLoginChecked, setDailyLoginChecked] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [equippedTitle, setEquippedTitle] = useState<ShopItem | null>(null);
   const [eggDrop, setEggDrop] = useState<PetType | null>(null);
   const [petResult, setPetResult] = useState<PetQuestResult | null>(null);
   const [selfQuestOpen, setSelfQuestOpen] = useState(false);
@@ -242,6 +256,10 @@ export default function ChildDashboard({
     const pet = await getActivePet(childId);
     setActivePet(pet);
 
+    // 装備中タイトル読み込み
+    const title = await getEquippedTitle(childId);
+    setEquippedTitle(title);
+
     setLoading(false);
   }, [childId, session?.familyId]);
 
@@ -252,6 +270,15 @@ export default function ChildDashboard({
     }
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (dailyLoginChecked) return;
+    if (!wallet) return;
+    setDailyLoginChecked(true);
+    getDailyLoginStatus(childId).then((s) => {
+      if (s.canClaimToday) setDailyLoginOpen(true);
+    });
+  }, [wallet, childId, dailyLoginChecked]);
 
   async function handleComplete(task: Task) {
     setSubmitting(task.id);
@@ -318,14 +345,45 @@ export default function ChildDashboard({
   return (
     <div className="min-h-screen px-4 py-4 max-w-lg mx-auto" style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
       <AnnouncementBanner role="child" />
-      <CommonHeader title={`🧒 ${session?.name} のバンク`} />
-      <p className="text-xs text-muted-foreground mb-3 -mt-4">{new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "long" })}</p>
+      {(() => {
+        const lv = getLevelProgress(total).current.level;
+        const exp = getLevelProgress(total).progress;
+        const hp = Math.min(100, Math.round((weeklySummary.streak / 7) * 100));
+        return (
+          <GameStatusHeader
+            title={<span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={16} /> バンク</span>}
+            userName={session?.name}
+            level={lv}
+            hp={hp}
+            mp={Math.min(10, weeklySummary.streak)}
+            exp={exp}
+            gold={total}
+          />
+        );
+      })()}
+      <p className="text-xs text-muted-foreground mb-3">{new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "long" })}</p>
 
       {/* レベル表示 */}
       <LevelDisplay childId={childId} />
 
+      {/* 装備中タイトル */}
+      {equippedTitle && (
+        <div
+          className="mx-auto mb-2 inline-flex items-center gap-1 px-3 py-1 rounded-full border-2 text-xs font-bold"
+          style={{
+            borderColor: RARITY_COLORS[equippedTitle.rarity].border,
+            backgroundColor: RARITY_COLORS[equippedTitle.rarity].bg,
+            color: RARITY_COLORS[equippedTitle.rarity].text,
+            display: "inline-flex",
+          }}
+        >
+          <span>{equippedTitle.emoji}</span>
+          <span>{equippedTitle.label}</span>
+        </div>
+      )}
+
       {/* ペット表示 */}
-      <div className="mb-3 flex justify-center">
+      <div className="mb-3 flex justify-center items-center gap-3">
         <PetDisplay
           pet={activePet}
           onTapEgg={async () => {
@@ -334,8 +392,23 @@ export default function ChildDashboard({
               loadData();
             }
           }}
+          onManage={() => setPetManageOpen(true)}
         />
+        <button
+          onClick={() => setShopOpen(true)}
+          className="text-xs text-primary hover:text-accent border border-primary/40 rounded-full px-3 py-1 transition-colors"
+          aria-label="ショップを ひらく"
+        >
+          🏪 ショップ
+        </button>
       </div>
+
+      <PetManagementDialog
+        open={petManageOpen}
+        onClose={() => setPetManageOpen(false)}
+        childId={childId}
+        onChanged={loadData}
+      />
 
       {/* おやからのスタンプ通知 */}
       <StampNotifications childId={childId} />
@@ -356,93 +429,128 @@ export default function ChildDashboard({
 
       {/* 装備（バッジ）表示 — 常時表示 */}
       <div className="mb-3">
-        {badges.length > 0 ? (
-          <BadgeDisplay badges={badges} />
-        ) : (
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 text-center">
-            <p className="text-sm font-bold text-gray-500 mb-2 flex items-center justify-center gap-1"><PixelShieldIcon size={16} /> <R k="装備" r="そうび" /></p>
-            <div className="flex justify-center gap-3 mb-2">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-lg">？</div>
-              ))}
+        <button
+          onClick={() => setTrophyOpen(true)}
+          className="w-full text-left"
+          aria-label="トロフィーケースをひらく"
+        >
+          {badges.length > 0 ? (
+            <BadgeDisplay badges={badges} />
+          ) : (
+            <div className="bg-muted rounded-xl p-4 border border-border text-center hover:border-primary/50 transition-colors">
+              <p className="text-sm font-bold text-muted-foreground mb-2 flex items-center justify-center gap-1"><PixelShieldIcon size={16} /> <R k="装備" r="そうび" /></p>
+              <div className="flex justify-center gap-3 mb-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-muted-foreground text-lg">？</div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground/70">クエストをクリアして <R k="装備" r="そうび" />をあつめよう！</p>
             </div>
-            <p className="text-xs text-gray-400">クエストをクリアして <R k="装備" r="そうび" />をあつめよう！</p>
-          </div>
-        )}
+          )}
+        </button>
+        <p className="text-center text-[10px] text-muted-foreground mt-1">
+          タップで トロフィーケースを ひらく
+        </p>
       </div>
+
+      <TrophyCaseDialog
+        open={trophyOpen}
+        onClose={() => setTrophyOpen(false)}
+        childId={childId}
+      />
+
+      <DailyLoginModal
+        open={dailyLoginOpen}
+        onClose={() => setDailyLoginOpen(false)}
+        childId={childId}
+        walletId={wallet?.id ?? null}
+        onClaimed={loadData}
+      />
+
+      <ShopDialog
+        open={shopOpen}
+        onClose={() => setShopOpen(false)}
+        childId={childId}
+        walletId={wallet?.id ?? null}
+        spendingBalance={wallet?.spending_balance ?? 0}
+        onChanged={loadData}
+      />
 
       {/* 週次サマリー */}
       {weeklySummary.quests > 0 && (
-        <Card className="mb-4 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
-          <CardContent className="p-4">
-            <p className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-1"><PixelBarChartIcon size={16} /> こんしゅうの きろく</p>
-            <div className="flex justify-around">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-amber-700">{weeklySummary.quests}</p>
-                <p className="text-xs text-muted-foreground">クエスト</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-amber-700">¥{weeklySummary.earned.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground"><R k="稼" r="かせ" />いだ</p>
-              </div>
-              {weeklySummary.streak > 0 && (
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-amber-700 flex items-center justify-center gap-0.5"><PixelFlameIcon size={18} />{weeklySummary.streak}</p>
-                  <p className="text-xs text-muted-foreground"><R k="連続" r="れんぞく" /><R k="日" r="にち" /></p>
-                </div>
-              )}
+        <RpgCard
+          tier="violet"
+          className="mb-4"
+          title={<><PixelBarChartIcon size={16} /> こんしゅうの きろく</>}
+        >
+          <div className="flex justify-around py-1">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-accent">{weeklySummary.quests}</p>
+              <p className="text-xs text-muted-foreground">クエスト</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-accent">¥{weeklySummary.earned.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground"><R k="稼" r="かせ" />いだ</p>
+            </div>
+            {weeklySummary.streak > 0 && (
+              <div className="text-center">
+                <p className="text-2xl font-bold text-accent flex items-center justify-center gap-0.5"><PixelFlameIcon size={18} />{weeklySummary.streak}</p>
+                <p className="text-xs text-muted-foreground"><R k="連続" r="れんぞく" /><R k="日" r="にち" /></p>
+              </div>
+            )}
+          </div>
+        </RpgCard>
       )}
 
       {/* Piggy Bank */}
-      <Card className="mb-4 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">
-        <CardContent className="p-6 text-center">
+      <RpgCard tier="gold" className="mb-4">
+        <div className="p-4 text-center">
           <div className={`mb-2 flex items-center justify-center gap-1 transition-transform duration-500 ${total >= 5000 ? "scale-125" : total >= 1000 ? "scale-110" : "scale-100"}`}>
             <PixelChestOpenIcon size={48} />
             {total >= 5000 && <PixelStarIcon size={20} />}
           </div>
-          <p className="text-3xl font-bold text-amber-700">
+          <p className="text-3xl font-bold text-primary drop-shadow-[0_2px_8px_rgba(255,166,35,0.55)]">
             ¥{total.toLocaleString()}
           </p>
           <p className="text-sm text-muted-foreground mb-4"><R k="全部" r="ぜんぶ" />のお<R k="金" r="かね" /></p>
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-white/70 rounded-xl p-2">
-              <p className="text-[10px] text-red-500 font-semibold">
+            <div className="bg-secondary/60 rounded-xl p-2 border border-border">
+              <p className="text-[10px] text-[#ff6b6b] font-semibold">
                 <span className="flex items-center gap-0.5"><PixelCartIcon size={12} /> <R k="使" r="つか" />う</span>
               </p>
-              <p className="text-base font-bold text-red-600">
+              <p className="text-base font-bold text-[#ff6b6b]">
                 ¥{(wallet?.spending_balance ?? 0).toLocaleString()}
               </p>
-              <Button
+              <RpgButton
+                tier="ruby"
                 size="sm"
-                className="mt-1 w-full bg-red-500 hover:bg-red-600 text-white text-[10px] h-6 px-1"
+                fullWidth
+                className="mt-1 h-6 px-1 text-[10px]"
                 onClick={() => { setSpendOpen(true); setSpendError(""); setSpendSuccess(false); }}
               >
-                <span className="flex items-center gap-0.5"><PixelCartIcon size={10} /> <R k="使" r="つか" />う</span>
-              </Button>
+                <PixelCartIcon size={10} /> <R k="使" r="つか" />う
+              </RpgButton>
             </div>
-            <div className="bg-white/70 rounded-xl p-2">
-              <p className="text-[10px] text-blue-500 font-semibold">
+            <div className="bg-secondary/60 rounded-xl p-2 border border-border">
+              <p className="text-[10px] text-[#5dade2] font-semibold">
                 <span className="flex items-center gap-0.5"><PixelPiggyIcon size={12} /> <R k="貯" r="た" />める</span>
               </p>
-              <p className="text-base font-bold text-blue-600">
+              <p className="text-base font-bold text-[#5dade2]">
                 ¥{(wallet?.saving_balance ?? 0).toLocaleString()}
               </p>
             </div>
-            <div className="bg-white/70 rounded-xl p-2">
-              <p className="text-[10px] text-green-500 font-semibold">
+            <div className="bg-secondary/60 rounded-xl p-2 border border-border">
+              <p className="text-[10px] text-[#58d68d] font-semibold">
                 <span className="flex items-center gap-0.5"><PixelSeedlingIcon size={12} /> <R k="増" r="ふ" />やす</span>
               </p>
-              <p className="text-base font-bold text-green-600">
+              <p className="text-base font-bold text-[#58d68d]">
                 ¥{(wallet?.invest_balance ?? 0).toLocaleString()}
               </p>
             </div>
           </div>
 
-        </CardContent>
-      </Card>
+        </div>
+      </RpgCard>
 
       {/* 貯金目標 */}
       <SavingGoalSection
@@ -467,12 +575,15 @@ export default function ChildDashboard({
             investBalance={wallet.invest_balance ?? 0}
           />
           {(wallet.invest_balance ?? 0) > 0 && (
-            <Button
-              className="w-full mt-2 h-12 text-base font-bold bg-green-500 hover:bg-green-600 text-white rounded-2xl"
+            <RpgButton
+              tier="emerald"
+              size="lg"
+              fullWidth
+              className="mt-2"
               onClick={() => setInvestOrderOpen(true)}
             >
-              <span className="flex items-center gap-1"><PixelSeedlingIcon size={16} /> <R k="株" r="かぶ" />を <R k="買" r="か" />いたい！</span>
-            </Button>
+              <PixelSeedlingIcon size={16} /> <R k="株" r="かぶ" />を <R k="買" r="か" />いたい！
+            </RpgButton>
           )}
         </div>
       )}
@@ -492,42 +603,43 @@ export default function ChildDashboard({
         );
         if (todayTasks.length === 0) return null;
         return (
-          <Card className="mb-4 border-amber-300">
-            <CardContent className="p-4">
-              <p className="text-base font-bold text-amber-800 mb-2">
-                <span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={16} /> <R k="今日" r="きょう" />のクエスト</span>
-              </p>
-              <div className="space-y-2">
-                {todayTasks.map((task) => (
-                  <div key={task.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">{getTaskIcon(task.title)}</span>
-                      <span className="text-sm font-medium"><AutoRuby text={task.title} /></span>
-                    </div>
-                    <Button
-                      size="sm"
-                      className="bg-green-500 hover:bg-green-600 text-white text-xs h-8"
-                      onClick={() => handleComplete(task)}
-                      disabled={submitting === task.id}
-                    >
-                      {submitting === task.id ? "..." : "クリア！"}
-                    </Button>
+          <RpgCard
+            tier="gold"
+            className="mb-4"
+            title={<><PixelCrossedSwordsIcon size={16} /> <R k="今日" r="きょう" />のクエスト</>}
+          >
+            <div className="space-y-2 py-1">
+              {todayTasks.map((task) => (
+                <div key={task.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{getTaskIcon(task.title)}</span>
+                    <span className="text-sm font-medium text-card-foreground"><AutoRuby text={task.title} /></span>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  <RpgButton
+                    tier="emerald"
+                    size="sm"
+                    onClick={() => handleComplete(task)}
+                    disabled={submitting === task.id}
+                  >
+                    {submitting === task.id ? "..." : "クリア！"}
+                  </RpgButton>
+                </div>
+              ))}
+            </div>
+          </RpgCard>
         );
       })()}
 
       {/* じぶんクエストを つくる */}
       <div className="mb-4">
-        <Button
-          className="w-full h-14 text-lg bg-emerald-500 hover:bg-emerald-600 text-white"
+        <RpgButton
+          tier="violet"
+          size="lg"
+          fullWidth
           onClick={() => setSelfQuestOpen(true)}
         >
-          <span className="flex items-center gap-1"><PixelLightbulbIcon size={18} /> <R k="自分" r="じぶん" />クエストを <R k="作" r="つく" />る</span>
-        </Button>
+          <PixelLightbulbIcon size={18} /> <R k="自分" r="じぶん" />クエストを <R k="作" r="つく" />る
+        </RpgButton>
         {pendingProposals > 0 && (
           <p className="text-center text-xs text-amber-600 mt-1">
             <span className="inline-flex items-center gap-0.5"><PixelLetterIcon size={12} /> {pendingProposals}<R k="件" r="けん" />の <R k="提案" r="ていあん" />が <R k="承認待" r="しょうにんま" />ちだよ</span>
@@ -543,7 +655,7 @@ export default function ChildDashboard({
       />
 
       <Tabs defaultValue="tasks" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList variant="rpg" className="grid w-full grid-cols-2">
           <TabsTrigger value="tasks"><span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={14} /> クエスト</span></TabsTrigger>
           <TabsTrigger value="history"><span className="flex items-center gap-1"><PixelScrollIcon size={14} /> <R k="履歴" r="りれき" /></span></TabsTrigger>
         </TabsList>
@@ -551,7 +663,7 @@ export default function ChildDashboard({
         {/* Tasks */}
         <TabsContent value="tasks" className="space-y-3 mt-3">
           {tasks.length === 0 ? (
-            <Card className="border-amber-200">
+            <Card className="border-primary/30 bg-card">
               <CardContent className="p-6 text-center text-muted-foreground">
                 <R k="今" r="いま" />できるクエストはないよ 😴
               </CardContent>
@@ -570,7 +682,7 @@ export default function ChildDashboard({
                           </p>
                         )}
                         <div className="flex items-center gap-2 mt-1">
-                          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-200">
+                          <Badge className="bg-primary/20 text-primary border border-primary/40 hover:bg-primary/30">
                             ¥{task.reward_amount.toLocaleString()}
                           </Badge>
                           <Badge variant="secondary" className="text-xs">
@@ -583,13 +695,14 @@ export default function ChildDashboard({
                         </div>
                       </div>
                     </div>
-                    <Button
-                      className="bg-green-500 hover:bg-green-600 text-white h-12 px-4 text-base"
+                    <RpgButton
+                      tier="emerald"
+                      size="md"
                       onClick={() => handleComplete(task)}
                       disabled={submitting === task.id}
                     >
-                      {submitting === task.id ? "..." : <span className="flex items-center gap-1">クリア！<PixelCrossedSwordsIcon size={14} /></span>}
-                    </Button>
+                      {submitting === task.id ? "..." : <>クリア！<PixelCrossedSwordsIcon size={14} /></>}
+                    </RpgButton>
                   </div>
               </QuestCardFrame>
             ))
@@ -598,57 +711,55 @@ export default function ChildDashboard({
 
         {/* Transaction History */}
         <TabsContent value="history" className="mt-3">
-          <Card className="border-amber-200">
-            <CardHeader>
-              <CardTitle className="text-base"><R k="最近" r="さいきん" />の<R k="履歴" r="りれき" /></CardTitle>
-            </CardHeader>
-            <CardContent>
-              {transactions.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  まだ<R k="履歴" r="りれき" />がないよ
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {transactions.map((tx) => (
-                    <div
-                      key={tx.id}
-                      className="flex items-center justify-between py-2 border-b border-amber-100 last:border-0"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">
-                          <span className="inline-flex mr-1">{tx.type === "earn"
-                            ? <PixelCoinIcon size={14} />
-                            : tx.type === "spend"
-                              ? <PixelCartIcon size={14} />
-                              : <PixelPiggyIcon size={14} />}</span>
-                          <AutoRuby text={tx.description || tx.type} />
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleDateString("ja-JP")}
-                        </p>
-                      </div>
-                      <span
-                        className={`font-bold ${tx.type === "earn" ? "text-green-600" : "text-red-500"}`}
-                      >
-                        {tx.type === "earn" ? "+" : "-"}¥
-                        {tx.amount.toLocaleString()}
-                      </span>
+          <RpgCard
+            tier="silver"
+            title={<><PixelScrollIcon size={16} /> <R k="最近" r="さいきん" />の<R k="履歴" r="りれき" /></>}
+          >
+            {transactions.length === 0 ? (
+              <p className="text-muted-foreground text-center py-4">
+                まだ<R k="履歴" r="りれき" />がないよ
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {transactions.map((tx) => (
+                  <div
+                    key={tx.id}
+                    className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-card-foreground">
+                        <span className="inline-flex mr-1">{tx.type === "earn"
+                          ? <PixelCoinIcon size={14} />
+                          : tx.type === "spend"
+                            ? <PixelCartIcon size={14} />
+                            : <PixelPiggyIcon size={14} />}</span>
+                        <AutoRuby text={tx.description || tx.type} />
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(tx.created_at).toLocaleDateString("ja-JP")}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    <span
+                      className={`font-bold ${tx.type === "earn" ? "text-[#58d68d]" : "text-[#ff6b6b]"}`}
+                    >
+                      {tx.type === "earn" ? "+" : "-"}¥
+                      {tx.amount.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </RpgCard>
         </TabsContent>
       </Tabs>
       {/* おしはらい ステータス */}
       {pendingPayments.length > 0 && (
-        <Card className="mt-4 border-orange-200 bg-orange-50">
+        <Card className="mt-4 border-primary/60 bg-card">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-orange-700 mb-2 flex items-center gap-1"><PixelCoinIcon size={16} /> <R k="親" r="おや" />が お<R k="金" r="かね" />を <R k="準備" r="じゅんび" /> しているよ</p>
+            <p className="text-sm font-semibold text-primary mb-2 flex items-center gap-1"><PixelCoinIcon size={16} /> <R k="親" r="おや" />が お<R k="金" r="かね" />を <R k="準備" r="じゅんび" /> しているよ</p>
             {pendingPayments.map((sp) => (
-              <div key={sp.id} className="text-sm mb-1 p-2 rounded-lg bg-white/60">
-                <span className="font-bold text-orange-800">¥{sp.amount.toLocaleString()}</span>
+              <div key={sp.id} className="text-sm mb-1 p-2 rounded-lg bg-secondary/60 border border-border">
+                <span className="font-bold text-accent">¥{sp.amount.toLocaleString()}</span>
                 <span className="text-muted-foreground ml-1.5">{sp.purpose}</span>
               </div>
             ))}
@@ -656,16 +767,16 @@ export default function ChildDashboard({
         </Card>
       )}
       {paidRecent.length > 0 && (
-        <Card className="mt-4 border-emerald-200 bg-emerald-50">
+        <Card className="mt-4 border-[#2ecc71]/40 bg-card">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-emerald-700 mb-2 flex items-center gap-1"><PixelConfettiIcon size={16} /> お<R k="金" r="かね" />を もらったよ！</p>
+            <p className="text-sm font-semibold text-[#58d68d] mb-2 flex items-center gap-1"><PixelConfettiIcon size={16} /> お<R k="金" r="かね" />を もらったよ！</p>
             {paidRecent.map((sp) => (
-              <div key={sp.id} className="text-sm mb-1 p-2 rounded-lg bg-white/60 flex items-center justify-between">
+              <div key={sp.id} className="text-sm mb-1 p-2 rounded-lg bg-secondary/60 border border-border flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-emerald-800">¥{sp.amount.toLocaleString()}</span>
+                  <span className="font-bold text-[#58d68d]">¥{sp.amount.toLocaleString()}</span>
                   <span className="text-muted-foreground ml-1.5">{sp.purpose}</span>
                 </div>
-                <span className="text-xs text-emerald-500">
+                <span className="text-xs text-[#58d68d]">
                   {sp.payment_method === "paypay" ? "📱 PayPay" :
                    sp.payment_method === "b43" ? "💳 B/43" :
                    sp.payment_method === "linepay" ? "💚 LINE Pay" :
@@ -679,14 +790,14 @@ export default function ChildDashboard({
 
       {/* やりなおしクエスト（差し戻し） */}
       {rejectedLogs.length > 0 && (
-        <Card className="mt-4 border-amber-200 bg-amber-50">
+        <Card className="mt-4 border-[#e74c3c]/40 bg-card">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-amber-700 mb-2 flex items-center gap-1"><PixelRefreshIcon size={16} /> やり<R k="直" r="なお" />し クエスト</p>
+            <p className="text-sm font-semibold text-[#ff6b6b] mb-2 flex items-center gap-1"><PixelRefreshIcon size={16} /> やり<R k="直" r="なお" />し クエスト</p>
             {rejectedLogs.map((log) => (
-              <div key={log.id} className="text-sm mb-2 p-2 rounded-lg bg-white/60">
-                <p className="font-semibold text-amber-800">{log.task?.title}</p>
+              <div key={log.id} className="text-sm mb-2 p-2 rounded-lg bg-secondary/60 border border-border">
+                <p className="font-semibold text-card-foreground">{log.task?.title}</p>
                 {log.reject_reason ? (
-                  <p className="text-xs text-amber-600 mt-0.5">💬 {log.reject_reason}</p>
+                  <p className="text-xs text-[#ff6b6b] mt-0.5">💬 {log.reject_reason}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground mt-0.5">もう<R k="一度" r="いちど" /> <R k="頑張" r="がんば" />ろう！</p>
                 )}
@@ -698,16 +809,16 @@ export default function ChildDashboard({
 
       {/* つかう リクエストの やりなおし */}
       {rejectedSpends.length > 0 && (
-        <Card className="mt-4 border-blue-200 bg-blue-50">
+        <Card className="mt-4 border-[#3498db]/40 bg-card">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-1"><PixelRefreshIcon size={16} /> <R k="使" r="つか" />う リクエストの やり<R k="直" r="なお" />し</p>
+            <p className="text-sm font-semibold text-[#5dade2] mb-2 flex items-center gap-1"><PixelRefreshIcon size={16} /> <R k="使" r="つか" />う リクエストの やり<R k="直" r="なお" />し</p>
             {rejectedSpends.map((sr) => (
-              <div key={sr.id} className="text-sm mb-2 p-2 rounded-lg bg-white/60">
-                <p className="font-semibold text-blue-800">
+              <div key={sr.id} className="text-sm mb-2 p-2 rounded-lg bg-secondary/60 border border-border">
+                <p className="font-semibold text-card-foreground">
                   ¥{sr.amount.toLocaleString()} — {sr.purpose}
                 </p>
                 {sr.reject_reason ? (
-                  <p className="text-xs text-blue-600 mt-0.5">💬 {sr.reject_reason}</p>
+                  <p className="text-xs text-[#5dade2] mt-0.5">💬 {sr.reject_reason}</p>
                 ) : (
                   <p className="text-xs text-muted-foreground mt-0.5"><R k="今度" r="こんど" />は <R k="別" r="べつ" />の <R k="使" r="つか" />い<R k="方" r="かた" />を <R k="考" r="かんが" />えてみよう！</p>
                 )}
@@ -755,12 +866,14 @@ export default function ChildDashboard({
               <p className="text-xs text-muted-foreground text-center">
                 <R k="使" r="つか" />えるお<R k="金" r="かね" />: ¥{wallet?.spending_balance.toLocaleString() || 0}
               </p>
-              <Button
-                className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white text-lg"
+              <RpgButton
+                tier="sapphire"
+                size="lg"
+                fullWidth
                 onClick={handleSpendRequest}
               >
                 <R k="親" r="おや" />に お<R k="願" r="ねが" />いする
-              </Button>
+              </RpgButton>
             </div>
           )}
         </DialogContent>

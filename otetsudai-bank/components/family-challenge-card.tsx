@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import RpgCard from "@/components/rpg-card";
+import RpgButton from "@/components/rpg-button";
 import { Progress } from "@/components/ui/progress";
 import { PixelTargetIcon, PixelConfettiIcon, PixelGiftIcon, PixelCrownIcon } from "@/components/pixel-icons";
 import type { FamilyChallenge, User } from "@/lib/types";
@@ -130,18 +130,11 @@ export function FamilyChallengeCard({
   if (!challenge) {
     if (!isParent) return null;
     return (
-      <Card className="mb-4 border-dashed border-amber-300">
-        <CardContent className="p-4 text-center">
-          <Button
-            variant="outline"
-            className="w-full border-amber-300 text-amber-700 hover:bg-amber-50"
-            disabled={creating}
-            onClick={handleCreate}
-          >
-            {creating ? "作成中..." : <span className="flex items-center gap-1"><PixelTargetIcon size={16} /> 今週のチャレンジを作る</span>}
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="mb-4">
+        <RpgButton tier="gold" size="md" fullWidth disabled={creating} onClick={handleCreate}>
+          {creating ? "作成中..." : <><PixelTargetIcon size={16} /> 今週のチャレンジを作る</>}
+        </RpgButton>
+      </div>
     );
   }
 
@@ -151,68 +144,68 @@ export function FamilyChallengeCard({
   const daysLeft = Math.max(0, Math.ceil((new Date(challenge.end_date).getTime() - Date.now()) / 86400000));
 
   return (
-    <Card className={`mb-4 ${isComplete ? "border-green-300 bg-gradient-to-r from-green-50 to-emerald-50" : "border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50"}`}>
-      <CardContent className="p-4">
-        <p className="text-sm font-bold text-center text-amber-700 mb-1">
-          <span className="flex items-center justify-center gap-1">
-            <PixelCrownIcon size={16} />
-            {isComplete ? "家族チャレンジ達成！" : "家族チャレンジ"}
-          </span>
+    <RpgCard
+      tier={isComplete ? "violet" : "gold"}
+      className="mb-4"
+      title={
+        <span className="flex items-center justify-center gap-1 w-full">
+          <PixelCrownIcon size={16} />
+          {isComplete ? "家族チャレンジ達成！" : "家族チャレンジ"}
+        </span>
+      }
+    >
+      {/* ボスモンスター */}
+      <div className="flex flex-col items-center my-2">
+        <PixelBossMonster defeated={isComplete} size={56} />
+        <p className={`text-[10px] font-bold mt-0.5 ${isComplete ? "text-[#58d68d]" : "text-[#ff6b6b]"}`}>
+          {isComplete ? "たおした！" : `HP: ${remaining}/${challenge.target_quests}`}
         </p>
+      </div>
 
-        {/* ボスモンスター */}
-        <div className="flex flex-col items-center my-2">
-          <PixelBossMonster defeated={isComplete} size={56} />
-          <p className={`text-[10px] font-bold mt-0.5 ${isComplete ? "text-green-600" : "text-red-600"}`}>
-            {isComplete ? "たおした！" : `HP: ${remaining}/${challenge.target_quests}`}
-          </p>
-        </div>
+      <p className="text-base font-bold text-center text-card-foreground mb-3">
+        「{challenge.title}」
+      </p>
 
-        <p className="text-base font-bold text-center text-gray-800 mb-3">
-          「{challenge.title}」
-        </p>
-
-        {/* メンバー進捗 */}
-        <div className="space-y-1.5 mb-3">
-          {progress.map((p) => {
-            const ratio = challenge.target_quests > 0
-              ? Math.min(100, Math.round((p.count / Math.ceil(challenge.target_quests / kids.length)) * 100))
-              : 0;
-            return (
-              <div key={p.childId} className="flex items-center gap-2">
-                <span className="text-base w-6">{p.icon}</span>
-                <span className="text-xs font-bold w-12 truncate">{p.name}</span>
-                <div className="flex-1">
-                  <Progress value={ratio} className="h-2.5" />
-                </div>
-                <span className="text-xs font-bold w-6 text-right">{p.count}</span>
+      {/* メンバー進捗 */}
+      <div className="space-y-1.5 mb-3">
+        {progress.map((p) => {
+          const ratio = challenge.target_quests > 0
+            ? Math.min(100, Math.round((p.count / Math.ceil(challenge.target_quests / kids.length)) * 100))
+            : 0;
+          return (
+            <div key={p.childId} className="flex items-center gap-2">
+              <span className="text-base w-6">{p.icon}</span>
+              <span className="text-xs font-bold w-12 truncate text-card-foreground">{p.name}</span>
+              <div className="flex-1">
+                <Progress value={ratio} className="h-2.5" />
               </div>
-            );
-          })}
-        </div>
+              <span className="text-xs font-bold w-6 text-right text-card-foreground">{p.count}</span>
+            </div>
+          );
+        })}
+      </div>
 
-        {/* 合計 */}
-        <p className="text-xs text-center text-gray-600 mb-1">
-          家族合計: {totalCount}/{challenge.target_quests} クエスト
-        </p>
-        <Progress value={percent} className="h-3 mb-1" />
-        <p className="text-[10px] text-right text-muted-foreground">{percent}%</p>
+      {/* 合計 */}
+      <p className="text-xs text-center text-muted-foreground mb-1">
+        家族合計: {totalCount}/{challenge.target_quests} クエスト
+      </p>
+      <Progress value={percent} className="h-3 mb-1" />
+      <p className="text-[10px] text-right text-muted-foreground">{percent}%</p>
 
-        {/* ボーナス */}
-        <p className="text-xs font-bold text-amber-600 text-center mt-2">
-          <span className="flex items-center justify-center gap-1"><PixelGiftIcon size={16} /> 達成ボーナス: みんなに {challenge.bonus_amount}円！</span>
+      {/* ボーナス */}
+      <p className="text-xs font-bold text-accent text-center mt-2 drop-shadow-[0_1px_4px_rgba(249,195,59,0.4)]">
+        <span className="flex items-center justify-center gap-1"><PixelGiftIcon size={16} /> 達成ボーナス: みんなに {challenge.bonus_amount}円！</span>
+      </p>
+      {!isComplete && (
+        <p className="text-[11px] text-center text-muted-foreground mt-1">
+          あと {remaining}クエスト！ 残り{daysLeft}日 がんばろう！
         </p>
-        {!isComplete && (
-          <p className="text-[11px] text-center text-gray-500 mt-1">
-            あと {remaining}クエスト！ 残り{daysLeft}日 がんばろう！
-          </p>
-        )}
-        {isComplete && (
-          <p className="text-xs font-bold text-green-600 text-center mt-1">
-            <span className="flex items-center justify-center gap-1">みんなで達成した！ おめでとう！ <PixelConfettiIcon size={16} /></span>
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      )}
+      {isComplete && (
+        <p className="text-xs font-bold text-[#58d68d] text-center mt-1 drop-shadow-[0_1px_4px_rgba(46,204,113,0.4)]">
+          <span className="flex items-center justify-center gap-1">みんなで達成した！ おめでとう！ <PixelConfettiIcon size={16} /></span>
+        </p>
+      )}
+    </RpgCard>
   );
 }

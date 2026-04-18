@@ -110,15 +110,15 @@ export function LevelDisplay({ childId }: Props) {
         ? current.greetingLonely
         : current.greeting;
 
-  const moodBg =
+  const moodBorder =
     mood === "active"
-      ? "from-emerald-100 to-yellow-100 border-emerald-300"
+      ? "border-[#2ecc71]/50 shadow-[0_0_14px_rgba(46,204,113,0.25)]"
       : mood === "lonely"
-        ? "from-blue-50 to-gray-100 border-blue-200"
-        : "from-amber-100 to-yellow-100 border-amber-200";
+        ? "border-[#3498db]/40 shadow-[0_0_12px_rgba(52,152,219,0.22)]"
+        : "border-primary/50 shadow-[0_0_14px_rgba(255,166,35,0.28)]";
 
   return (
-    <div className={`bg-gradient-to-r ${moodBg} rounded-xl p-4 mb-4 border`}>
+    <div className={`bg-card rounded-xl p-4 mb-4 border-2 ${moodBorder}`}>
       <div className="flex items-start gap-3">
         {/* キャラクターSVG表示 */}
         <div className="flex flex-col items-center gap-1 min-w-[72px]">
@@ -129,15 +129,15 @@ export function LevelDisplay({ childId }: Props) {
         {/* ステータス */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
-            <p className="font-bold text-amber-800 text-sm leading-relaxed break-words">
+            <p className="font-bold text-primary text-sm leading-relaxed break-words drop-shadow-[0_1px_4px_rgba(255,166,35,0.35)]">
               Lv.{current.level} <RubyStr text={current.title} />
             </p>
           </div>
 
           {/* セリフ吹き出し */}
-          <div className="relative bg-white/70 rounded-lg px-3 py-1.5 mt-1 mb-2 border border-amber-200/50">
-            <div className="absolute -left-1.5 top-2 w-0 h-0 border-t-4 border-t-transparent border-r-6 border-r-white/70 border-b-4 border-b-transparent" />
-            <p className="text-xs text-gray-700">「<RubyStr text={greeting} />」</p>
+          <div className="relative bg-secondary/60 rounded-lg px-3 py-1.5 mt-1 mb-2 border border-primary/30">
+            <div className="absolute -left-1.5 top-2 w-0 h-0 border-t-4 border-t-transparent border-r-6 border-r-secondary/60 border-b-4 border-b-transparent" />
+            <p className="text-xs text-card-foreground">「<RubyStr text={greeting} />」</p>
           </div>
 
           {/* RPGステータスゲージ */}
@@ -164,7 +164,7 @@ export function LevelDisplay({ childId }: Props) {
               <R k="次" r="つぎ" />のレベルまで あと ¥{remaining.toLocaleString()}
             </p>
           ) : (
-            <p className="text-[10px] text-amber-600 mt-1 font-semibold">
+            <p className="text-[10px] text-accent mt-1 font-semibold">
               <R k="最高" r="さいこう" /> レベル <R k="達成" r="たっせい" />！
             </p>
           )}
