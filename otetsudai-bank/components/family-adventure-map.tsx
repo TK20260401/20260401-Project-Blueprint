@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { PixelMapIcon, PixelFlameIcon, PixelCoinIcon } from "@/components/pixel-icons";
 import CharacterSvg from "@/components/character-svg";
+import DungeonMap from "@/components/dungeon-map";
 import type { User, Wallet } from "@/lib/types";
 
 const LEVEL_THRESHOLDS = [0, 100, 500, 1500, 3000, 5000, 10000];
@@ -23,6 +24,7 @@ type Props = {
 
 export function FamilyAdventureMap({ familyName, children: kids, wallets }: Props) {
   const [stats, setStats] = useState({ weeklyQuests: 0, weeklyEarned: 0, familyStreak: 0 });
+  const [totalFamilyQuests, setTotalFamilyQuests] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -62,6 +64,14 @@ export function FamilyAdventureMap({ familyName, children: kids, wallets }: Prop
       }
 
       setStats({ weeklyQuests: logs?.length || 0, weeklyEarned, familyStreak });
+
+      // 全期間のクエスト数（ダンジョンフロア用）
+      const { count: totalQ } = await supabase
+        .from("otetsudai_task_logs")
+        .select("id", { count: "exact", head: true })
+        .in("child_id", childIds)
+        .eq("status", "approved");
+      setTotalFamilyQuests(totalQ || 0);
     }
     load();
   }, [kids]);
@@ -124,6 +134,9 @@ export function FamilyAdventureMap({ familyName, children: kids, wallets }: Prop
             <p className="text-[9px] text-muted-foreground">合計</p>
           </div>
         </div>
+
+        {/* ダンジョンフロア進行マップ */}
+        <DungeonMap totalQuests={totalFamilyQuests} />
       </CardContent>
     </Card>
   );
