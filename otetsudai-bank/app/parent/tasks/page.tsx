@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { PixelCrossedSwordsIcon, PixelScrollIcon, PixelCoinIcon, PixelRefreshIcon, PixelPersonIcon, PixelPencilIcon, PixelPauseIcon, PixelPlayIcon, PixelTrashIcon } from "@/components/pixel-icons";
 
 const RECURRENCE_LABELS: Record<string, string> = {
   once: "1回",
@@ -146,7 +147,7 @@ export default function TaskManagement() {
               ← もどる
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-emerald-800">⚔️ クエスト管理</h1>
+          <h1 className="text-2xl font-bold text-emerald-800 flex items-center gap-2"><PixelCrossedSwordsIcon size={24} /> クエスト管理</h1>
         </div>
         <Button
           className="bg-amber-500 hover:bg-amber-600 text-white"
@@ -163,7 +164,7 @@ export default function TaskManagement() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="title">⚔️ クエスト名</Label>
+                <Label htmlFor="title"><span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={14} /> クエスト名</span></Label>
                 <Input
                   id="title"
                   value={form.title}
@@ -172,7 +173,7 @@ export default function TaskManagement() {
                 />
               </div>
               <div>
-                <Label htmlFor="description">📝 せつめい（任意）</Label>
+                <Label htmlFor="description"><span className="flex items-center gap-1"><PixelScrollIcon size={14} /> せつめい（任意）</span></Label>
                 <Textarea
                   id="description"
                   value={form.description}
@@ -185,7 +186,7 @@ export default function TaskManagement() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="reward">🪙 ごほうび (¥)</Label>
+                  <Label htmlFor="reward"><span className="flex items-center gap-1"><PixelCoinIcon size={14} /> ごほうび (¥)</span></Label>
                   <Input
                     id="reward"
                     type="number"
@@ -201,7 +202,7 @@ export default function TaskManagement() {
                   />
                 </div>
                 <div>
-                  <Label>🔄 くりかえし</Label>
+                  <Label><span className="flex items-center gap-1"><PixelRefreshIcon size={14} /> くりかえし</span></Label>
                   <Select
                     value={form.recurrence}
                     onValueChange={(v) =>
@@ -223,7 +224,7 @@ export default function TaskManagement() {
                 </div>
               </div>
               <div>
-                <Label>👤 だれのクエスト？</Label>
+                <Label><span className="flex items-center gap-1"><PixelPersonIcon size={14} /> だれのクエスト？</span></Label>
                 <Select
                   value={form.assigned_child_id}
                   onValueChange={(v) =>
@@ -303,7 +304,7 @@ export default function TaskManagement() {
                           className="text-amber-600 font-semibold hover:underline cursor-pointer"
                           onClick={() => openEdit(task)}
                         >
-                          🪙 ¥{task.reward_amount.toLocaleString()}
+                          <span className="flex items-center gap-0.5"><PixelCoinIcon size={14} /> ¥{task.reward_amount.toLocaleString()}</span>
                         </button>
                         {assignedChild && (
                           <span className="text-muted-foreground">
@@ -318,14 +319,14 @@ export default function TaskManagement() {
                         size="sm"
                         onClick={() => openEdit(task)}
                       >
-                        ✏️
+                        <PixelPencilIcon size={16} />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleActive(task)}
                       >
-                        {task.is_active ? "⏸" : "▶️"}
+                        {task.is_active ? <PixelPauseIcon size={16} /> : <PixelPlayIcon size={16} />}
                       </Button>
                       <Button
                         variant="ghost"
@@ -333,7 +334,7 @@ export default function TaskManagement() {
                         className="text-red-500"
                         onClick={() => handleDelete(task.id)}
                       >
-                        🗑
+                        <PixelTrashIcon size={16} />
                       </Button>
                     </div>
                   </div>
