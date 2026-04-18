@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { R } from "@/components/ruby-text";
+import { PixelCrossedSwordsIcon, PixelStarIcon, PixelCheckIcon, PixelTrashIcon, PixelDoorIcon } from "@/components/pixel-icons";
+import PixelHeroSvg from "@/components/pixel-hero-svg";
 
 type LoginMode = "select" | "family" | "admin";
 
@@ -260,7 +262,7 @@ export default function LoginPage() {
                 setShowPassword(false);
               }}
             >
-              ← もどる
+              <span className="flex items-center gap-1"><PixelDoorIcon size={14} /> もどる</span>
             </Button>
           </CardContent>
         </Card>
@@ -274,7 +276,7 @@ export default function LoginPage() {
       <div className="flex items-center justify-center min-h-screen p-4">
         <Card className="w-full max-w-md shadow-xl border-amber-200">
           <CardHeader className="text-center">
-            <div className="text-5xl mb-2">⚔️</div>
+            <div className="mb-2 flex justify-center"><PixelHeroSvg type="warrior" size={48} /></div>
             <CardTitle className="text-2xl font-bold text-emerald-800">
               おこづかいクエスト
             </CardTitle>
@@ -284,7 +286,7 @@ export default function LoginPage() {
             <div className="flex gap-2 mt-2 justify-center">
               <Link href="/signup">
                 <Button variant="outline" size="sm" className="border-amber-300 text-amber-600 hover:bg-amber-50">
-                  ✨ <R k="初" r="はじ" />めての<R k="方" r="かた" />
+                  <span className="flex items-center gap-1"><PixelStarIcon size={14} /> <R k="初" r="はじ" />めての<R k="方" r="かた" /></span>
                 </Button>
               </Link>
               <Link href="/help">
@@ -297,7 +299,7 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             {verified === "true" && (
               <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-3 text-center">
-                <p className="text-sm font-semibold text-emerald-700">✅ メール<R k="認証" r="にんしょう" />が<R k="完了" r="かんりょう" />しました</p>
+                <p className="text-sm font-semibold text-emerald-700 flex items-center gap-1"><PixelCheckIcon size={14} /> メール<R k="認証" r="にんしょう" />が<R k="完了" r="かんりょう" />しました</p>
                 <p className="text-xs text-emerald-600 mt-1">ログインしてください</p>
               </div>
             )}
@@ -373,7 +375,7 @@ export default function LoginPage() {
                           setDeleteTarget(f);
                         }}
                       >
-                        🗑️
+                        <PixelTrashIcon size={14} />
                       </Button>
                     )}
                   </div>
@@ -392,7 +394,7 @@ export default function LoginPage() {
                     setMembers([]);
                   }}
                 >
-                  ← もどる
+                  <span className="flex items-center gap-1"><PixelDoorIcon size={14} /> もどる</span>
                 </Button>
                 <span className="font-semibold text-amber-700">
                   {selectedFamily.name}
@@ -423,7 +425,7 @@ export default function LoginPage() {
                   size="sm"
                   onClick={() => setSelectedUser(null)}
                 >
-                  ← もどる
+                  <span className="flex items-center gap-1"><PixelDoorIcon size={14} /> もどる</span>
                 </Button>
                 <span className="font-semibold text-amber-700">
                   {selectedUser.name}
@@ -478,7 +480,7 @@ export default function LoginPage() {
               setError("");
             }}
           >
-            ← モードをえらびなおす
+            <span className="flex items-center gap-1"><PixelDoorIcon size={14} /> モードをえらびなおす</span>
           </Button>
         </div>
       </Card>
@@ -489,7 +491,7 @@ export default function LoginPage() {
           <Card className="w-full max-w-sm border-red-300 bg-white shadow-2xl">
             <CardHeader className="pb-2">
               <CardTitle className="text-base text-red-700 flex items-center gap-2">
-                🗑️ おうちデータの 削除
+                <PixelTrashIcon size={14} /> おうちデータの 削除
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -518,7 +520,7 @@ export default function LoginPage() {
                   onClick={handleDeleteFamily}
                   disabled={deleting}
                 >
-                  {deleting ? "削除中..." : "🗑️ 削除する"}
+                  {deleting ? "削除中..." : "削除する"}
                 </Button>
               </div>
             </CardContent>

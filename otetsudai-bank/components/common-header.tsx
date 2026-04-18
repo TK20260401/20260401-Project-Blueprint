@@ -23,7 +23,7 @@ export default function CommonHeader({ title, userName, backHref, pendingCount, 
       <div className="flex items-center gap-2">
         {backHref && (
           <Button variant="ghost" size="sm" onClick={() => router.push(backHref)}>
-            ←
+            <PixelDoorIcon size={14} />
           </Button>
         )}
         <div>

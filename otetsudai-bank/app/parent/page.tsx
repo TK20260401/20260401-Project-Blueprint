@@ -22,7 +22,7 @@ import { FamilyStampRelay } from "@/components/family-stamp-relay";
 import { MonthlyReport } from "@/components/monthly-report";
 import { FamilyAdventureMap } from "@/components/family-adventure-map";
 import { FamilyChallengeCard } from "@/components/family-challenge-card";
-import { PixelCrossedSwordsIcon, PixelScrollIcon, PixelHourglassIcon, PixelCartIcon, PixelStarIcon, PixelChatIcon, PixelSeedlingIcon, PixelConfettiIcon, PixelBarChartIcon, PixelLetterIcon, PixelCoinIcon, PixelPiggyIcon, PixelChartIcon, PixelTrashIcon, PixelWarningIcon } from "@/components/pixel-icons";
+import { PixelCrossedSwordsIcon, PixelScrollIcon, PixelHourglassIcon, PixelCartIcon, PixelStarIcon, PixelChatIcon, PixelSeedlingIcon, PixelConfettiIcon, PixelBarChartIcon, PixelLetterIcon, PixelCoinIcon, PixelPiggyIcon, PixelChartIcon, PixelTrashIcon, PixelWarningIcon, PixelCheckIcon, PixelRefreshIcon } from "@/components/pixel-icons";
 
 /** メールアドレス形式なら表示名として不適切と判断 */
 function displayName(name: string | undefined | null): string {
@@ -527,13 +527,13 @@ export default function ParentDashboard() {
                       className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3 flex-shrink-0 ml-2"
                       onClick={() => setApprovalTarget(log)}
                     >
-                      ✓ 承認
+                      <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> 承認</span>
                     </Button>
                   </div>
                   {/* やりなおしプリセット理由 */}
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { label: "🔄 やり直し", reason: "" },
+                      { label: "やり直し", reason: "" },
                       { label: "もう少し 丁寧に", reason: "もう少し 丁寧に やってみよう" },
                       { label: "最後まで やろう", reason: "最後まで やりきろう！" },
                       { label: "時間を かけてね", reason: "もう少し 時間を かけてみよう" },
@@ -583,13 +583,13 @@ export default function ParentDashboard() {
                       className="bg-emerald-500 hover:bg-emerald-600 text-white h-9 px-3 flex-shrink-0 ml-2"
                       onClick={() => handleApproveSpend(spend)}
                     >
-                      ✓ OK
+                      <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> OK</span>
                     </Button>
                   </div>
                   {/* やりなおしプリセット理由 */}
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { label: "🔄 今は やめておこう", reason: "" },
+                      { label: "今は やめておこう", reason: "" },
                       { label: "高すぎるよ", reason: "金額を 見直してみよう" },
                       { label: "理由を くわしく", reason: "もう少し くわしく 教えてね" },
                       { label: "貯めてからね", reason: "もう少し 貯めてからにしよう" },
@@ -666,7 +666,7 @@ export default function ParentDashboard() {
                       className="bg-emerald-500 hover:bg-emerald-600 text-white flex-1 h-9"
                       onClick={() => handleApproveProposal(proposal.id)}
                     >
-                      ✓ 承認
+                      <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> 承認</span>
                     </Button>
                     <Button
                       size="sm"
@@ -674,7 +674,7 @@ export default function ParentDashboard() {
                       className="border-amber-200 text-amber-600 hover:bg-amber-50 flex-1 h-9"
                       onClick={() => handleRejectProposal(proposal.id)}
                     >
-                      🔄 こんどにしよう
+                      <span className="flex items-center gap-0.5"><PixelRefreshIcon size={12} /> こんどにしよう</span>
                     </Button>
                   </div>
                 </div>
@@ -725,7 +725,7 @@ export default function ParentDashboard() {
                         className="text-blue-400 hover:text-blue-600 text-xs flex-shrink-0"
                         onClick={() => handleMarkRead(msg.id)}
                       >
-                        ✓ よんだ
+                        <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> よんだ</span>
                       </Button>
                     </div>
                   </div>
@@ -771,7 +771,7 @@ export default function ParentDashboard() {
                       className="bg-green-500 hover:bg-green-600 text-white flex-1 h-9"
                       onClick={() => handleApproveInvestOrder(order)}
                     >
-                      ✓ 承認
+                      <span className="flex items-center gap-0.5"><PixelCheckIcon size={12} /> 承認</span>
                     </Button>
                     <Button
                       size="sm"
@@ -779,7 +779,7 @@ export default function ParentDashboard() {
                       className="border-amber-200 text-amber-600 hover:bg-amber-50 flex-1 h-9"
                       onClick={() => handleRejectInvestOrder(order.id)}
                     >
-                      🔄 こんどにしよう
+                      <span className="flex items-center gap-0.5"><PixelRefreshIcon size={12} /> こんどにしよう</span>
                     </Button>
                   </div>
                 </div>
@@ -968,7 +968,7 @@ export default function ParentDashboard() {
                           setTempInvestRatio(wallet?.invest_ratio ?? 0);
                         }}
                       >
-                        ⚙️ 分割比率を 変更
+                        分割比率を 変更
                       </Button>
                     )}
 
