@@ -31,6 +31,7 @@ import { MoneyTree } from "@/components/money-tree";
 import { FamilyChallengeCard } from "@/components/family-challenge-card";
 import { InvestOrderDialog } from "@/components/invest-order-dialog";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { PixelCrossedSwordsIcon, PixelBarChartIcon, PixelFlameIcon, PixelChestOpenIcon, PixelCartIcon, PixelPiggyIcon, PixelSeedlingIcon, PixelCoinIcon, PixelScrollIcon, PixelStarIcon, PixelLightbulbIcon, PixelLetterIcon, PixelRefreshIcon, PixelConfettiIcon, PixelShieldIcon, PixelChatIcon } from "@/components/pixel-icons";
 
 export default function ChildDashboard({
   params,
@@ -325,7 +326,7 @@ export default function ChildDashboard({
           <BadgeDisplay badges={badges} />
         ) : (
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-200 text-center">
-            <p className="text-sm font-bold text-gray-500 mb-2">⚔️ <R k="装備" r="そうび" /></p>
+            <p className="text-sm font-bold text-gray-500 mb-2 flex items-center justify-center gap-1"><PixelShieldIcon size={16} /> <R k="装備" r="そうび" /></p>
             <div className="flex justify-center gap-3 mb-2">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-lg">？</div>
@@ -340,7 +341,7 @@ export default function ChildDashboard({
       {weeklySummary.quests > 0 && (
         <Card className="mb-4 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50">
           <CardContent className="p-4">
-            <p className="text-sm font-bold text-amber-800 mb-2">📊 こんしゅうの きろく</p>
+            <p className="text-sm font-bold text-amber-800 mb-2 flex items-center gap-1"><PixelBarChartIcon size={16} /> こんしゅうの きろく</p>
             <div className="flex justify-around">
               <div className="text-center">
                 <p className="text-2xl font-bold text-amber-700">{weeklySummary.quests}</p>
@@ -352,7 +353,7 @@ export default function ChildDashboard({
               </div>
               {weeklySummary.streak > 0 && (
                 <div className="text-center">
-                  <p className="text-2xl font-bold text-amber-700">🔥{weeklySummary.streak}</p>
+                  <p className="text-2xl font-bold text-amber-700 flex items-center justify-center gap-0.5"><PixelFlameIcon size={18} />{weeklySummary.streak}</p>
                   <p className="text-xs text-muted-foreground"><R k="連続" r="れんぞく" /><R k="日" r="にち" /></p>
                 </div>
               )}
@@ -364,8 +365,9 @@ export default function ChildDashboard({
       {/* Piggy Bank */}
       <Card className="mb-4 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">
         <CardContent className="p-6 text-center">
-          <div className={`text-6xl mb-2 transition-transform duration-500 ${total >= 5000 ? "scale-125" : total >= 1000 ? "scale-110" : "scale-100"}`}>
-            {total >= 5000 ? "🐷🌟" : total >= 1000 ? "🐷✨" : "🐷"}
+          <div className={`mb-2 flex items-center justify-center gap-1 transition-transform duration-500 ${total >= 5000 ? "scale-125" : total >= 1000 ? "scale-110" : "scale-100"}`}>
+            <PixelChestOpenIcon size={48} />
+            {total >= 5000 && <PixelStarIcon size={20} />}
           </div>
           <p className="text-3xl font-bold text-amber-700">
             ¥{total.toLocaleString()}
@@ -374,7 +376,7 @@ export default function ChildDashboard({
           <div className="grid grid-cols-3 gap-2">
             <div className="bg-white/70 rounded-xl p-2">
               <p className="text-[10px] text-red-500 font-semibold">
-                💳 <R k="使" r="つか" />う
+                <span className="flex items-center gap-0.5"><PixelCartIcon size={12} /> <R k="使" r="つか" />う</span>
               </p>
               <p className="text-base font-bold text-red-600">
                 ¥{(wallet?.spending_balance ?? 0).toLocaleString()}
@@ -384,12 +386,12 @@ export default function ChildDashboard({
                 className="mt-1 w-full bg-red-500 hover:bg-red-600 text-white text-[10px] h-6 px-1"
                 onClick={() => { setSpendOpen(true); setSpendError(""); setSpendSuccess(false); }}
               >
-                🛒 <R k="使" r="つか" />う
+                <span className="flex items-center gap-0.5"><PixelCartIcon size={10} /> <R k="使" r="つか" />う</span>
               </Button>
             </div>
             <div className="bg-white/70 rounded-xl p-2">
               <p className="text-[10px] text-blue-500 font-semibold">
-                🐷 <R k="貯" r="た" />める
+                <span className="flex items-center gap-0.5"><PixelPiggyIcon size={12} /> <R k="貯" r="た" />める</span>
               </p>
               <p className="text-base font-bold text-blue-600">
                 ¥{(wallet?.saving_balance ?? 0).toLocaleString()}
@@ -397,7 +399,7 @@ export default function ChildDashboard({
             </div>
             <div className="bg-white/70 rounded-xl p-2">
               <p className="text-[10px] text-green-500 font-semibold">
-                🌱 <R k="増" r="ふ" />やす
+                <span className="flex items-center gap-0.5"><PixelSeedlingIcon size={12} /> <R k="増" r="ふ" />やす</span>
               </p>
               <p className="text-base font-bold text-green-600">
                 ¥{(wallet?.invest_balance ?? 0).toLocaleString()}
@@ -435,7 +437,7 @@ export default function ChildDashboard({
               className="w-full mt-2 h-12 text-base font-bold bg-green-500 hover:bg-green-600 text-white rounded-2xl"
               onClick={() => setInvestOrderOpen(true)}
             >
-              🌱 <R k="株" r="かぶ" />を <R k="買" r="か" />いたい！
+              <span className="flex items-center gap-1"><PixelSeedlingIcon size={16} /> <R k="株" r="かぶ" />を <R k="買" r="か" />いたい！</span>
             </Button>
           )}
         </div>
@@ -459,7 +461,7 @@ export default function ChildDashboard({
           <Card className="mb-4 border-amber-300">
             <CardContent className="p-4">
               <p className="text-base font-bold text-amber-800 mb-2">
-                ☀️ <R k="今日" r="きょう" />のクエスト
+                <span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={16} /> <R k="今日" r="きょう" />のクエスト</span>
               </p>
               <div className="space-y-2">
                 {todayTasks.map((task) => (
@@ -490,11 +492,11 @@ export default function ChildDashboard({
           className="w-full h-14 text-lg bg-emerald-500 hover:bg-emerald-600 text-white"
           onClick={() => setSelfQuestOpen(true)}
         >
-          ✨ <R k="自分" r="じぶん" />クエストを <R k="作" r="つく" />る
+          <span className="flex items-center gap-1"><PixelLightbulbIcon size={18} /> <R k="自分" r="じぶん" />クエストを <R k="作" r="つく" />る</span>
         </Button>
         {pendingProposals > 0 && (
           <p className="text-center text-xs text-amber-600 mt-1">
-            📨 {pendingProposals}<R k="件" r="けん" />の <R k="提案" r="ていあん" />が <R k="承認待" r="しょうにんま" />ちだよ
+            <span className="inline-flex items-center gap-0.5"><PixelLetterIcon size={12} /> {pendingProposals}<R k="件" r="けん" />の <R k="提案" r="ていあん" />が <R k="承認待" r="しょうにんま" />ちだよ</span>
           </p>
         )}
       </div>
@@ -508,8 +510,8 @@ export default function ChildDashboard({
 
       <Tabs defaultValue="tasks" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="tasks">⚔️ クエスト</TabsTrigger>
-          <TabsTrigger value="history">📜 <R k="履歴" r="りれき" /></TabsTrigger>
+          <TabsTrigger value="tasks"><span className="flex items-center gap-1"><PixelCrossedSwordsIcon size={14} /> クエスト</span></TabsTrigger>
+          <TabsTrigger value="history"><span className="flex items-center gap-1"><PixelScrollIcon size={14} /> <R k="履歴" r="りれき" /></span></TabsTrigger>
         </TabsList>
 
         {/* Tasks */}
@@ -553,7 +555,7 @@ export default function ChildDashboard({
                       onClick={() => handleComplete(task)}
                       disabled={submitting === task.id}
                     >
-                      {submitting === task.id ? "..." : "クリア！⚔️"}
+                      {submitting === task.id ? "..." : <span className="flex items-center gap-1">クリア！<PixelCrossedSwordsIcon size={14} /></span>}
                     </Button>
                   </div>
                 </CardContent>
@@ -582,11 +584,11 @@ export default function ChildDashboard({
                     >
                       <div>
                         <p className="text-sm font-medium">
-                          {tx.type === "earn"
-                            ? "🪙"
+                          <span className="inline-flex mr-1">{tx.type === "earn"
+                            ? <PixelCoinIcon size={14} />
                             : tx.type === "spend"
-                              ? "🛒"
-                              : "🏦"}{" "}
+                              ? <PixelCartIcon size={14} />
+                              : <PixelPiggyIcon size={14} />}</span>
                           <AutoRuby text={tx.description || tx.type} />
                         </p>
                         <p className="text-xs text-muted-foreground">
@@ -611,7 +613,7 @@ export default function ChildDashboard({
       {pendingPayments.length > 0 && (
         <Card className="mt-4 border-orange-200 bg-orange-50">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-orange-700 mb-2">🪙 <R k="親" r="おや" />が お<R k="金" r="かね" />を <R k="準備" r="じゅんび" /> しているよ</p>
+            <p className="text-sm font-semibold text-orange-700 mb-2 flex items-center gap-1"><PixelCoinIcon size={16} /> <R k="親" r="おや" />が お<R k="金" r="かね" />を <R k="準備" r="じゅんび" /> しているよ</p>
             {pendingPayments.map((sp) => (
               <div key={sp.id} className="text-sm mb-1 p-2 rounded-lg bg-white/60">
                 <span className="font-bold text-orange-800">¥{sp.amount.toLocaleString()}</span>
@@ -624,7 +626,7 @@ export default function ChildDashboard({
       {paidRecent.length > 0 && (
         <Card className="mt-4 border-emerald-200 bg-emerald-50">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-emerald-700 mb-2">🎉 お<R k="金" r="かね" />を もらったよ！</p>
+            <p className="text-sm font-semibold text-emerald-700 mb-2 flex items-center gap-1"><PixelConfettiIcon size={16} /> お<R k="金" r="かね" />を もらったよ！</p>
             {paidRecent.map((sp) => (
               <div key={sp.id} className="text-sm mb-1 p-2 rounded-lg bg-white/60 flex items-center justify-between">
                 <div>
@@ -647,7 +649,7 @@ export default function ChildDashboard({
       {rejectedLogs.length > 0 && (
         <Card className="mt-4 border-amber-200 bg-amber-50">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-amber-700 mb-2">🔄 やり<R k="直" r="なお" />し クエスト</p>
+            <p className="text-sm font-semibold text-amber-700 mb-2 flex items-center gap-1"><PixelRefreshIcon size={16} /> やり<R k="直" r="なお" />し クエスト</p>
             {rejectedLogs.map((log) => (
               <div key={log.id} className="text-sm mb-2 p-2 rounded-lg bg-white/60">
                 <p className="font-semibold text-amber-800">{log.task?.title}</p>
@@ -666,7 +668,7 @@ export default function ChildDashboard({
       {rejectedSpends.length > 0 && (
         <Card className="mt-4 border-blue-200 bg-blue-50">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-blue-700 mb-2">🔄 <R k="使" r="つか" />う リクエストの やり<R k="直" r="なお" />し</p>
+            <p className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-1"><PixelRefreshIcon size={16} /> <R k="使" r="つか" />う リクエストの やり<R k="直" r="なお" />し</p>
             {rejectedSpends.map((sr) => (
               <div key={sr.id} className="text-sm mb-2 p-2 rounded-lg bg-white/60">
                 <p className="font-semibold text-blue-800">
@@ -687,11 +689,11 @@ export default function ChildDashboard({
       <Dialog open={spendOpen} onOpenChange={setSpendOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>🛒 お<R k="金" r="かね" />を<R k="使" r="つか" />う</DialogTitle>
+            <DialogTitle><span className="flex items-center gap-1"><PixelCartIcon size={18} /> お<R k="金" r="かね" />を<R k="使" r="つか" />う</span></DialogTitle>
           </DialogHeader>
           {spendSuccess ? (
             <div className="text-center py-4">
-              <div className="text-4xl mb-2">📨</div>
+              <div className="mb-2 flex justify-center"><PixelLetterIcon size={40} /></div>
               <p className="font-semibold text-green-600"><R k="親" r="おや" />に お<R k="願" r="ねが" />いしたよ！</p>
               <p className="text-sm text-muted-foreground"><R k="承認" r="しょうにん" />を<R k="待" r="ま" />ってね</p>
             </div>
