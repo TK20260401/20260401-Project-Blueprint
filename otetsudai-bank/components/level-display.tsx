@@ -8,6 +8,8 @@ import { R, RubyStr } from "@/components/ruby-text";
 import CharacterSvg from "@/components/character-svg";
 import { PixelSwordIcon } from "@/components/pixel-icons";
 import RpgStatusBar from "@/components/rpg-status-bar";
+import EquipmentView from "@/components/equipment-view";
+import { calculateRpgStats } from "@/lib/rpg-stats";
 
 type Mood = "active" | "normal" | "lonely";
 
@@ -21,6 +23,9 @@ export function LevelDisplay({ childId }: Props) {
   const [loaded, setLoaded] = useState(false);
   const [daysActive7, setDaysActive7] = useState(0);
   const [savingWeeks, setSavingWeeks] = useState(0);
+  const [totalQuests, setTotalQuests] = useState(0);
+  const [badgeCount, setBadgeCount] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -59,6 +64,24 @@ export function LevelDisplay({ childId }: Props) {
           .map((log: { approved_at?: string }) => new Date(log.approved_at!).toDateString())
       );
       setDaysActive7(activeDays.size);
+
+      setTotalQuests((data || []).length);
+
+      // ストリーク計算
+      const allLogDays = [...new Set(
+        (data || []).filter((l: { approved_at?: string }) => l.approved_at)
+          .map((l: { approved_at?: string }) => new Date(l.approved_at!).toDateString())
+      )].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+      let streak = 0;
+      const today = new Date(); today.setHours(0,0,0,0);
+      const check = new Date(today);
+      if (allLogDays.length > 0 && allLogDays[0] !== check.toDateString()) check.setDate(check.getDate() - 1);
+      while (allLogDays.includes(check.toDateString())) { streak++; check.setDate(check.getDate() - 1); }
+      setStreakDays(streak);
+
+      // バッジ数
+      const { count: bc } = await supabase.from("otetsudai_badges").select("id", { count: "exact", head: true }).eq("child_id", childId);
+      setBadgeCount(bc || 0);
 
       // MP: 簡易的に直近の貯金アクティビティ週数（ログ日数/7の概算）
       const allDays = new Set(
@@ -122,6 +145,19 @@ export function LevelDisplay({ childId }: Props) {
             hp={Math.round((daysActive7 / 7) * 100)}
             mp={savingWeeks}
             exp={progress}
+          />
+          {/* 装備ステータス */}
+          <EquipmentView
+            stats={calculateRpgStats({
+              level: current.level,
+              totalQuests,
+              badgeCount,
+              streakDays,
+              daysActiveInLast7: daysActive7,
+              savingStreakWeeks: savingWeeks,
+              expProgress: progress,
+            })}
+            appearance={current.appearance ? current.appearance.replace(/\[([^\]|]+)\|[^\]]+\]/g, "$1") : ""}
           />
           {next ? (
             <p className="text-[10px] text-muted-foreground mt-1">
