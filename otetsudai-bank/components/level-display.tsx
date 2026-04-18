@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 import { getLevelProgress } from "@/lib/levels";
 import { Progress } from "@/components/ui/progress";
 import { R, RubyStr } from "@/components/ruby-text";
+import CharacterSvg from "@/components/character-svg";
+import { PixelSwordIcon } from "@/components/pixel-icons";
 
 type Mood = "active" | "normal" | "lonely";
 
@@ -69,18 +71,12 @@ export function LevelDisplay({ childId }: Props) {
         ? "from-blue-50 to-gray-100 border-blue-200"
         : "from-amber-100 to-yellow-100 border-amber-200";
 
-  const moodIndicator =
-    mood === "active" ? "✨" : mood === "lonely" ? "💤" : "😊";
-
   return (
     <div className={`bg-gradient-to-r ${moodBg} rounded-xl p-4 mb-4 border`}>
       <div className="flex items-start gap-3">
-        {/* キャラクター表示 */}
-        <div className="flex flex-col items-center gap-1 min-w-[64px]">
-          <div className="relative">
-            <span className="text-5xl">{current.character}</span>
-            <span className="absolute -top-1 -right-1 text-sm">{moodIndicator}</span>
-          </div>
+        {/* キャラクターSVG表示 */}
+        <div className="flex flex-col items-center gap-1 min-w-[72px]">
+          <CharacterSvg level={current.level} mood={mood} size={72} />
           <span className="text-[10px] text-muted-foreground"><RubyStr text={current.appearance} /></span>
         </div>
 
@@ -93,21 +89,34 @@ export function LevelDisplay({ childId }: Props) {
           </div>
 
           {/* セリフ吹き出し */}
-          <div className="relative bg-white/70 rounded-lg px-3 py-1.5 mt-1 mb-2">
+          <div className="relative bg-white/70 rounded-lg px-3 py-1.5 mt-1 mb-2 border border-amber-200/50">
             <div className="absolute -left-1.5 top-2 w-0 h-0 border-t-4 border-t-transparent border-r-6 border-r-white/70 border-b-4 border-b-transparent" />
             <p className="text-xs text-gray-700">「<RubyStr text={greeting} />」</p>
           </div>
 
           {next ? (
             <>
-              <Progress value={progress} className="h-2" />
+              {/* RPG風EXPバー */}
+              <div className="flex items-center gap-1.5">
+                <PixelSwordIcon size={14} />
+                <div className="flex-1">
+                  <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden border border-amber-300">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-full" />
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-amber-700">EXP {progress}%</span>
+              </div>
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 <R k="次" r="つぎ" />のレベルまで あと ¥{remaining.toLocaleString()}
               </p>
             </>
           ) : (
             <p className="text-[10px] text-amber-600 mt-1 font-semibold">
-              <R k="最高" r="さいこう" /> レベル <R k="達成" r="たっせい" />！ 🎊
+              <R k="最高" r="さいこう" /> レベル <R k="達成" r="たっせい" />！
             </p>
           )}
         </div>

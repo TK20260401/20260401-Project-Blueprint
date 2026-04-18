@@ -366,6 +366,8 @@ parent/child: 家族ベース認証
 | v0.12.3 | 2026-04-17 | 家族管理削除機能、RLSポリシー追加(admin用)、AppAlertプレーンText化、辞書「下→した」削除(誤変換防止)、バッジラベル漢字化 |
 | v0.13.0 | 2026-04-17 | ファミリースタンプリレー（親⇔子・兄弟間エール送信、パーティチャット風UI）、ふやすの木（投資残高に応じた木成長メタファー: たね→ふたば→わかぎ→たいぼく）。RLSセキュリティ修正（4テーブル有効化） |
 | v0.14.0 | 2026-04-17 | 月次レポート（子供ごとの成長統計+自動コメント）、ファミリーダッシュボード（冒険の地図）、家族チャレンジウィーク（協力型週間目標+進捗バー+達成ボーナス） |
+| v0.15.0 | 2026-04-17 | Habitica風ピクセルアートSVG全画面導入。PixelIcons(38種)+PixelHeroSvg(戦士・魔法使い)をモバイル・Web両版に追加。全UIアイコンをSVGピクセルアートに置換 |
+| v0.16.0 | 2026-04-18 | RPG演出強化。CharacterSvg(7段階レベルキャラ)・MoneyTree SVG(4段階成長)をWeb版に移植、LevelUpModal/BadgeUnlockModalのSVG化(ピクセルスパークル・メダルフレーム・RPGバナー)、FamilyChallengeCardにボスモンスターSVG、FamilyAdventureMapにワールドマップ背景SVG、クエストクリアバナーRPG化、Web版LevelDisplayにCharacterSvg+RPG風EXPバー導入。TestFlightフィードバック#1全項目完了確認+ドキュメント同期 |
 
 ## Getting Started
 

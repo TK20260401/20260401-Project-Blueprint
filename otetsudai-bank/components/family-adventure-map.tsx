@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { PixelMapIcon, PixelFlameIcon, PixelCoinIcon } from "@/components/pixel-icons";
+import CharacterSvg from "@/components/character-svg";
 import type { User, Wallet } from "@/lib/types";
 
 const LEVEL_THRESHOLDS = [0, 100, 500, 1500, 3000, 5000, 10000];
@@ -13,8 +14,6 @@ function getLevel(total: number): number {
   }
   return 1;
 }
-
-const LEVEL_EMOJI = ["🐣", "🐥", "🐤", "🦅", "🦉", "🐉", "👑"];
 
 type Props = {
   familyName: string;
@@ -90,7 +89,7 @@ export function FamilyAdventureMap({ familyName, children: kids, wallets }: Prop
                 key={kid.id}
                 className="flex flex-col items-center bg-white/70 rounded-xl p-2 border border-amber-200 min-w-[72px]"
               >
-                <span className="text-2xl">{LEVEL_EMOJI[Math.min(level - 1, 6)]}</span>
+                <CharacterSvg level={Math.min(level, 7)} mood="normal" size={48} />
                 <span className="text-[10px] font-bold text-amber-600">Lv.{level}</span>
                 <span className="text-xs font-bold text-gray-800 truncate max-w-[64px]">{kid.name}</span>
                 <span className="text-[10px] text-muted-foreground">{total.toLocaleString()}円</span>
