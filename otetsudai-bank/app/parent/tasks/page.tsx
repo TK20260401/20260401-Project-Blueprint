@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { PixelCrossedSwordsIcon, PixelScrollIcon, PixelCoinIcon, PixelRefreshIcon, PixelPersonIcon, PixelPencilIcon, PixelPauseIcon, PixelPlayIcon, PixelTrashIcon } from "@/components/pixel-icons";
+import QuestCardFrame from "@/components/quest-card-frame";
 
 const RECURRENCE_LABELS: Record<string, string> = {
   once: "1回",
@@ -268,12 +269,18 @@ export default function TaskManagement() {
             const assignedChild = children.find(
               (c) => c.id === task.assigned_child_id
             );
+            const tier: "bronze" | "silver" | "gold" = task.is_special
+              ? "gold"
+              : task.recurrence === "weekly"
+                ? "silver"
+                : "bronze";
             return (
-              <Card
+              <div
                 key={task.id}
-                className={`border-amber-200 ${!task.is_active ? "opacity-50" : ""}`}
+                className={!task.is_active ? "opacity-50" : ""}
               >
-                <CardContent className="p-4">
+                <QuestCardFrame tier={tier}>
+                  <div className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -338,8 +345,9 @@ export default function TaskManagement() {
                       </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  </div>
+                </QuestCardFrame>
+              </div>
             );
           })
         )}
