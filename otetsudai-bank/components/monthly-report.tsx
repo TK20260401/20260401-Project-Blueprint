@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { PixelBarChartIcon, PixelTargetIcon, PixelCoinIcon, PixelFlameIcon, PixelCrossedSwordsIcon, PixelConfettiIcon, PixelPiggyIcon, PixelLightbulbIcon } from "@/components/pixel-icons";
+import CharacterSvg from "@/components/character-svg";
 import type { User, Wallet } from "@/lib/types";
 
 type Props = {
@@ -115,7 +116,26 @@ export function MonthlyReport({ child, wallet }: Props) {
         <p className="text-sm font-bold text-purple-700 text-center flex items-center justify-center gap-1">
           <PixelBarChartIcon size={18} /> {child.name}の成長レポート
         </p>
-        <p className="text-[11px] text-muted-foreground text-center mb-3">{label}</p>
+        <p className="text-[11px] text-muted-foreground text-center mb-2">{label}</p>
+
+        {/* レベル変化のキャラクター表示 */}
+        {data.levelEnd > data.levelStart ? (
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="flex flex-col items-center opacity-50">
+              <CharacterSvg level={Math.min(data.levelStart, 7)} mood="normal" size={40} />
+              <span className="text-[9px] text-muted-foreground">Lv.{data.levelStart}</span>
+            </div>
+            <span className="text-amber-500 font-bold text-lg">→</span>
+            <div className="flex flex-col items-center">
+              <CharacterSvg level={Math.min(data.levelEnd, 7)} mood="active" size={48} />
+              <span className="text-[9px] font-bold text-amber-600">Lv.{data.levelEnd}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-center mb-3">
+            <CharacterSvg level={Math.min(data.levelEnd, 7)} mood="normal" size={48} />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-2 mb-3">
           <div className="bg-white/60 rounded-xl p-2 text-center flex flex-col items-center">
