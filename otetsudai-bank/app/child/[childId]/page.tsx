@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import SavingGoalSection from "@/components/saving-goal";
 import BadgeDisplay from "@/components/badge-display";
-import CoinAnimation from "@/components/coin-animation";
+import TreasureChestAnimation from "@/components/treasure-chest-animation";
 import { SelfQuestForm } from "@/components/self-quest-form";
 import { LevelDisplay } from "@/components/level-display";
 import { StampNotifications } from "@/components/stamp-notifications";
@@ -734,7 +734,7 @@ export default function ChildDashboard({
         </DialogContent>
       </Dialog>
 
-      <CoinAnimation show={showCoinAnim} onComplete={() => setShowCoinAnim(false)} />
+      <TreasureChestAnimation show={showCoinAnim} onComplete={() => setShowCoinAnim(false)} />
     </div>
   );
 }
