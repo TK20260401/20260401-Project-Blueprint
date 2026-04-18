@@ -32,6 +32,8 @@ import { FamilyChallengeCard } from "@/components/family-challenge-card";
 import { InvestOrderDialog } from "@/components/invest-order-dialog";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { PixelCrossedSwordsIcon, PixelBarChartIcon, PixelFlameIcon, PixelChestOpenIcon, PixelCartIcon, PixelPiggyIcon, PixelSeedlingIcon, PixelCoinIcon, PixelScrollIcon, PixelStarIcon, PixelLightbulbIcon, PixelLetterIcon, PixelRefreshIcon, PixelConfettiIcon, PixelShieldIcon, PixelChatIcon } from "@/components/pixel-icons";
+import QuestCardFrame from "@/components/quest-card-frame";
+import { getQuestCardTier } from "@/lib/rpg-stats";
 
 export default function ChildDashboard({
   params,
@@ -524,8 +526,7 @@ export default function ChildDashboard({
             </Card>
           ) : (
             tasks.map((task) => (
-              <Card key={task.id} className="border-amber-200">
-                <CardContent className="p-4">
+              <QuestCardFrame key={task.id} tier={getQuestCardTier(task)}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-start gap-3">
                       <span className="text-3xl mt-0.5">{getTaskIcon(task.title)}</span>
@@ -558,8 +559,7 @@ export default function ChildDashboard({
                       {submitting === task.id ? "..." : <span className="flex items-center gap-1">クリア！<PixelCrossedSwordsIcon size={14} /></span>}
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+              </QuestCardFrame>
             ))
           )}
         </TabsContent>
