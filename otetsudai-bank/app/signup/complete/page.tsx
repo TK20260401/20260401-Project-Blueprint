@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PixelConfettiIcon } from "@/components/pixel-icons";
 
 export default function SignupCompletePage() {
   const [familyName, setFamilyName] = useState("");
@@ -29,7 +30,7 @@ export default function SignupCompletePage() {
     <div className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-b from-emerald-50 to-amber-50">
       <Card className="w-full max-w-md shadow-xl border-emerald-300">
         <CardHeader className="text-center">
-          <div className="text-6xl mb-3">🎉</div>
+          <div className="mb-3 flex justify-center"><PixelConfettiIcon size={48} /></div>
           <CardTitle className="text-2xl font-bold text-emerald-800">
             登録かんりょう！
           </CardTitle>
