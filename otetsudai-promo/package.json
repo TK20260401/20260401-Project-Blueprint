@@ -1,0 +1,25 @@
+{
+  "name": "otetsudai-promo",
+  "version": "1.0.0",
+  "description": "おこづかいクエスト PR動画 (Remotion)",
+  "private": true,
+  "scripts": {
+    "start": "remotion studio",
+    "build:vertical": "remotion render PromoVertical out/promo-vertical.mp4",
+    "build:horizontal": "remotion render PromoHorizontal out/promo-horizontal.mp4",
+    "build:all": "npm run build:vertical && npm run build:horizontal",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.0",
+    "@remotion/cli": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.5.0"
+  }
+}
