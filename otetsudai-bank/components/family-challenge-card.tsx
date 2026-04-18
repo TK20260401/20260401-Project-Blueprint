@@ -5,8 +5,49 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { PixelTargetIcon, PixelConfettiIcon, PixelGiftIcon } from "@/components/pixel-icons";
+import { PixelTargetIcon, PixelConfettiIcon, PixelGiftIcon, PixelCrownIcon } from "@/components/pixel-icons";
 import type { FamilyChallenge, User } from "@/lib/types";
+
+/** ピクセルアートのボスモンスター（スライム風） */
+function PixelBossMonster({ defeated = false, size = 64 }: { defeated?: boolean; size?: number }) {
+  const opacity = defeated ? 0.4 : 1;
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" opacity={opacity}>
+      <defs>
+        <radialGradient id="bossBody" cx="50%" cy="40%" r="50%">
+          <stop offset="0%" stopColor={defeated ? "#888" : "#7B4CDB"} />
+          <stop offset="100%" stopColor={defeated ? "#666" : "#5A2DAA"} />
+        </radialGradient>
+      </defs>
+      <ellipse cx={32} cy={58} rx={22} ry={5} fill="#000" opacity={0.15} />
+      <path d="M12,46 Q12,20 32,14 Q52,20 52,46 Q52,54 32,54 Q12,54 12,46 Z" fill="url(#bossBody)" />
+      <ellipse cx={24} cy={28} rx={6} ry={4} fill="#FFFFFF" opacity={0.2} />
+      <path d="M20,20 L16,8 L24,16 Z" fill={defeated ? "#888" : "#8E44AD"} />
+      <circle cx={16} cy={8} r={2} fill={defeated ? "#AAA" : "#E74C3C"} />
+      <path d="M44,20 L48,8 L40,16 Z" fill={defeated ? "#888" : "#8E44AD"} />
+      <circle cx={48} cy={8} r={2} fill={defeated ? "#AAA" : "#E74C3C"} />
+      {defeated ? (
+        <>
+          <line x1={22} y1={32} x2={28} y2={38} stroke="#333" strokeWidth={2.5} />
+          <line x1={28} y1={32} x2={22} y2={38} stroke="#333" strokeWidth={2.5} />
+          <line x1={36} y1={32} x2={42} y2={38} stroke="#333" strokeWidth={2.5} />
+          <line x1={42} y1={32} x2={36} y2={38} stroke="#333" strokeWidth={2.5} />
+          <path d="M26,44 Q32,41 38,44" stroke="#333" strokeWidth={1.5} fill="none" />
+        </>
+      ) : (
+        <>
+          <ellipse cx={25} cy={34} rx={5} ry={6} fill="#FFFFFF" />
+          <circle cx={26} cy={35} r={3} fill="#333" />
+          <circle cx={27} cy={34} r={1} fill="#FFF" />
+          <ellipse cx={39} cy={34} rx={5} ry={6} fill="#FFFFFF" />
+          <circle cx={40} cy={35} r={3} fill="#333" />
+          <circle cx={41} cy={34} r={1} fill="#FFF" />
+          <path d="M26,43 Q32,48 38,43" stroke="#333" strokeWidth={1.5} fill="none" />
+        </>
+      )}
+    </svg>
+  );
+}
 
 type Props = {
   challenge: FamilyChallenge | null;
@@ -113,8 +154,20 @@ export function FamilyChallengeCard({
     <Card className={`mb-4 ${isComplete ? "border-green-300 bg-gradient-to-r from-green-50 to-emerald-50" : "border-amber-300 bg-gradient-to-r from-amber-50 to-yellow-50"}`}>
       <CardContent className="p-4">
         <p className="text-sm font-bold text-center text-amber-700 mb-1">
-          <span className="flex items-center justify-center gap-1">{isComplete ? <><PixelConfettiIcon size={16} /> 家族チャレンジ達成！</> : <><PixelTargetIcon size={16} /> 家族チャレンジ</>}</span>
+          <span className="flex items-center justify-center gap-1">
+            <PixelCrownIcon size={16} />
+            {isComplete ? "家族チャレンジ達成！" : "家族チャレンジ"}
+          </span>
         </p>
+
+        {/* ボスモンスター */}
+        <div className="flex flex-col items-center my-2">
+          <PixelBossMonster defeated={isComplete} size={56} />
+          <p className={`text-[10px] font-bold mt-0.5 ${isComplete ? "text-green-600" : "text-red-600"}`}>
+            {isComplete ? "たおした！" : `HP: ${remaining}/${challenge.target_quests}`}
+          </p>
+        </div>
+
         <p className="text-base font-bold text-center text-gray-800 mb-3">
           「{challenge.title}」
         </p>
