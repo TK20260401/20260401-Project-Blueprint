@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { R } from "@/components/ruby-text";
+import { PixelSeedlingIcon, PixelRefreshIcon, PixelHourglassIcon, PixelChartIcon, PixelChartDownIcon, PixelTargetIcon } from "@/components/pixel-icons";
 
 type Portfolio = {
   id: string;
@@ -139,7 +140,7 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
     <Card className="border-green-200">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center justify-between">
-          <span>🌱 <R k="投資" r="とうし" />ポートフォリオ</span>
+          <span className="flex items-center gap-1"><PixelSeedlingIcon size={18} /> <R k="投資" r="とうし" />ポートフォリオ</span>
           <Button
             variant="ghost"
             size="sm"
@@ -150,9 +151,9 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
             {syncing ? (
               <span className="animate-pulse"><R k="更新" r="こうしん" /> <R k="中" r="ちゅう" />...</span>
             ) : isCoolingDown ? (
-              `⏳ あと${Math.ceil(cooldownRemain / 60000)}分`
+              <span className="flex items-center gap-0.5"><PixelHourglassIcon size={12} /> あと{Math.ceil(cooldownRemain / 60000)}分</span>
             ) : (
-              <>🔄 <R k="最新" r="さいしん" /><R k="価格" r="かかく" /></>
+              <span className="flex items-center gap-0.5"><PixelRefreshIcon size={12} /> <R k="最新" r="さいしん" /><R k="価格" r="かかく" /></span>
             )}
           </Button>
         </CardTitle>
@@ -193,21 +194,21 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
               「<R k="株" r="かぶ" />を <R k="買" r="か" />いたい！」ボタンで <R k="始" r="はじ" />めよう！
             </p>
             <div className="bg-green-50 rounded-lg p-3 text-left text-xs text-green-800 space-y-2 border border-green-100">
-              <p className="font-semibold text-green-700">🌱 <R k="投資" r="とうし" />の <R k="基本" r="きほん" /></p>
+              <p className="font-semibold text-green-700 flex items-center gap-1"><PixelSeedlingIcon size={14} /> <R k="投資" r="とうし" />の <R k="基本" r="きほん" /></p>
               <p>
                 <R k="株" r="かぶ" />は「お<R k="店" r="みせ" />の <R k="一部" r="いちぶ" />を <R k="持" r="も" />つ」こと。
                 <br />
                 お<R k="店" r="みせ" />が <R k="頑張" r="がんば" />ると、<R k="株" r="かぶ" />の <R k="値段" r="ねだん" />が あがるよ！
               </p>
               <p>
-                🐢 <span className="font-semibold"><R k="長" r="なが" />く <R k="持" r="も" />つのが コツ！</span>
+<span className="font-semibold"><R k="長" r="なが" />く <R k="持" r="も" />つのが コツ！</span>
                 <br />
                 すぐ <R k="売" r="う" />らないで、じっくり <R k="育" r="そだ" />てよう。
                 <br />
                 <R k="何" r="なん" /><R k="年" r="ねん" />も <R k="持" r="も" />ち<R k="続" r="つづ" />けると、すこしずつ <R k="増" r="ふ" />えていくよ。
               </p>
               <p>
-                🎯 <span className="font-semibold"><R k="選" r="えら" />び<R k="方" r="かた" />の ポイント</span>
+<span className="font-semibold"><R k="選" r="えら" />び<R k="方" r="かた" />の ポイント</span>
                 <br />
                 たくさん ありすぎると <R k="迷" r="まよ" />っちゃうから、
                 <br />
@@ -241,7 +242,7 @@ export function InvestPortfolio({ childId, investBalance }: Props) {
                         isUp ? "text-green-600" : "text-red-600"
                       }`}
                     >
-                      {isUp ? "📈" : "📉"} ¥{Math.abs(amount).toLocaleString()} ({percent})
+                      <span className="inline-flex items-center gap-0.5">{isUp ? <PixelChartIcon size={12} /> : <PixelChartDownIcon size={12} />} ¥{Math.abs(amount).toLocaleString()} ({percent})</span>
                     </p>
                   </div>
                 </div>
