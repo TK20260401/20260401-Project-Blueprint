@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { R, RubyStr } from "@/components/ruby-text";
 import CharacterSvg from "@/components/character-svg";
 import { PixelSwordIcon } from "@/components/pixel-icons";
+import RpgStatusBar from "@/components/rpg-status-bar";
 
 type Mood = "active" | "normal" | "lonely";
 
@@ -18,6 +19,8 @@ export function LevelDisplay({ childId }: Props) {
   const [totalEarned, setTotalEarned] = useState(0);
   const [mood, setMood] = useState<Mood>("normal");
   const [loaded, setLoaded] = useState(false);
+  const [daysActive7, setDaysActive7] = useState(0);
+  const [savingWeeks, setSavingWeeks] = useState(0);
 
   useEffect(() => {
     async function load() {
@@ -44,9 +47,29 @@ export function LevelDisplay({ childId }: Props) {
       if (recentLogs.length >= 1) {
         setMood("active");
       } else {
-        // 全くログがない場合はnormal（始めたばかり）、ログがあるのに最近ない場合はlonely
         setMood(data && data.length > 0 ? "lonely" : "normal");
       }
+
+      // HP: 過去7日間のアクティブ日数
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const activeDays = new Set(
+        (data || [])
+          .filter((log: { approved_at?: string }) => log.approved_at && new Date(log.approved_at) >= sevenDaysAgo)
+          .map((log: { approved_at?: string }) => new Date(log.approved_at!).toDateString())
+      );
+      setDaysActive7(activeDays.size);
+
+      // MP: 簡易的に直近の貯金アクティビティ週数（ログ日数/7の概算）
+      const allDays = new Set(
+        (data || [])
+          .filter((log: { approved_at?: string }) => log.approved_at)
+          .map((log: { approved_at?: string }) => {
+            const d = new Date(log.approved_at!);
+            return `${d.getFullYear()}-W${Math.ceil((d.getDate()) / 7)}`;
+          })
+      );
+      setSavingWeeks(Math.min(allDays.size, 10));
 
       setLoaded(true);
     }
@@ -94,26 +117,16 @@ export function LevelDisplay({ childId }: Props) {
             <p className="text-xs text-gray-700">「<RubyStr text={greeting} />」</p>
           </div>
 
+          {/* RPGステータスゲージ */}
+          <RpgStatusBar
+            hp={Math.round((daysActive7 / 7) * 100)}
+            mp={savingWeeks}
+            exp={progress}
+          />
           {next ? (
-            <>
-              {/* RPG風EXPバー */}
-              <div className="flex items-center gap-1.5">
-                <PixelSwordIcon size={14} />
-                <div className="flex-1">
-                  <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden border border-amber-300">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent rounded-full" />
-                  </div>
-                </div>
-                <span className="text-[10px] font-bold text-amber-700">EXP {progress}%</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                <R k="次" r="つぎ" />のレベルまで あと ¥{remaining.toLocaleString()}
-              </p>
-            </>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              <R k="次" r="つぎ" />のレベルまで あと ¥{remaining.toLocaleString()}
+            </p>
           ) : (
             <p className="text-[10px] text-amber-600 mt-1 font-semibold">
               <R k="最高" r="さいこう" /> レベル <R k="達成" r="たっせい" />！
