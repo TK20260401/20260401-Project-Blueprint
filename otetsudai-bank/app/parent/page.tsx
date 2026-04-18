@@ -431,6 +431,7 @@ export default function ParentDashboard() {
         exp={Math.min(100, Math.round((weeklySummary.quests / Math.max(1, children.length * 7)) * 100))}
         gold={stats.totalEarned}
         pendingCount={totalPending}
+        backHref="/"
         rightActions={
           <Link href="/parent/tasks">
             <Button variant="outline" size="sm" className="h-7 px-2 text-[10px] border-primary/60 text-primary hover:bg-primary/10">

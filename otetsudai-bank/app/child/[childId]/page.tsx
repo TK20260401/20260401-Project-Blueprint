@@ -358,6 +358,7 @@ export default function ChildDashboard({
             mp={Math.min(10, weeklySummary.streak)}
             exp={exp}
             gold={total}
+            backHref="/"
           />
         );
       })()}

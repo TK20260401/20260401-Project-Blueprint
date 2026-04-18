@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { clearSession } from "@/lib/session";
 import CharacterSvg from "@/components/character-svg";
 import { Badge } from "@/components/ui/badge";
-import { PixelDoorIcon, PixelCoinIcon } from "@/components/pixel-icons";
+import { PixelDoorIcon, PixelCoinIcon, PixelHouseIcon } from "@/components/pixel-icons";
 import { Button } from "@/components/ui/button";
 import type { ReactNode } from "react";
 
@@ -77,9 +77,9 @@ export default function GameStatusHeader({
             size="sm"
             className="h-9 w-9 p-0 flex-shrink-0 text-primary hover:bg-primary/10"
             onClick={() => router.push(backHref)}
-            aria-label="もどる"
+            aria-label="TOPにもどる"
           >
-            <PixelDoorIcon size={14} />
+            <PixelHouseIcon size={16} />
           </Button>
         )}
 
