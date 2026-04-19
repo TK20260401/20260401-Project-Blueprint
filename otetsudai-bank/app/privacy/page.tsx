@@ -116,11 +116,12 @@ export default function PrivacyPage() {
         </section>
       </div>
 
-      <div className="mt-8 flex justify-center gap-4">
-        <Link href="/terms" className="text-sm text-primary hover:underline">
-          利用規約 →
-        </Link>
-        <Link href="/" className="text-sm text-primary hover:underline">
+      <div className="mt-10 flex justify-center">
+        <Link
+          href="/"
+          replace
+          className="inline-flex items-center gap-2 rounded-xl border-2 border-primary bg-card px-6 py-3 text-sm font-bold text-primary shadow-[0_0_10px_rgba(255,166,35,0.25)] hover:bg-primary hover:text-primary-foreground transition-colors"
+        >
           ← トップにもどる
         </Link>
       </div>
