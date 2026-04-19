@@ -8,3 +8,7 @@ node_modules/
 next-env.d.ts
 .vercel
 .history/
+
+# macOS
+.DS_Store
+**/.DS_Store
