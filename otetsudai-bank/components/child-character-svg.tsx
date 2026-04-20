@@ -1,19 +1,20 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, Easing } from "react-native";
-import Svg, { Rect, G } from "react-native-svg";
+"use client";
+
+import React from "react";
+import IdleAnimationWrapper from "@/components/idle-animation-wrapper";
 
 export type ChildGender = "boy" | "girl" | "other";
 
 const PX = 4;
 type PixelDef = [number, number, string];
 
-// 共通カラー
+const MIN_SIZE = 20;
+
 const SKIN = "#F5D0A0";
 const SKIN_SHADE = "#E8B888";
 const EYE = "#2A1A0A";
 const MOUTH = "#C0392B";
 
-// 男の子: 短髪、青シャツ、茶パンツ
 const BOY_HAIR = "#4A2E18";
 const BOY_HAIR_LIGHT = "#6B4A2C";
 const BOY_SHIRT = "#3498DB";
@@ -31,7 +32,6 @@ const BOY_PIXELS: PixelDef[] = [
   [1,7,BOY_PANTS],[2,7,BOY_PANTS],[3,7,BOY_PANTS],[4,7,BOY_PANTS],
 ];
 
-// 女の子: ロングヘア+リボン、黄シャツ、ピンクスカート
 const GIRL_HAIR = "#6B3410";
 const GIRL_HAIR_LIGHT = "#8B4E1E";
 const GIRL_RIBBON = "#E74C3C";
@@ -50,7 +50,6 @@ const GIRL_PIXELS: PixelDef[] = [
   [1,7,GIRL_SKIRT],[2,7,GIRL_SKIRT],[3,7,GIRL_SKIRT],[4,7,GIRL_SKIRT],
 ];
 
-// どちらでもない: ミディアム髪、緑シャツ、グレーパンツ（中性色）
 const OTHER_HAIR = "#3F2F5E";
 const OTHER_HAIR_LIGHT = "#5A467E";
 const OTHER_SHIRT = "#2ECC71";
@@ -68,92 +67,48 @@ const OTHER_PIXELS: PixelDef[] = [
   [1,7,OTHER_PANTS],[2,7,OTHER_PANTS],[3,7,OTHER_PANTS],[4,7,OTHER_PANTS],
 ];
 
-/**
- * 子供選択用キャラクターSVG
- * gender: boy / girl / other の3種
- * ピクセルアート（6x8グリッド）で描画
- * animated=true で上下にぴょんぴょん跳ねる
- */
 export default function ChildCharacterSvg({ gender, size = 48, animated = false }: { gender: ChildGender; size?: number; animated?: boolean }) {
   const pixels =
     gender === "boy" ? BOY_PIXELS : gender === "girl" ? GIRL_PIXELS : OTHER_PIXELS;
   const gridW = 6;
   const gridH = 8;
-
-  const anim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (!animated) return;
-    const dur = gender === "boy" ? 600 : gender === "girl" ? 800 : 700;
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(anim, {
-          toValue: 1,
-          duration: dur,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-        Animated.timing(anim, {
-          toValue: 0,
-          duration: dur,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [animated, gender, anim]);
-
+  const clamped = Math.max(MIN_SIZE, size);
   const svg = (
-    <Svg
-      width={size}
-      height={size * (gridH / gridW)}
+    <svg
+      width={clamped}
+      height={clamped * (gridH / gridW)}
       viewBox={`0 0 ${gridW * PX} ${gridH * PX}`}
-      accessible
-      accessibilityRole="image"
-      accessibilityLabel={
+      shapeRendering="crispEdges"
+      style={{ imageRendering: "pixelated" }}
+      role="img"
+      aria-label={
         gender === "boy" ? "男の子のキャラクター" : gender === "girl" ? "女の子のキャラクター" : "キャラクター"
       }
     >
-      <G>
+      <g>
         {pixels.map(([x, y, color], i) => (
-          <Rect key={i} x={x * PX} y={y * PX} width={PX} height={PX} fill={color} />
+          <rect key={i} x={x * PX} y={y * PX} width={PX} height={PX} fill={color} />
         ))}
-      </G>
-    </Svg>
+      </g>
+    </svg>
   );
 
   if (!animated) return svg;
 
-  // 男の子: 上下ジャンプ、女の子: 左右スイング、other: 上下ジャンプ
-  const translateY = gender !== "girl"
-    ? anim.interpolate({ inputRange: [0, 1], outputRange: [0, -10] })
-    : undefined;
-  const rotate = gender === "girl"
-    ? anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: ["-6deg", "6deg", "-6deg"] })
-    : undefined;
-
-  const transform: Animated.WithAnimatedObject<any>[] = [];
-  if (translateY) transform.push({ translateY });
-  if (rotate) transform.push({ rotate });
+  const animType = gender === "boy" ? "bounce" : gender === "girl" ? "sway" : "breathe";
+  const animDur = gender === "boy" ? 2 : 3;
 
   return (
-    <Animated.View style={{ transform }}>
+    <IdleAnimationWrapper type={animType} duration={animDur}>
       {svg}
-    </Animated.View>
+    </IdleAnimationWrapper>
   );
 }
 
-/**
- * DB内のicon文字列 (boy/girl/other キーや legacy emoji) から
- * 適切な SVG を返すヘルパー
- */
 export function resolveChildGender(icon: string | null | undefined): ChildGender {
   if (icon === "boy") return "boy";
   if (icon === "girl") return "girl";
   if (icon === "other") return "other";
-  // legacy emoji推定
   if (icon && /👦|🧒🏻/.test(icon)) return "boy";
   if (icon && /👧|👧🏻/.test(icon)) return "girl";
   return "other";
