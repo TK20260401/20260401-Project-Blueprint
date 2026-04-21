@@ -1,0 +1,150 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #0a0a2e;
+  color: #fff;
+  font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  text-align: center;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 16px;
+  background: linear-gradient(90deg, #00d4ff, #7b2fff, #ff2d95);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 0.1em;
+}
+
+.game-area {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.board-wrapper {
+  position: relative;
+  border: 3px solid #333;
+  border-radius: 4px;
+  background: #111;
+  line-height: 0;
+}
+
+#board {
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.overlay-text {
+  text-align: center;
+}
+
+.overlay-text p {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.overlay-text .sub {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-top: 8px;
+}
+
+.side-panel {
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-box {
+  background: #1a1a3e;
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+}
+
+.info-box h3 {
+  font-size: 0.75rem;
+  color: #888;
+  letter-spacing: 0.15em;
+  margin-bottom: 6px;
+}
+
+.info-box canvas {
+  display: block;
+  margin: 0 auto;
+  background: transparent;
+}
+
+.stat {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #00d4ff;
+}
+
+.controls-info {
+  margin-top: 16px;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.mobile-controls {
+  display: none;
+  margin-top: 16px;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.mobile-controls button {
+  width: 56px;
+  height: 56px;
+  font-size: 1.4rem;
+  border: none;
+  border-radius: 12px;
+  background: #2a2a5e;
+  color: #fff;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.mobile-controls button:active {
+  background: #4a4a8e;
+}
+
+@media (max-width: 600px) {
+  .side-panel.left { display: none; }
+  .side-panel { width: 90px; }
+  #board { width: 240px; height: 480px; }
+  .mobile-controls { display: flex; }
+  .controls-info { display: none; }
+  h1 { font-size: 1.4rem; }
+}

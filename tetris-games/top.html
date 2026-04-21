@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>テトリス - 3言語版</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a1e;
+      color: #fff;
+      font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container { text-align: center; padding: 40px 20px; }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #00d4ff, #7b2fff, #ff2d95);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle { color: #666; margin-bottom: 48px; font-size: 1.1rem; }
+    .cards { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .card {
+      background: #12122e;
+      border: 2px solid #222;
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 240px;
+      text-decoration: none;
+      color: #fff;
+      transition: all 0.3s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .card:hover { border-color: #555; transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    .card .icon { font-size: 3rem; }
+    .card h2 { font-size: 1.3rem; }
+    .card p { font-size: 0.85rem; color: #888; line-height: 1.5; }
+    .card .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+    }
+    .tag-js { background: #2a2a00; color: #f0db4f; }
+    .tag-py { background: #1a2a3a; color: #ffd43b; }
+    .tag-c  { background: #1a3a1a; color: #00ff88; }
+    footer { margin-top: 48px; color: #444; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TETRIS</h1>
+    <p class="subtitle">3つの言語で実装したテトリス</p>
+    <div class="cards">
+      <a class="card" href="./index.html">
+        <div class="icon">🟨</div>
+        <span class="tag tag-js">HTML / CSS / JS</span>
+        <h2>JavaScript版</h2>
+        <p>ネイティブCanvas API。ホールド、NEXT表示、ゴースト付きフル機能版。</p>
+      </a>
+      <a class="card" href="./python/index.html">
+        <div class="icon">🐍</div>
+        <span class="tag tag-py">Python (Pyodide)</span>
+        <h2>Python版</h2>
+        <p>ブラウザ上でPythonが動作。Pyodide WebAssemblyランタイム使用。</p>
+      </a>
+      <a class="card" href="./c/index.html">
+        <div class="icon">⚙️</div>
+        <span class="tag tag-c">C言語ロジック</span>
+        <h2>C言語版</h2>
+        <p>C言語のロジックを忠実にJS移植。ソースコード閲覧可能。</p>
+      </a>
+    </div>
+    <footer>テトリス 3言語実装デモ</footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>テトリス - Python版</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a0a2e;
+      color: #fff;
+      font-family: 'Segoe UI', 'Hiragino Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #ffcc00, #ff6600);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .badge {
+      display: inline-block;
+      background: #306998;
+      color: #ffd43b;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-bottom: 16px;
+    }
+    #loading {
+      font-size: 1.2rem;
+      color: #aaa;
+      margin: 40px 0;
+    }
+    #loading .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #555;
+      border-top-color: #ffd43b;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    canvas { display: block; border: 3px solid #333; border-radius: 4px; }
+    .info {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: #666;
+    }
+    #game-container { display: none; text-align: center; }
+    #stats {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    #stats div {
+      background: #2a1a4e;
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+    #stats .label { font-size: 0.7rem; color: #888; letter-spacing: 0.1em; }
+    #stats .value { font-size: 1.3rem; font-weight: bold; color: #ffd43b; }
+  </style>
+</head>
+<body>
+  <h1>テトリス</h1>
+  <span class="badge">🐍 Python (Pyodide)</span>
+
+  <div id="loading">
+    <span class="spinner"></span> Python環境を読み込み中...
+  </div>
+
+  <div id="game-container">
+    <canvas id="board" width="300" height="600"></canvas>
+    <div id="stats">
+      <div><div class="label">SCORE</div><div class="value" id="score">0</div></div>
+      <div><div class="label">LINES</div><div class="value" id="lines">0</div></div>
+      <div><div class="label">LEVEL</div><div class="value" id="level">1</div></div>
+    </div>
+    <p class="info">←→: 移動 ｜ ↑: 回転 ｜ ↓: 落下 ｜ Space: ハードドロップ</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.1/full/pyodide.js"></script>
+  <script>
+    async function main() {
+      const pyodide = await loadPyodide();
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('game-container').style.display = 'block';
+
+      // Python側にcanvasコンテキストを渡すためのブリッジ
+      pyodide.registerJsModule("js_bridge", {
+        get_canvas: () => document.getElementById('board'),
+        set_score: (s) => document.getElementById('score').textContent = s,
+        set_lines: (l) => document.getElementById('lines').textContent = l,
+        set_level: (lv) => document.getElementById('level').textContent = lv,
+        request_animation_frame: (callback) => requestAnimationFrame(callback),
+        performance_now: () => performance.now(),
+      });
+
+      // キー入力をPython側に伝えるキュー
+      const keyQueue = [];
+      document.addEventListener('keydown', (e) => {
+        if (['ArrowLeft','ArrowRight','ArrowDown','ArrowUp','Space'].includes(e.code)) {
+          e.preventDefault();
+          keyQueue.push(e.code);
+        }
+      });
+      pyodide.registerJsModule("key_input", {
+        get_keys: () => {
+          const keys = [...keyQueue];
+          keyQueue.length = 0;
+          return pyodide.toPy(keys);
+        }
+      });
+
+      await pyodide.runPythonAsync(`
+import random
+from pyodide.ffi import create_proxy
+import js_bridge
+import key_input
+from js import document
+
+# 定数
+COLS = 10
+ROWS = 20
+BLOCK = 30
+
+COLORS = [
+    None,
+    "#00f0f0",  # I
+    "#f0f000",  # O
+    "#a000f0",  # T
+    "#00f000",  # S
+    "#f00000",  # Z
+    "#0000f0",  # J
+    "#f0a000",  # L
+]
+
+SHAPES = [
+    None,
+    [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+    [[2,2],[2,2]],
+    [[0,3,0],[3,3,3],[0,0,0]],
+    [[0,4,4],[4,4,0],[0,0,0]],
+    [[5,5,0],[0,5,5],[0,0,0]],
+    [[6,0,0],[6,6,6],[0,0,0]],
+    [[0,0,7],[7,7,7],[0,0,0]],
+]
+
+class Tetris:
+    def __init__(self):
+        self.canvas = js_bridge.get_canvas()
+        self.ctx = self.canvas.getContext("2d")
+        self.reset()
+
+    def reset(self):
+        self.board = [[0]*COLS for _ in range(ROWS)]
+        self.bag = []
+        self.score = 0
+        self.lines = 0
+        self.level = 1
+        self.game_over = False
+        self.drop_interval = 1000
+        self.last_drop = js_bridge.performance_now()
+        self.spawn()
+
+    def fill_bag(self):
+        self.bag = list(range(1, 8))
+        random.shuffle(self.bag)
+
+    def next_type(self):
+        if not self.bag:
+            self.fill_bag()
+        return self.bag.pop()
+
+    def spawn(self):
+        t = self.next_type()
+        self.current = [row[:] for row in SHAPES[t]]
+        self.cx = (COLS - len(self.current[0])) // 2
+        self.cy = 0
+        if self.collides(self.current, self.cx, self.cy):
+            self.game_over = True
+
+    def collides(self, piece, px, py):
+        for y, row in enumerate(piece):
+            for x, val in enumerate(row):
+                if val:
+                    nx, ny = px + x, py + y
+                    if nx < 0 or nx >= COLS or ny >= ROWS:
+                        return True
+                    if ny >= 0 and self.board[ny][nx]:
+                        return True
+        return False
+
+    def merge(self):
+        for y, row in enumerate(self.current):
+            for x, val in enumerate(row):
+                if val:
+                    self.board[self.cy + y][self.cx + x] = val
+
+    def clear_lines(self):
+        cleared = 0
+        y = ROWS - 1
+        while y >= 0:
+            if all(self.board[y]):
+                del self.board[y]
+                self.board.insert(0, [0]*COLS)
+                cleared += 1
+            else:
+                y -= 1
+        if cleared:
+            pts = [0, 100, 300, 500, 800]
+            self.score += pts[cleared] * self.level
+            self.lines += cleared
+            self.level = self.lines // 10 + 1
+            self.drop_interval = max(100, 1000 - (self.level - 1) * 80)
+
+    def rotate(self):
+        piece = self.current
+        size = len(piece)
+        rotated = [[0]*size for _ in range(size)]
+        for y in range(size):
+            for x in range(size):
+                rotated[x][size-1-y] = piece[y][x]
+        for kick in [0, -1, 1, -2, 2]:
+            if not self.collides(rotated, self.cx + kick, self.cy):
+                self.current = rotated
+                self.cx += kick
+                return
+
+    def move(self, dx):
+        if not self.collides(self.current, self.cx + dx, self.cy):
+            self.cx += dx
+
+    def move_down(self):
+        if not self.collides(self.current, self.cx, self.cy + 1):
+            self.cy += 1
+            return True
+        return False
+
+    def hard_drop(self):
+        while not self.collides(self.current, self.cx, self.cy + 1):
+            self.cy += 1
+            self.score += 2
+        self.merge()
+        self.clear_lines()
+        self.spawn()
+
+    def ghost_y(self):
+        gy = self.cy
+        while not self.collides(self.current, self.cx, gy + 1):
+            gy += 1
+        return gy
+
+    def handle_input(self):
+        keys = key_input.get_keys().to_py()
+        for key in keys:
+            if self.game_over:
+                if key == "Space":
+                    self.reset()
+                return
+            if key == "ArrowLeft":
+                self.move(-1)
+            elif key == "ArrowRight":
+                self.move(1)
+            elif key == "ArrowDown":
+                self.move_down()
+                self.score += 1
+            elif key == "ArrowUp":
+                self.rotate()
+            elif key == "Space":
+                self.hard_drop()
+
+    def draw(self):
+        ctx = self.ctx
+        ctx.fillStyle = "#111"
+        ctx.fillRect(0, 0, COLS*BLOCK, ROWS*BLOCK)
+
+        # グリッド
+        ctx.strokeStyle = "#1a1a1a"
+        ctx.lineWidth = 0.5
+        for x in range(COLS + 1):
+            ctx.beginPath()
+            ctx.moveTo(x*BLOCK, 0)
+            ctx.lineTo(x*BLOCK, ROWS*BLOCK)
+            ctx.stroke()
+        for y in range(ROWS + 1):
+            ctx.beginPath()
+            ctx.moveTo(0, y*BLOCK)
+            ctx.lineTo(COLS*BLOCK, y*BLOCK)
+            ctx.stroke()
+
+        # ボード
+        for y in range(ROWS):
+            for x in range(COLS):
+                if self.board[y][x]:
+                    ctx.fillStyle = COLORS[self.board[y][x]]
+                    ctx.fillRect(x*BLOCK, y*BLOCK, BLOCK-1, BLOCK-1)
+
+        if not self.game_over and self.current:
+            # ゴースト
+            gy = self.ghost_y()
+            for y, row in enumerate(self.current):
+                for x, val in enumerate(row):
+                    if val:
+                        ctx.fillStyle = "rgba(255,255,255,0.1)"
+                        ctx.fillRect((self.cx+x)*BLOCK, (gy+y)*BLOCK, BLOCK-1, BLOCK-1)
+            # 現在ピース
+            for y, row in enumerate(self.current):
+                for x, val in enumerate(row):
+                    if val:
+                        ctx.fillStyle = COLORS[val]
+                        ctx.fillRect((self.cx+x)*BLOCK, (self.cy+y)*BLOCK, BLOCK-1, BLOCK-1)
+
+        if self.game_over:
+            ctx.fillStyle = "rgba(0,0,0,0.7)"
+            ctx.fillRect(0, 0, COLS*BLOCK, ROWS*BLOCK)
+            ctx.fillStyle = "#fff"
+            ctx.font = "bold 28px sans-serif"
+            ctx.textAlign = "center"
+            ctx.fillText("GAME OVER", COLS*BLOCK//2, ROWS*BLOCK//2 - 10)
+            ctx.font = "16px sans-serif"
+            ctx.fillStyle = "#aaa"
+            ctx.fillText("Spaceでリスタート", COLS*BLOCK//2, ROWS*BLOCK//2 + 20)
+
+    def update_ui(self):
+        js_bridge.set_score(str(self.score))
+        js_bridge.set_lines(str(self.lines))
+        js_bridge.set_level(str(self.level))
+
+game = Tetris()
+
+def game_loop(timestamp):
+    timestamp = float(timestamp)
+    game.handle_input()
+    if not game.game_over:
+        if timestamp - game.last_drop > game.drop_interval:
+            if not game.move_down():
+                game.merge()
+                game.clear_lines()
+                game.spawn()
+            game.last_drop = timestamp
+    game.draw()
+    game.update_ui()
+    js_bridge.request_animation_frame(loop_proxy)
+
+loop_proxy = create_proxy(game_loop)
+js_bridge.request_animation_frame(loop_proxy)
+      `);
+    }
+    main();
+  </script>
+</body>
+</html>
