@@ -9,6 +9,11 @@ next-env.d.ts
 .vercel
 .history/
 
+# 独立リポジトリ（個別にGitHubで管理）
+joho1-app/
+tetris-games/
+universal-games/
+
 # macOS
 .DS_Store
 **/.DS_Store
