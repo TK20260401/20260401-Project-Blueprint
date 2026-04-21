@@ -10,6 +10,7 @@ next-env.d.ts
 .history/
 
 # 独立リポジトリ（個別にGitHubで管理）
+clock/
 joho1-app/
 tetris-games/
 universal-games/
