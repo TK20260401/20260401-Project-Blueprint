@@ -183,51 +183,16 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
         setAdminLoading(false);
         return;
       }
-      let { data: authUser } = await supabase
-        .from("otetsudai_users")
-        .select("*")
-        .eq("auth_id", authData.user.id)
-        .in("role", ["admin", "parent"])
-        .limit(1)
-        .single();
-      if (!authUser) {
-        // レコードが未作成の場合、自動でadminとして登録
-        const { data: newUser } = await supabase.from("otetsudai_users").insert({
-          auth_id: authData.user.id,
-          role: "admin",
-          name: adminEmail.split("@")[0],
-          icon: "👨‍👩‍👧‍👦",
-          display_order: 0,
-        }).select().single();
-        authUser = newUser;
-      }
-      if (!authUser) {
-        await supabase.auth.signOut();
-        setError("このアカウントでは ログインできません");
-        setAdminLoading(false);
-        return;
-      }
-      // admin の family_id が null なら最新の自分の家族を探す
-      let familyId = authUser.family_id;
-      if (!familyId) {
-        const { data: myFamilies } = await supabase
-          .from("otetsudai_families")
-          .select("id, name")
-          .neq("name", SAMPLE_FAMILY_NAME)
-          .order("created_at", { ascending: false })
-          .limit(1);
-        if (myFamilies && myFamilies.length > 0) {
-          familyId = myFamilies[0].id;
-          // DB側も更新
-          await supabase.from("otetsudai_users").update({ family_id: familyId }).eq("id", authUser.id);
-        }
-      }
-      // セッション保存
+      // auth.users の user_metadata.role でadmin判定（RLS不要）
+      const userMeta = authData.user.user_metadata;
+      const isAdmin = userMeta?.role === "admin";
+
+      // セッション保存（RLSクエリを使わない）
       await setSession({
-        userId: authUser.id,
-        familyId,
-        role: authUser.role as "admin" | "parent",
-        name: authUser.name,
+        userId: authData.user.id,
+        familyId: null,
+        role: isAdmin ? "admin" : "parent",
+        name: adminEmail.split("@")[0],
         authId: authData.user.id,
       });
       // 直接ダッシュボードへ

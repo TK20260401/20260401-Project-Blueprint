@@ -285,8 +285,15 @@ export default function AdminScreen({ onLoginAs, onLogout }: Props) {
         ))}
 
         {families.length === 0 && (
-          <Text style={styles.emptyText}>家族データがありません</Text>
+          <Text style={styles.emptyText}>家族データがありません{"\n"}（RLSで制限されている可能性があります）</Text>
         )}
+
+        <View style={{ marginTop: 24, gap: 12 }}>
+          <Text style={styles.sectionTitle}>テストログイン</Text>
+          <RpgButton tier="gold" size="md" fullWidth onPress={() => onLoginAs("", "", "parent", "Admin")}>
+            <Text style={{ fontSize: 16, fontWeight: "bold", color: "#2A1800" }}>親ダッシュボードを開く</Text>
+          </RpgButton>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
