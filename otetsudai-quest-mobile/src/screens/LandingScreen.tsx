@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
+  type LayoutChangeEvent,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, type Palette } from "../theme";
@@ -30,6 +31,19 @@ export default function LandingScreen({ onSignup, onLogin, onParentLogin }: Prop
   const isTablet = width >= 600;
   const isSmallScreen = height < 700;
   const [legalModal, setLegalModal] = useState<"terms" | "privacy" | null>(null);
+  const [subtitleWrap, setSubtitleWrap] = useState(false);
+  const [measured, setMeasured] = useState(false);
+
+  const onSubtitleLayout = useCallback((e: LayoutChangeEvent) => {
+    if (measured) return;
+    const containerWidth = e.nativeEvent.layout.width;
+    // RubyText の1行での推定幅（フォントサイズ × 文字数の概算）
+    // 「クエストをクリアして、金貨をかせごう！」= 18文字
+    const fontSize = isSmallScreen ? 13 : rf(13);
+    const estimatedWidth = 18 * fontSize * 0.85;
+    setSubtitleWrap(estimatedWidth > containerWidth);
+    setMeasured(true);
+  }, [measured, isSmallScreen]);
 
   return (
     <View
@@ -50,9 +64,15 @@ export default function LandingScreen({ onSignup, onLogin, onParentLogin }: Prop
         >
           Job Saga
         </Text>
-        <View style={styles.subtitleWrap}>
-          <RubyText style={[styles.subtitle, isSmallScreen && { fontSize: 13 }]} parts={["クエストをクリアして、"]} rubySize={6} />
-          <RubyText style={[styles.subtitle, isSmallScreen && { fontSize: 13 }]} parts={["コインを", ["稼", "かせ"], "ごう！"]} rubySize={6} />
+        <View style={styles.subtitleWrap} onLayout={onSubtitleLayout}>
+          {subtitleWrap ? (
+            <>
+              <RubyText style={[styles.subtitle, isSmallScreen && { fontSize: 13 }]} parts={["クエストをクリアして、"]} rubySize={6} />
+              <RubyText style={[styles.subtitle, isSmallScreen && { fontSize: 13 }]} parts={[["金貨", "きんか"], "をかせごう！"]} rubySize={6} />
+            </>
+          ) : (
+            <RubyText style={[styles.subtitle, isSmallScreen && { fontSize: 13 }]} parts={["クエストをクリアして、", ["金貨", "きんか"], "をかせごう！"]} rubySize={6} />
+          )}
         </View>
 
         <View style={[styles.buttons, isSmallScreen && { marginBottom: 12 }]}>

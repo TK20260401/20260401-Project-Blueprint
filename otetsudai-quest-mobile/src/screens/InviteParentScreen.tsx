@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   Share,
@@ -9,12 +10,15 @@ import {
   ActivityIndicator,
   ScrollView,
   Platform,
+  Linking,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
 import { useTheme, type Palette } from "../theme";
 import { rf } from "../lib/responsive";
 import RpgButton from "../components/RpgButton";
+import { RubyText } from "../components/Ruby";
 import RpgCard from "../components/RpgCard";
 import { supabase } from "../lib/supabase";
 import { getSession } from "../lib/session";
@@ -27,40 +31,36 @@ type Props = {
 type MessageTone = "casual" | "polite" | "fun";
 
 const TONE_LABELS: Record<MessageTone, string> = {
-  casual: "カジュアル",
+  casual: "やさしい",
   polite: "ていねい",
-  fun: "おもしろ",
+  fun: "シンプル",
 };
 
-const TONE_EMOJI: Record<MessageTone, string> = {
-  casual: "\u{1F44B}",
-  polite: "\u{1F4E9}",
-  fun: "\u{1F389}",
-};
 
 function buildMessage(words: string[], tone: MessageTone): string {
   const wordsStr = words.join("  ");
   switch (tone) {
     case "casual":
       return (
-        `ジョブサガ はじめたよ！\n` +
-        `いっしょに つかおう！\n\n` +
+        `おうちのひとへ\n` +
+        `「ジョブサガ」をはじめたよ！\n` +
+        `いっしょにみてくれる？\n\n` +
         `あいことば: ${wordsStr}\n\n` +
-        `アプリをひらいて「おやとして さんかする」から あいことばを いれてね`
+        `アプリをひらいて「おやとしてさんかする」からあいことばをいれてね`
       );
     case "polite":
       return (
-        `ジョブサガを はじめました。\n` +
-        `おうちの ひとも さんかしてください。\n\n` +
-        `あいことば: ${wordsStr}\n\n` +
-        `アプリを ひらいて「おやとして さんかする」から\nあいことばを にゅうりょくしてください`
+        `【ジョブサガ／親御さま向け招待】\n` +
+        `お手伝い（仕事）とお金の勉強をはじめました。\n` +
+        `労働の対価として、おこづかいを受け取る体験を通じて、\n` +
+        `金融リテラシーを身につけるアプリです。\n\n` +
+        `合言葉: ${wordsStr}\n\n` +
+        `アプリを開いて「親として参加する」から合言葉を入力してください。`
       );
     case "fun":
       return (
-        `\u{2728} ぼうけんしゃ ぼしゅうちゅう！ \u{2728}\n` +
-        `ジョブサガの せかいで まってるよ！\n\n` +
-        `ひみつの あいことば: ${wordsStr}\n\n` +
-        `アプリを ひらいて「おやとして さんかする」で\nあいことばを となえよう！`
+        `ジョブサガに参加してください。\n\n` +
+        `合言葉: ${wordsStr}`
       );
   }
 }
@@ -72,8 +72,8 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
 
   const [inviteWords, setInviteWords] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTone, setSelectedTone] = useState<MessageTone>("casual");
-  const [copied, setCopied] = useState(false);
+  const [selectedTone, setSelectedTone] = useState<MessageTone>("polite");
+  const [editedMessage, setEditedMessage] = useState<string>("");
 
   useEffect(() => {
     fetchInviteWords();
@@ -99,29 +99,43 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
     }
   }
 
-  const handleShare = useCallback(async () => {
-    if (!inviteWords) return;
-    const message = buildMessage(inviteWords, selectedTone);
-    try {
-      await Share.share({
-        message,
-        ...(Platform.OS === "ios" ? { url: undefined } : {}),
-      });
-    } catch {
-      // User cancelled - ignore
+  // トーン変更時にテンプレを再生成
+  useEffect(() => {
+    if (inviteWords) {
+      setEditedMessage(buildMessage(inviteWords, selectedTone));
     }
-  }, [inviteWords, selectedTone]);
+  }, [selectedTone, inviteWords]);
 
-  const handleCopyWords = useCallback(async () => {
-    if (!inviteWords) return;
-    // expo-clipboard がなくても Share で代用可能だが、
-    // ここでは words をシェアシートに渡す
+  const getMsg = useCallback(() => editedMessage, [editedMessage]);
+
+  const handleShareLINE = useCallback(async () => {
+    const url = `https://line.me/R/share?text=${encodeURIComponent(getMsg())}`;
+    await Linking.openURL(url);
+  }, [getMsg]);
+
+  const handleShareEmail = useCallback(async () => {
+    const subject = encodeURIComponent("ジョブサガへの招待");
+    const body = encodeURIComponent(getMsg());
+    await Linking.openURL(`mailto:?subject=${subject}&body=${body}`);
+  }, [getMsg]);
+
+  const handleShareSMS = useCallback(async () => {
+    const sep = Platform.OS === "ios" ? "&" : "?";
+    await Linking.openURL(`sms:${sep}body=${encodeURIComponent(getMsg())}`);
+  }, [getMsg]);
+
+  const handleCopy = useCallback(async () => {
+    await Clipboard.setStringAsync(getMsg());
+    Alert.alert("コピーしました", "メッセージをコピーしました");
+  }, [getMsg]);
+
+  const handleShareOther = useCallback(async () => {
     try {
-      await Share.share({ message: inviteWords.join("  ") });
+      await Share.share({ message: getMsg() });
     } catch {
       // cancelled
     }
-  }, [inviteWords]);
+  }, [getMsg]);
 
   if (loading) {
     return (
@@ -149,9 +163,7 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
           <Text style={styles.backArrow}>{"\u2190"}</Text>
         </TouchableOpacity>
         <View style={styles.centered}>
-          <Text style={styles.errorText}>
-            あいことばが みつかりませんでした
-          </Text>
+          <RubyText style={styles.errorText} parts={[["合言葉", "あいことば"], "が ", ["見", "み"], "つかりませんでした"]} rubySize={6} />
         </View>
       </View>
     );
@@ -180,15 +192,12 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>おうちの ひとを よぼう！</Text>
-        <Text style={styles.subtitle}>
-          おやに このがめんを みせるか{"\n"}
-          メッセージを おくってね
-        </Text>
+        <RubyText style={styles.title} parts={["おうちの", ["人", "ひと"], "を よぼう！"]} rubySize={8} />
+        <RubyText style={styles.subtitle} parts={["おうちの", ["人", "ひと"], "にこの", ["画面", "がめん"], "を", ["見", "み"], "せるか メッセージを", ["送", "おく"], "ってね"]} rubySize={6} />
 
         {/* あいことばカード */}
         <RpgCard tier="gold" variant="compact" style={styles.wordsCard}>
-          <Text style={styles.sectionLabel}>あいことば</Text>
+          <RubyText style={styles.sectionLabel} parts={[["合言葉", "あいことば"]]} rubySize={5} />
           <View style={styles.wordsRow}>
             {inviteWords.map((word, i) => (
               <View key={i} style={styles.wordChip}>
@@ -196,24 +205,12 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
               </View>
             ))}
           </View>
-          <TouchableOpacity
-            onPress={handleCopyWords}
-            style={styles.copyButton}
-            accessibilityLabel="あいことばをコピー"
-            accessibilityRole="button"
-          >
-            <Text style={styles.copyButtonText}>
-              あいことばを おくる
-            </Text>
-          </TouchableOpacity>
         </RpgCard>
 
         {/* QRコード */}
         <RpgCard tier="silver" variant="compact" style={styles.qrCard}>
           <Text style={styles.sectionLabel}>QRコード</Text>
-          <Text style={styles.qrHint}>
-            おやの スマホで よみとってね
-          </Text>
+          <RubyText style={styles.qrHint} parts={["おうちの", ["人", "ひと"], "のスマホで ", ["読", "よ"], "み", ["取", "と"], "ってね"]} rubySize={5} />
           <View style={styles.qrWrap}>
             <View style={styles.qrBackground}>
               <QRCode
@@ -228,7 +225,7 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
 
         {/* テキストシェア */}
         <RpgCard tier="silver" variant="compact" style={styles.shareCard}>
-          <Text style={styles.sectionLabel}>メッセージで おくる</Text>
+          <RubyText style={styles.sectionLabel} parts={["メッセージで ", ["送", "おく"], "る"]} rubySize={5} />
 
           <View style={styles.toneRow}>
             {(["casual", "polite", "fun"] as MessageTone[]).map((tone) => (
@@ -243,12 +240,12 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
                 accessibilityRole="button"
                 accessibilityState={{ selected: selectedTone === tone }}
               >
-                <Text style={styles.toneEmoji}>{TONE_EMOJI[tone]}</Text>
                 <Text
                   style={[
                     styles.toneText,
                     selectedTone === tone && styles.toneTextActive,
                   ]}
+                  numberOfLines={1}
                 >
                   {TONE_LABELS[tone]}
                 </Text>
@@ -256,23 +253,33 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
             ))}
           </View>
 
-          <View style={styles.previewBox}>
-            <Text style={styles.previewText}>
-              {buildMessage(inviteWords, selectedTone)}
-            </Text>
-          </View>
+          <TextInput
+            style={styles.previewInput}
+            value={editedMessage}
+            onChangeText={setEditedMessage}
+            multiline
+            textAlignVertical="top"
+            placeholderTextColor={palette.textPlaceholder}
+            accessibilityLabel="送信メッセージを編集"
+          />
 
-          <RpgButton
-            tier="emerald"
-            size="md"
-            fullWidth
-            onPress={handleShare}
-            accessibilityLabel="メッセージをおくる"
-          >
-            <Text style={styles.shareButtonText}>
-              おくる
-            </Text>
-          </RpgButton>
+          <View style={styles.shareRow}>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShareLINE} accessibilityLabel="LINEで送る">
+              <Text style={styles.shareBtnLabel}>LINE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShareEmail} accessibilityLabel="メールで送る">
+              <Text style={styles.shareBtnLabel}>メール</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShareSMS} accessibilityLabel="SMSで送る">
+              <Text style={styles.shareBtnLabel}>SMS</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleCopy} accessibilityLabel="コピーする">
+              <Text style={styles.shareBtnLabel}>コピー</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareBtn} onPress={handleShareOther} accessibilityLabel="その他の方法で送る">
+              <RubyText style={styles.shareBtnLabel} parts={[["他", "ほか"]]} rubySize={4} />
+            </TouchableOpacity>
+          </View>
         </RpgCard>
 
         {/* スキップ */}
@@ -283,7 +290,7 @@ export default function InviteParentScreen({ onBack, onSkip }: Props) {
           accessibilityRole="button"
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Text style={styles.skipText}>あとで よぶ</Text>
+          <RubyText style={styles.skipText} parts={["あとで よぶ"]} rubySize={5} />
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -323,7 +330,7 @@ function createStyles(p: Palette) {
       textAlign: "center",
     },
     title: {
-      fontSize: rf(22),
+      fontSize: rf(18),
       fontWeight: "800",
       color: p.primaryDark,
       marginBottom: 8,
@@ -389,7 +396,7 @@ function createStyles(p: Palette) {
       marginBottom: 16,
     },
     qrHint: {
-      fontSize: rf(12),
+      fontSize: rf(10),
       color: p.textMuted,
       textAlign: "center",
       marginBottom: 12,
@@ -412,14 +419,16 @@ function createStyles(p: Palette) {
     toneRow: {
       flexDirection: "row",
       justifyContent: "center",
-      gap: 8,
+      gap: 6,
       marginBottom: 14,
     },
     toneChip: {
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      gap: 4,
-      paddingHorizontal: 14,
+      justifyContent: "center",
+      gap: 3,
+      paddingHorizontal: 6,
       paddingVertical: 8,
       borderRadius: 20,
       backgroundColor: p.surfaceMuted,
@@ -442,23 +451,42 @@ function createStyles(p: Palette) {
     toneTextActive: {
       color: p.primaryDark,
     },
-    previewBox: {
+    previewInput: {
       backgroundColor: p.white,
       borderRadius: 12,
       borderWidth: 1,
       borderColor: p.border,
       padding: 14,
       marginBottom: 14,
-    },
-    previewText: {
       fontSize: rf(13),
-      color: p.textStrong,
+      color: "#1a1a1a",
       lineHeight: rf(20),
+      minHeight: 120,
     },
-    shareButtonText: {
-      fontSize: rf(16),
-      fontWeight: "bold",
-      color: "#FFFFFF",
+    shareRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      gap: 4,
+    },
+    shareBtn: {
+      flex: 1,
+      alignItems: "center",
+      paddingVertical: 10,
+      borderRadius: 10,
+      backgroundColor: p.surfaceMuted,
+      borderWidth: 1,
+      borderColor: p.border,
+      minHeight: 44,
+    },
+    shareBtnIcon: {
+      fontSize: 20,
+      marginBottom: 4,
+    },
+    shareBtnLabel: {
+      fontSize: 9,
+      color: p.textStrong,
+      fontWeight: "600",
+      textAlign: "center",
     },
     // スキップ
     skipLink: {

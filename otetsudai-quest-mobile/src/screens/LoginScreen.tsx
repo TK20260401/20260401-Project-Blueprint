@@ -99,6 +99,27 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
       .select("*");
     setFamilies(data || []);
     setLoading(false);
+
+    // 子供モード: 家族選択をスキップして全子供を直接表示
+    if (mode === "child" && data && data.length > 0) {
+      const { data: allChildren } = await supabase
+        .from("otetsudai_users")
+        .select("*")
+        .eq("role", "child");
+      if (allChildren && allChildren.length > 0) {
+        setMembers(allChildren);
+        if (allChildren.length === 1) {
+          // 子供が1人なら自動選択してPIN入力へ
+          setSelectedFamily(data.find((f: any) => f.id === allChildren[0].family_id) || data[0]);
+          setSelectedUser(allChildren[0]);
+          setPin("");
+          setStep("pin");
+        } else {
+          setSelectedFamily(data[0]);
+          setStep("member");
+        }
+      }
+    }
   }
 
   async function loadMyFamilies(authId: string) {
@@ -151,7 +172,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
     try {
       const result = await verifyPin(selectedUser.id, pinValue);
       if (!result.valid) {
-        setError("PINが ちがいます");
+        setError("PINがちがいます");
         return;
       }
       await loginAsUser(
@@ -161,7 +182,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
       );
       onLoginSuccess();
     } catch {
-      setError("PINが ちがいます");
+      setError("PINがちがいます");
     }
   }
 
@@ -470,6 +491,11 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
       setSelectedUser(null);
       setStep("member");
     } else if (step === "member") {
+      if (mode === "child") {
+        // 子供モードでは家族選択をスキップしたので、そのまま戻る
+        if (onBack) { onBack(); return; }
+        return;
+      }
       setSelectedFamily(null);
       setMembers([]);
       setStep("family");
@@ -929,9 +955,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
               <PixelHeroSvg type="mage" size={48} animated mode="walk" />
             </View>
             <Text style={styles.title} adjustsFontSizeToFit numberOfLines={1}>ジョブサガ</Text>
-            <Text style={styles.subtitle} adjustsFontSizeToFit numberOfLines={1}>
-              クエストをクリアしてコインをかせごう！
-            </Text>
+            <RubyText style={styles.subtitle} parts={["クエストをクリアして、", ["金貨", "きんか"], "をかせごう！"]} rubySize={5} />
           </>
         )}
 
@@ -946,7 +970,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
                   <Text style={{ fontSize: 18, fontWeight: "bold", color: "#2A1800" }}>子供モード</Text>
                 </View>
               </RpgButton>
-              <Text style={[styles.modeHint, { textAlign: "center", marginTop: 4 }]}>おうちをえらんでログイン</Text>
+              <RubyText style={[styles.modeHint, { textAlign: "center", marginTop: 4 }]} parts={["おうちを", ["選", "えら"], "んでログイン"]} rubySize={5} />
             </View>
             <View style={{ marginBottom: 8 }}>
               <RpgButton tier="violet" size="lg" fullWidth onPress={() => { setStep("admin"); setIsSignUp(false); setError(""); }}>
@@ -966,7 +990,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>もどる</Text></View>
             </TouchableOpacity>
-            <Text style={styles.label}>おうちを選んでね</Text>
+            <RubyText style={styles.label} parts={["おうちを", ["選", "えら"], "んでね"]} rubySize={6} />
             {families.map((f) => (
               <TouchableOpacity
                 key={f.id}
@@ -985,7 +1009,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>{selectedFamily?.name}</Text></View>
             </TouchableOpacity>
-            <Text style={styles.label}>だれかな？</Text>
+            <RubyText style={styles.label} parts={[["誰", "だれ"], "かな？"]} rubySize={6} />
             {members.map((m) => (
               <TouchableOpacity
                 key={m.id}
@@ -1015,10 +1039,8 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>{selectedUser?.name}</Text></View>
             </TouchableOpacity>
-            <Text style={styles.label}>PINをいれてね 🔑</Text>
-            <Text style={styles.hint}>
-              おうちのひとにきいた4けたのばんごうをいれてね
-            </Text>
+            <RubyText style={styles.label} parts={["PINを", ["入", "い"], "れてね 🔑"]} rubySize={6} />
+            <RubyText style={styles.hint} parts={[["自分", "じぶん"], "で", ["決", "き"], "めた4", ["桁", "けた"], "の", ["数字", "すうじ"], "を", ["入", "い"], "れてね"]} rubySize={5} />
             <TextInput
               style={styles.pinInput}
               value={pin}
@@ -1046,7 +1068,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
             </TouchableOpacity>
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <RpgButton tier="gold" size="lg" fullWidth onPress={() => { Keyboard.dismiss(); handlePinLogin(); }}>
-              クエストをはじめる！
+              はじめる！
             </RpgButton>
           </>
         )}

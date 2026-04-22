@@ -12,15 +12,18 @@ import WalletDetailScreen from "../screens/WalletDetailScreen";
 import SpendRequestScreen from "../screens/SpendRequestScreen";
 import InvestScreen from "../screens/InvestScreen";
 import InviteParentScreen from "../screens/InviteParentScreen";
+import AdminScreen from "../screens/AdminScreen";
 import {
   WelcomeScreen,
   NicknameScreen,
   PinSetupScreen,
   BackupWordsScreen,
+  RecoverAccountScreen,
 } from "../screens/onboarding";
 import {
   signInAnonymously,
   createChildAccount,
+  recoverAccount,
   loginAsUser,
 } from "../services/auth";
 
@@ -34,7 +37,9 @@ export type RootStackParamList = {
   Nickname: undefined;
   PinSetup: undefined;
   BackupWords: { backupWords: string[] };
+  RecoverAccount: undefined;
   InviteParent: undefined;
+  Admin: undefined;
   // Main
   ChildDashboard: { childId: string };
   ParentDashboard: undefined;
@@ -90,7 +95,10 @@ export default function AppNavigator() {
         <Stack.Screen name="Nickname" component={NicknameWrapper} />
         <Stack.Screen name="PinSetup" component={PinSetupWrapper} />
         <Stack.Screen name="BackupWords" component={BackupWordsWrapper} />
+        <Stack.Screen name="RecoverAccount" component={RecoverAccountWrapper} />
         <Stack.Screen name="InviteParent" component={InviteParentWrapper} />
+        {/* Admin */}
+        <Stack.Screen name="Admin" component={AdminWrapper} />
         {/* Auth */}
         <Stack.Screen name="Login" component={LoginWrapper} />
         <Stack.Screen name="ChildLogin" component={ChildLoginWrapper} />
@@ -144,10 +152,7 @@ function WelcomeWrapper({ navigation }: { navigation: any }) {
   return (
     <WelcomeScreen
       onNext={() => navigation.navigate("Nickname")}
-      onRecover={() => {
-        // TODO: RecoverAccountScreen に遷移
-        Alert.alert("ふっきゅう", "アカウントふっきゅう機能は準備中です");
-      }}
+      onRecover={() => navigation.navigate("RecoverAccount")}
     />
   );
 }
@@ -165,21 +170,28 @@ function NicknameWrapper({ navigation }: { navigation: any }) {
 }
 
 function PinSetupWrapper({ navigation }: { navigation: any }) {
+  const creatingRef = React.useRef(false);
   const handlePinSet = useCallback(async (pin: string) => {
+    if (creatingRef.current) return;
+    creatingRef.current = true;
     _onboardPin = pin;
     try {
       // 1. Anonymous Auth でサインイン
-      const { error: anonError } = await signInAnonymously();
+      const { data: anonData, error: anonError } = await signInAnonymously();
       if (anonError) throw anonError;
 
-      // 2. Edge Function でアカウント作成
-      const result = await createChildAccount(_onboardNickname, _onboardPin);
+      // セッション確立を待つ
+      const token = anonData.session?.access_token;
+      if (!token) throw new Error("Anonymous Auth のセッションが取得できませんでした");
+
+      // 2. Edge Function でアカウント作成（トークンを明示的に渡す）
+      const result = await createChildAccount(_onboardNickname, _onboardPin, token);
 
       // 3. セッション保存
       await loginAsUser(
         { id: result.userId, role: "child", name: _onboardNickname },
         result.familyId,
-        undefined // authId はSupabase sessionから自動取得
+        undefined
       );
 
       // 4. バックアップあいことば画面へ
@@ -188,6 +200,8 @@ function PinSetupWrapper({ navigation }: { navigation: any }) {
       });
     } catch (err: any) {
       Alert.alert("エラー", err.message || "アカウントの作成に失敗しました");
+    } finally {
+      creatingRef.current = false;
     }
   }, [navigation]);
 
@@ -211,6 +225,46 @@ function BackupWordsWrapper({ navigation, route }: { navigation: any; route: any
     <BackupWordsScreen
       words={backupWords}
       onConfirm={handleConfirm}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+// ── Recover Account ──
+
+function RecoverAccountWrapper({ navigation }: { navigation: any }) {
+  const handleRecover = useCallback(async (words: string[], newPin: string) => {
+    // 1. Anonymous Auth
+    const { data: anonData, error: anonError } = await signInAnonymously();
+    if (anonError) throw anonError;
+    const token = anonData.session?.access_token;
+    if (!token) throw new Error("セッションが取得できませんでした");
+
+    // 2. Edge Function で復旧
+    const result = await recoverAccount(words, newPin, token);
+
+    // 3. セッション保存
+    await loginAsUser(
+      { id: result.userId, role: result.role as "child", name: result.userName },
+      result.familyId,
+      undefined
+    );
+
+    // 4. ダッシュボードへ
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: "ChildDashboard",
+          params: { childId: result.userId },
+        },
+      ],
+    });
+  }, [navigation]);
+
+  return (
+    <RecoverAccountScreen
+      onRecover={handleRecover}
       onBack={() => navigation.goBack()}
     />
   );
@@ -241,13 +295,51 @@ function InviteParentWrapper({ navigation }: { navigation: any }) {
   );
 }
 
+// ── Admin ──
+
+function AdminWrapper({ navigation }: { navigation: any }) {
+  const handleLoginAs = useCallback(
+    async (userId: string, familyId: string, role: string, name: string) => {
+      if (role === "child") {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "ChildDashboard", params: { childId: userId } }],
+        });
+      } else {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "ParentDashboard" }],
+        });
+      }
+    },
+    [navigation]
+  );
+
+  const handleLogout = useCallback(async () => {
+    await clearSession();
+    navigation.reset({ index: 0, routes: [{ name: "Landing" }] });
+  }, [navigation]);
+
+  return (
+    <AdminScreen
+      onLoginAs={handleLoginAs}
+      onLogout={handleLogout}
+    />
+  );
+}
+
 // ── Login Wrappers ──
 
 function makeLoginSuccess(navigation: any) {
   return async () => {
     const session = await getSession();
     if (!session) return;
-    if (session.role === "child") {
+    if (session.role === "admin") {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Admin" }],
+      });
+    } else if (session.role === "child") {
       navigation.reset({
         index: 0,
         routes: [
