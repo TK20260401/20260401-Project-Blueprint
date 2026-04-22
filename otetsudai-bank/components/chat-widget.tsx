@@ -112,7 +112,7 @@ export default function ChatWidget({ role }: { role: "parent" | "child" | "guest
                   ? "コインくんになんでもきいてね！🪙"
                   : role === "parent"
                     ? "クエスト教育についてご相談ください"
-                    : "おこづかいクエストについて何でもきいてね！"}
+                    : "ジョブサガについて何でもきいてね！"}
               </div>
             )}
             {messages.map((msg, i) => (

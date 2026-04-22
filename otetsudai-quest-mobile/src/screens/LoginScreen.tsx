@@ -928,7 +928,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
               <PixelHeroSvg type="warrior" size={48} animated mode="walk" />
               <PixelHeroSvg type="mage" size={48} animated mode="walk" />
             </View>
-            <Text style={styles.title} adjustsFontSizeToFit numberOfLines={1}>おこづかいクエスト</Text>
+            <Text style={styles.title} adjustsFontSizeToFit numberOfLines={1}>ジョブサガ</Text>
             <Text style={styles.subtitle} adjustsFontSizeToFit numberOfLines={1}>
               クエストをクリアしてコインをかせごう！
             </Text>

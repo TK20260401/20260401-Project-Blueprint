@@ -25,7 +25,7 @@ export default function WelcomeScreen({ onNext, onRecover }: Props) {
       ]}
     >
       <View style={styles.content}>
-        <View style={styles.heroRow} accessibilityLabel="おこづかいクエスト キャラクター">
+        <View style={styles.heroRow} accessibilityLabel="ジョブサガ">
           <PixelHeroSvg type="warrior" size={64} animated mode="walk" />
           <PixelHeroSvg type="mage" size={64} animated mode="walk" />
         </View>
@@ -35,7 +35,7 @@ export default function WelcomeScreen({ onNext, onRecover }: Props) {
           adjustsFontSizeToFit
           numberOfLines={1}
         >
-          おこづかいクエスト
+          ジョブサガ
         </Text>
 
         <View style={styles.subtitleWrap}>

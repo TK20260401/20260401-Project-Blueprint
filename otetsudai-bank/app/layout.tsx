@@ -21,21 +21,21 @@ const OG_IMAGE = `${SITE_URL}/api/og`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "おこづかいクエスト | Habitica風RPG マネー教育アプリ",
+  title: "ジョブサガ | 子供向け教育フィンテックアプリ",
   description:
     "お手伝いを「クエスト」に変えて、子供が楽しく金融リテラシーを育てられるアプリ。3分割ウォレット（使う/貯める/増やす）、ペット育成、レベルアップ、トロフィー等RPG要素満載。",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "おこづかいクエスト",
+    title: "ジョブサガ",
   },
   openGraph: {
     type: "website",
-    siteName: "おこづかいクエスト",
-    title: "おこづかいクエスト v0.19.0 プロトタイプ",
+    siteName: "ジョブサガ",
+    title: "ジョブサガ v0.19.0 プロトタイプ",
     description:
-      "お手伝いをクエストに。Habitica風RPGで子供が楽しく金融リテラシーを育てるアプリ。",
+      "お手伝いをクエストに。子供が楽しく金融リテラシーを育てる教育フィンテックアプリ。",
     url: SITE_URL,
     locale: "ja_JP",
     images: [
@@ -43,15 +43,15 @@ export const metadata: Metadata = {
         url: OG_IMAGE,
         width: 1200,
         height: 630,
-        alt: "おこづかいクエスト - Habitica風RPGマネー教育アプリ",
+        alt: "ジョブサガ - 子供向け教育フィンテックアプリ",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "おこづかいクエスト v0.19.0 プロトタイプ",
+    title: "ジョブサガ v0.19.0 プロトタイプ",
     description:
-      "お手伝いをクエストに。Habitica風RPGで子供が楽しく金融リテラシーを育てるアプリ。",
+      "お手伝いをクエストに。子供が楽しく金融リテラシーを育てる教育フィンテックアプリ。",
     images: [OG_IMAGE],
   },
   other: {

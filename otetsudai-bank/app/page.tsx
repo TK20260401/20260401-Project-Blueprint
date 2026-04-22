@@ -15,7 +15,7 @@ export default function LandingPage() {
         <div className="max-w-lg text-center">
           <div className="mb-4 flex justify-center gap-2"><PixelHeroSvg type="warrior" size={56} /><PixelHeroSvg type="mage" size={56} /></div>
           <h1 className="text-4xl font-extrabold text-primary mb-2 drop-shadow-[0_2px_8px_rgba(255,166,35,0.4)]">
-            おこづかいクエスト
+            Job Saga
           </h1>
           <p className="text-lg text-accent mb-1">
             クエストをクリアして コインを <R k="稼" r="かせ" />ごう！

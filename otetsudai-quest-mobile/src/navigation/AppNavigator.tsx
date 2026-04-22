@@ -11,6 +11,7 @@ import ParentDashboardScreen from "../screens/ParentDashboardScreen";
 import WalletDetailScreen from "../screens/WalletDetailScreen";
 import SpendRequestScreen from "../screens/SpendRequestScreen";
 import InvestScreen from "../screens/InvestScreen";
+import InviteParentScreen from "../screens/InviteParentScreen";
 import {
   WelcomeScreen,
   NicknameScreen,
@@ -33,6 +34,7 @@ export type RootStackParamList = {
   Nickname: undefined;
   PinSetup: undefined;
   BackupWords: { backupWords: string[] };
+  InviteParent: undefined;
   // Main
   ChildDashboard: { childId: string };
   ParentDashboard: undefined;
@@ -88,6 +90,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Nickname" component={NicknameWrapper} />
         <Stack.Screen name="PinSetup" component={PinSetupWrapper} />
         <Stack.Screen name="BackupWords" component={BackupWordsWrapper} />
+        <Stack.Screen name="InviteParent" component={InviteParentWrapper} />
         {/* Auth */}
         <Stack.Screen name="Login" component={LoginWrapper} />
         <Stack.Screen name="ChildLogin" component={ChildLoginWrapper} />
@@ -200,9 +203,25 @@ function BackupWordsWrapper({ navigation, route }: { navigation: any; route: any
   const backupWords: string[] = route.params?.backupWords ?? [];
 
   const handleConfirm = useCallback(async () => {
+    // バックアップ確認後 → 招待画面へ
+    navigation.navigate("InviteParent");
+  }, [navigation]);
+
+  return (
+    <BackupWordsScreen
+      words={backupWords}
+      onConfirm={handleConfirm}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
+
+// ── Invite Parent ──
+
+function InviteParentWrapper({ navigation }: { navigation: any }) {
+  const goToDashboard = useCallback(async () => {
     const session = await getSession();
     if (!session) return;
-    // ダッシュボードへ直行（スタックをリセット）
     navigation.reset({
       index: 0,
       routes: [
@@ -215,10 +234,9 @@ function BackupWordsWrapper({ navigation, route }: { navigation: any; route: any
   }, [navigation]);
 
   return (
-    <BackupWordsScreen
-      words={backupWords}
-      onConfirm={handleConfirm}
+    <InviteParentScreen
       onBack={() => navigation.goBack()}
+      onSkip={goToDashboard}
     />
   );
 }

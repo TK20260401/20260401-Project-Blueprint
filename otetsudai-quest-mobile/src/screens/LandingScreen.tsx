@@ -11,7 +11,7 @@ import { useTheme, type Palette } from "../theme";
 import { rf } from "../lib/responsive";
 import { RubyText, AutoRubyText } from "../components/Ruby";
 import PixelHeroSvg from "../components/PixelHeroSvg";
-import { PixelKeyIcon, PixelCoinIcon, PixelPiggyIcon, PixelSeedlingIcon } from "../components/PixelIcons";
+import { PixelKeyIcon, PixelDoorIcon, PixelCoinIcon, PixelPiggyIcon, PixelSeedlingIcon } from "../components/PixelIcons";
 import RpgButton from "../components/RpgButton";
 import LegalModal from "../components/LegalModal";
 import { TERMS, PRIVACY } from "../lib/legal-texts";
@@ -39,7 +39,7 @@ export default function LandingScreen({ onSignup, onLogin, onParentLogin }: Prop
       ]}
     >
       <View style={[styles.hero, isTablet && { maxWidth: 480, alignSelf: "center", width: "100%" }]}>
-        <View style={styles.heroRow} accessibilityLabel="おこづかいクエスト">
+        <View style={styles.heroRow} accessibilityLabel="Job Saga">
           <PixelHeroSvg type="warrior" size={isSmallScreen ? 48 : 64} animated mode="walk" />
           <PixelHeroSvg type="mage" size={isSmallScreen ? 48 : 64} animated mode="walk" />
         </View>
@@ -48,7 +48,7 @@ export default function LandingScreen({ onSignup, onLogin, onParentLogin }: Prop
           adjustsFontSizeToFit
           numberOfLines={1}
         >
-          おこづかいクエスト
+          Job Saga
         </Text>
         <View style={styles.subtitleWrap}>
           <RubyText style={[styles.subtitle, isSmallScreen && { fontSize: 13 }]} parts={["クエストをクリアして、"]} rubySize={6} />
@@ -56,18 +56,27 @@ export default function LandingScreen({ onSignup, onLogin, onParentLogin }: Prop
         </View>
 
         <View style={[styles.buttons, isSmallScreen && { marginBottom: 12 }]}>
-          <RpgButton tier="gold" size="lg" fullWidth onPress={onLogin} accessibilityLabel="子供ログイン">
-            <PixelKeyIcon size={22} />
-            <Text style={{ fontSize: isTablet ? 18 : 16, fontWeight: "bold", color: "#2A1800" }} adjustsFontSizeToFit numberOfLines={1}>
-              クエストをはじめる！
+          {onSignup && (
+            <RpgButton tier="gold" size="lg" fullWidth onPress={onSignup} accessibilityLabel="はじめてのひと 新規登録">
+              <PixelKeyIcon size={22} />
+              <Text style={{ fontSize: isTablet ? 18 : 16, fontWeight: "bold", color: "#2A1800" }} adjustsFontSizeToFit numberOfLines={1}>
+                はじめてのひと
+              </Text>
+            </RpgButton>
+          )}
+          <RpgButton tier="silver" size="lg" fullWidth onPress={onLogin} accessibilityLabel="つづきから ログイン">
+            <PixelDoorIcon size={22} />
+            <Text style={{ fontSize: isTablet ? 18 : 16, fontWeight: "bold", color: "#1A1D22" }} adjustsFontSizeToFit numberOfLines={1}>
+              つづきから
             </Text>
           </RpgButton>
           {onParentLogin && (
             <TouchableOpacity
               onPress={onParentLogin}
-              style={{ alignSelf: "center", paddingVertical: 8, paddingHorizontal: 16 }}
+              style={styles.parentLink}
               accessibilityLabel="おうちのひとログイン"
               accessibilityRole="button"
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <RubyText style={{ fontSize: 12, color: palette.textMuted }} parts={["おうちのひと（", ["親", "おや"], "モード）"]} rubySize={5} />
             </TouchableOpacity>
@@ -112,7 +121,7 @@ export default function LandingScreen({ onSignup, onLogin, onParentLogin }: Prop
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.copyright}>CC BY-NC-SA 4.0 Snafty inc.</Text>
+      <Text style={styles.copyright}>{"\u00A9"} 2026 Snafty inc.</Text>
 
       <LegalModal
         visible={legalModal === "terms"}
@@ -269,6 +278,13 @@ function createStyles(p: Palette) {
     subtitleWrap: {
       alignItems: "center",
       marginBottom: 4,
+    },
+    parentLink: {
+      alignSelf: "center",
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      minHeight: 44,
+      justifyContent: "center",
     },
   });
 }

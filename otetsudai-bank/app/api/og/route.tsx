@@ -25,7 +25,7 @@ async function loadGoogleFont(family: string, weight: number, text: string) {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const title = searchParams.get("title") ?? "おこづかいクエスト";
+  const title = searchParams.get("title") ?? "ジョブサガ";
   const sub = searchParams.get("sub") ?? "お手伝いをクエストに";
   const version = searchParams.get("v") ?? "v0.19.0 プロトタイプ";
 

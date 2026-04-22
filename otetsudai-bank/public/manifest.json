@@ -1,6 +1,6 @@
 {
-  "name": "おこづかいクエスト",
-  "short_name": "おこづかいクエスト",
+  "name": "ジョブサガ",
+  "short_name": "ジョブサガ",
   "description": "お手伝い＝クエスト！稼いで、貯めて、増やすマネー冒険アプリ",
   "start_url": "/",
   "display": "standalone",
@@ -41,7 +41,7 @@
       "sizes": "512x512",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "おこづかいクエスト ホーム画面"
+      "label": "ジョブサガ ホーム画面"
     }
   ],
   "shortcuts": [
