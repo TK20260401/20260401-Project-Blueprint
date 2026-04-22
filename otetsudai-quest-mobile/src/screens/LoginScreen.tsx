@@ -100,25 +100,9 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
     setFamilies(data || []);
     setLoading(false);
 
-    // 子供モード: 家族選択をスキップして全子供を直接表示
-    if (mode === "child" && data && data.length > 0) {
-      const { data: allChildren } = await supabase
-        .from("otetsudai_users")
-        .select("*")
-        .eq("role", "child");
-      if (allChildren && allChildren.length > 0) {
-        setMembers(allChildren);
-        if (allChildren.length === 1) {
-          // 子供が1人なら自動選択してPIN入力へ
-          setSelectedFamily(data.find((f: any) => f.id === allChildren[0].family_id) || data[0]);
-          setSelectedUser(allChildren[0]);
-          setPin("");
-          setStep("pin");
-        } else {
-          setSelectedFamily(data[0]);
-          setStep("member");
-        }
-      }
+    // 子供モード: 家族が1つなら自動スキップ
+    if (mode === "child" && data && data.length === 1) {
+      handleFamilySelect(data[0]);
     }
   }
 
@@ -246,11 +230,8 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
         name: authUser.name,
         authId: authData.user.id,
       });
-      // 常に家族管理画面へ（ダッシュボードへはボタンで遷移）
-      setLoggedInUserId(authUser.id);
-      setLoggedInAuthId(authData.user.id);
-      setAdminLoggedIn(true);
-      await loadMyFamilies(authData.user.id);
+      // 直接ダッシュボードへ
+      onLoginSuccess();
     } catch {
       setError("ログインに 失敗しました");
     }
@@ -984,8 +965,8 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
           </>
         )}
 
-        {/* Step: Family selection */}
-        {step === "family" && (
+        {/* Step: Family selection (子供モード以外で表示) */}
+        {step === "family" && mode !== "child" && (
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>もどる</Text></View>
@@ -998,6 +979,26 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
                 onPress={() => handleFamilySelect(f)}
               >
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flex: 1 }}><PixelHouseIcon size={16} /><Text style={styles.selectText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{f.name}</Text></View>
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+        {/* 子供モード: 家族スキップ → 全子供から名前を選ぶ */}
+        {step === "family" && mode === "child" && (
+          <>
+            <TouchableOpacity style={styles.backButton} onPress={goBack}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>もどる</Text></View>
+            </TouchableOpacity>
+            <RubyText style={styles.label} parts={[["名前", "なまえ"], "を", ["選", "えら"], "んでね"]} rubySize={6} />
+            {families.map((f) => (
+              <TouchableOpacity
+                key={f.id}
+                style={styles.selectButton}
+                onPress={() => handleFamilySelect(f)}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+                  <Text style={styles.selectText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{f.name}</Text>
+                </View>
               </TouchableOpacity>
             ))}
           </>
