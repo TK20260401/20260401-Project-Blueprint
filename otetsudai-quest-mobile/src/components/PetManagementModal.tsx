@@ -21,8 +21,10 @@ import {
 } from "../lib/pets";
 import PetSvg from "./PetSvg";
 import RpgButton from "./RpgButton";
-import { PixelPawIcon } from "./PixelIcons";
+import { PixelPawIcon, PixelStarIcon } from "./PixelIcons";
 import RpgCard from "./RpgCard";
+import { RubyText } from "./Ruby";
+import PetEncyclopediaModal from "./PetEncyclopediaModal";
 import { useTheme, type Palette } from "../theme";
 
 type Props = {
@@ -41,6 +43,7 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState("");
+  const [encyclopediaOpen, setEncyclopediaOpen] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
@@ -78,16 +81,28 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
         <View style={styles.header}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <PixelPawIcon size={18} />
-            <Text style={styles.headerTitle}>ペットずかん</Text>
+            <RubyText style={styles.headerTitle} parts={[["仲間", "なかま"], "ペット"]} rubySize={5} />
           </View>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.subtitle}>
-          アクティブに できるのは 1ぴきだけ！
-        </Text>
+        <RubyText style={styles.subtitle} parts={["アクティブに できるのは 1", ["匹", "ひき"], "だけ！"]} rubySize={4} />
+
+        <TouchableOpacity
+          onPress={() => setEncyclopediaOpen(true)}
+          style={styles.encyclopediaBtn}
+          accessibilityLabel="ペット図鑑を ひらく"
+          accessibilityRole="button"
+        >
+          <PixelStarIcon size={16} />
+          <RubyText
+            style={styles.encyclopediaBtnText}
+            parts={["ペット", ["図鑑", "ずかん"], "を ", ["見", "み"], "る"]}
+            rubySize={5}
+          />
+        </TouchableOpacity>
 
         <ScrollView
           contentContainerStyle={{ padding: 12, paddingBottom: insets.bottom + 20 }}
@@ -212,6 +227,11 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
           </View>
         </ScrollView>
       </View>
+      <PetEncyclopediaModal
+        visible={encyclopediaOpen}
+        onClose={() => setEncyclopediaOpen(false)}
+        childId={childId}
+      />
     </Modal>
   );
 }
@@ -254,6 +274,25 @@ function createStyles(p: Palette) {
       textAlign: "center",
       paddingHorizontal: 16,
       paddingVertical: 8,
+    },
+    encyclopediaBtn: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      gap: 6,
+      marginHorizontal: 12,
+      marginBottom: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: p.accent,
+      backgroundColor: p.surfaceMuted,
+    },
+    encyclopediaBtnText: {
+      fontSize: 13,
+      color: p.accent,
+      fontWeight: "800" as const,
     },
     emptyWrap: {
       alignItems: "center",
