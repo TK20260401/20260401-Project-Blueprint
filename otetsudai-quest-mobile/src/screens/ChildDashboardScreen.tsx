@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { getSession, clearSession } from "../lib/session";
 import { useTheme, type Palette } from "../theme";
+import { palettes, type PaletteName } from "../theme/palettes";
 import { rf } from "../lib/responsive";
 import { getTaskIcon } from "../lib/task-icons";
 import { getLevelProgress, getCurrentLevel } from "../lib/levels";
@@ -59,6 +60,7 @@ import * as Haptics from "expo-haptics";
 import { useReducedMotion } from "../lib/useReducedMotion";
 import { PixelSwordIcon, PixelScrollIcon, PixelChestOpenIcon, PixelShieldIcon, PixelStarIcon, PixelCrossedSwordsIcon, PixelPotionIcon, PixelFlameIcon, PixelLetterIcon, PixelCoinIcon, PixelCartIcon, PixelPiggyIcon, PixelChartIcon, PixelDoorIcon, PixelBarChartIcon, PixelHourglassIcon, PixelCheckIcon, PixelCrossIcon, PixelMapIcon, PixelLightbulbIcon, PixelBookIcon, PixelTargetIcon, PixelChatIcon, PixelRefreshIcon, PixelConfettiIcon, PixelShopIcon, PixelPencilIcon } from "../components/PixelIcons";
 import StampSvg from "../components/StampSvg";
+import WalletTransferModal, { type PotType } from "../components/WalletTransferModal";
 import QuestCardFrame from "../components/QuestCardFrame";
 import TaskIconSvg from "../components/TaskIconSvg";
 import RpgStatusBar from "../components/RpgStatusBar";
@@ -77,7 +79,7 @@ export default function ChildDashboardScreen({
 }) {
   const { childId } = route.params;
   const { alert } = useAppAlert();
-  const { palette } = useTheme();
+  const { palette, paletteName, setPalette } = useTheme();
   const styles = useMemo(() => createStyles(palette), [palette]);
   const reducedMotion = useReducedMotion();
   const { width: screenW, height: screenH } = useWindowDimensions();
@@ -93,7 +95,11 @@ export default function ChildDashboardScreen({
   const [weeklySummary, setWeeklySummary] = useState({ quests: 0, earned: 0, streak: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshDoneAt, setRefreshDoneAt] = useState<number | null>(null);
+  const [transferVisible, setTransferVisible] = useState(false);
   const [submitting, setSubmitting] = useState<string | null>(null);
+  // 今日すでに提出済み（pending/approved）のタスクID — 一覧から非表示にする
+  const [submittedTodayIds, setSubmittedTodayIds] = useState<string[]>([]);
   const [tab, setTab] = useState<"quests" | "history">("quests");
   const [mood, setMood] = useState<"active" | "normal" | "lonely">("normal");
   // レベルアップ演出
@@ -232,6 +238,18 @@ export default function ChildDashboardScreen({
     ]);
 
     setTasks(taskRes.data || []);
+    // 今日すでに提出済み（pending/approved）のタスクIDを取得し、一覧から非表示にする
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { data: todayLogs } = await supabase
+      .from("otetsudai_task_logs")
+      .select("task_id")
+      .eq("child_id", childId)
+      .in("status", ["pending", "approved"])
+      .gte("created_at", todayStart.toISOString());
+    // DB の結果と optimistic state をマージ（insert 直後の読み取り遅延でも非表示が消えないように）
+    const dbIds = (todayLogs || []).map((l: any) => l.task_id);
+    setSubmittedTodayIds((prev) => Array.from(new Set([...prev, ...dbIds])));
     // ウォレットが未作成の場合、自動作成する（ガード）
     let walletData = walletRes.data;
     if (!walletData) {
@@ -483,6 +501,44 @@ export default function ChildDashboardScreen({
     setRefreshing(true);
     await loadData();
     setRefreshing(false);
+    setRefreshDoneAt(Date.now());
+    setTimeout(() => setRefreshDoneAt(null), 1500);
+  }
+
+  // 3pot 間の振替（銀行/証券の入出金モデル）
+  async function handleTransfer(from: PotType, to: PotType, amount: number) {
+    if (!wallet) throw new Error("ウォレットが ありません");
+    if (from === to) throw new Error("おなじ ところには ふりかえできません");
+    if (amount <= 0) throw new Error("0円より おおきく");
+
+    const balanceMap = {
+      spending: wallet.spending_balance,
+      saving: wallet.saving_balance,
+      invest: wallet.invest_balance,
+    };
+    if (amount > balanceMap[from]) throw new Error(`${balanceMap[from].toLocaleString()}円までだよ`);
+
+    const next = { ...balanceMap, [from]: balanceMap[from] - amount, [to]: balanceMap[to] + amount };
+    const { error: walletErr } = await supabase
+      .from("otetsudai_wallets")
+      .update({
+        spending_balance: next.spending,
+        saving_balance: next.saving,
+        invest_balance: next.invest,
+      })
+      .eq("id", wallet.id);
+    if (walletErr) throw walletErr;
+
+    const labelMap = { spending: "つかう", saving: "ためる", invest: "ふやす" } as const;
+    const txTypeMap = { spending: "spend", saving: "save", invest: "invest" } as const;
+    await supabase.from("otetsudai_transactions").insert({
+      wallet_id: wallet.id,
+      type: txTypeMap[to],
+      amount,
+      description: `${labelMap[from]} → ${labelMap[to]} ふりかえ`,
+    });
+
+    await loadData();
   }
 
   function confirmAndComplete(task: Task) {
@@ -498,6 +554,8 @@ export default function ChildDashboardScreen({
 
   async function handleComplete(task: Task) {
     setSubmitting(task.id);
+    // 楽観的UI: 即座に一覧から消す（DB書き込みを待たない）
+    setSubmittedTodayIds((prev) => (prev.includes(task.id) ? prev : [...prev, task.id]));
 
     // クリア前のレベルを記録
     const beforeLevel = getCurrentLevel(totalEarned);
@@ -670,6 +728,28 @@ export default function ChildDashboardScreen({
           exp={levelInfo.progress}
           gold={totalEarned}
           onBack={handleLogout}
+          rightSlot={
+            <View style={{ flexDirection: "row", gap: 6, marginRight: 4 }}>
+              {(Object.keys(palettes) as PaletteName[]).map((name) => (
+                <TouchableOpacity
+                  key={name}
+                  onPress={() => setPalette(name)}
+                  accessibilityLabel={`テーマ: ${palettes[name].name}`}
+                  accessibilityRole="button"
+                  hitSlop={{ top: 8, bottom: 8, left: 2, right: 2 }}
+                  style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: 8,
+                    backgroundColor: palettes[name].primary,
+                    borderWidth: paletteName === name ? 2 : 0,
+                    borderColor: palette.textStrong,
+                    opacity: paletteName === name ? 1 : 0.5,
+                  }}
+                />
+              ))}
+            </View>
+          }
         />
       </View>
       <Text style={styles.headerDate}>{new Date().toLocaleDateString("ja-JP", { month: "long", day: "numeric", weekday: "long" })}</Text>
@@ -772,6 +852,63 @@ export default function ChildDashboardScreen({
           <Text style={styles.quickNavAmount}>
             {(wallet?.invest_balance ?? 0).toLocaleString()}
           </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* おさいふ こうしん＋ふりかえ — 銀行/証券の入出金モデル */}
+      <View style={styles.walletActionsRow}>
+        <TouchableOpacity
+          style={styles.refreshBtn}
+          onPress={onRefresh}
+          disabled={refreshing}
+          activeOpacity={0.7}
+          accessibilityLabel="おさいふを こうしんする"
+          accessibilityRole="button"
+          accessibilityHint="さいきんの きんがくに こうしんします"
+        >
+          {refreshing ? (
+            <ActivityIndicator size="small" color={palette.accent} />
+          ) : refreshDoneAt ? (
+            <PixelCheckIcon size={18} />
+          ) : (
+            <PixelRefreshIcon size={18} />
+          )}
+          <View style={{ flex: 1 }}>
+            <RubyText
+              style={styles.refreshBtnLabel}
+              parts={refreshing
+                ? ["こうしん ちゅう..."]
+                : refreshDoneAt
+                ? ["こうしん しました ✨"]
+                : [["更新", "こうしん"]]}
+              rubySize={6}
+              noWrap
+            />
+            {!refreshing && !refreshDoneAt && (
+              <RubyText
+                style={styles.refreshBtnHint}
+                parts={["（さいきんの きんがくに する）"]}
+                rubySize={5}
+                noWrap
+              />
+            )}
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.transferBtn}
+          onPress={() => setTransferVisible(true)}
+          disabled={!wallet}
+          activeOpacity={0.7}
+          accessibilityLabel="おかねを ふりかえる"
+          accessibilityRole="button"
+          accessibilityHint="つかう・ためる・ふやすの あいだで おかねを 動かします"
+        >
+          <PixelCoinIcon size={18} />
+          <View style={{ flex: 1 }}>
+            <RubyText style={styles.refreshBtnLabel} parts={[["振替", "ふりかえ"]]} rubySize={6} noWrap />
+            <RubyText style={styles.refreshBtnHint} parts={["（つかう・ためる・ふやす を いどう）"]} rubySize={5} noWrap />
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -1093,10 +1230,10 @@ export default function ChildDashboardScreen({
               <PixelStarIcon size={22} />
               <RubyText style={styles.specialSectionTitle} parts={[["特別", "とくべつ"], "クエスト"]} />
             </View>
-            {tasks.filter((t) => t.is_special && isSpecialActive(t)).length > 0 ? (
+            {tasks.filter((t) => t.is_special && isSpecialActive(t) && !submittedTodayIds.includes(t.id)).length > 0 ? (
               <>
                 {tasks
-                  .filter((t) => t.is_special && isSpecialActive(t))
+                  .filter((t) => t.is_special && isSpecialActive(t) && !submittedTodayIds.includes(t.id))
                   .map((task) => (
                     <View key={task.id} style={styles.specialQuestCard}>
                       <View style={styles.specialQuestHeader}>
@@ -1167,13 +1304,13 @@ export default function ChildDashboardScreen({
             )}
 
             {/* 通常クエスト */}
-            {tasks.filter((t) => !t.is_special).length > 0 && (
+            {tasks.filter((t) => !t.is_special && !submittedTodayIds.includes(t.id)).length > 0 && (
               <>
-                {tasks.filter((t) => t.is_special && isSpecialActive(t)).length > 0 && (
+                {tasks.filter((t) => t.is_special && isSpecialActive(t) && !submittedTodayIds.includes(t.id)).length > 0 && (
                   <AutoRubyText text="クエスト" style={[styles.sectionTitle, { marginTop: 16 }]} rubySize={7} />
                 )}
                 {tasks
-                  .filter((t) => !t.is_special)
+                  .filter((t) => !t.is_special && !submittedTodayIds.includes(t.id))
                   .map((task) => (
                     <QuestCardFrame key={task.id} tier={getQuestCardTier(task)}>
                       <View style={styles.questInfo}>
@@ -1444,6 +1581,14 @@ export default function ChildDashboardScreen({
           onComplete={() => { setEggDrop(null); loadData(); }}
         />
       )}
+
+      {/* ふりかえ（ポット間移動） */}
+      <WalletTransferModal
+        visible={transferVisible}
+        onClose={() => setTransferVisible(false)}
+        wallet={wallet}
+        onConfirm={handleTransfer}
+      />
 
       {/* ペットずかん */}
       <PetManagementModal
@@ -1812,6 +1957,47 @@ function createStyles(p: Palette) {
     gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,
+  },
+  // おさいふ こうしん＋振替ボタン — Quick Nav 直下、ScrollView 外で常時可視
+  walletActionsRow: {
+    flexDirection: "row" as const,
+    gap: 6,
+    marginHorizontal: 10,
+    marginBottom: 8,
+  },
+  refreshBtn: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: p.surfaceMuted,
+    borderWidth: 1,
+    borderColor: p.border,
+  },
+  transferBtn: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: `${p.accent}1A`,
+    borderWidth: 1,
+    borderColor: p.accent,
+  },
+  refreshBtnLabel: {
+    fontSize: 13,
+    fontWeight: "700" as const,
+    color: p.textBase,
+  },
+  refreshBtnHint: {
+    fontSize: 10,
+    color: p.textMuted,
+    marginTop: 1,
   },
   quickNavBtn: {
     flexBasis: "23%" as any,

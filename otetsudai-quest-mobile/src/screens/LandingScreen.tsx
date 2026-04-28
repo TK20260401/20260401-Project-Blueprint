@@ -77,16 +77,16 @@ export default function LandingScreen({ onSignup, onLogin, onParentLogin }: Prop
 
         <View style={[styles.buttons, isSmallScreen && { marginBottom: 12 }]}>
           {onSignup && (
-            <RpgButton tier="gold" size="lg" fullWidth onPress={onSignup} accessibilityLabel="はじめてのひと 新規登録">
+            <RpgButton tier="gold" size="lg" fullWidth contentAlign="start" onPress={onSignup} accessibilityLabel="はじめてのひと 新規登録">
               <PixelKeyIcon size={22} />
-              <Text style={{ fontSize: isTablet ? 18 : 16, fontWeight: "bold", color: "#2A1800" }} adjustsFontSizeToFit numberOfLines={1}>
+              <Text style={{ fontSize: isTablet ? 18 : 16, fontWeight: "bold", color: "#2A1800", textAlign: "left" }} adjustsFontSizeToFit numberOfLines={1}>
                 はじめてのひと
               </Text>
             </RpgButton>
           )}
-          <RpgButton tier="silver" size="lg" fullWidth onPress={onLogin} accessibilityLabel="つづきから ログイン">
+          <RpgButton tier="silver" size="lg" fullWidth contentAlign="start" onPress={onLogin} accessibilityLabel="つづきから ログイン">
             <PixelDoorIcon size={22} />
-            <Text style={{ fontSize: isTablet ? 18 : 16, fontWeight: "bold", color: "#1A1D22" }} adjustsFontSizeToFit numberOfLines={1}>
+            <Text style={{ fontSize: isTablet ? 18 : 16, fontWeight: "bold", color: "#1A1D22", textAlign: "left" }} adjustsFontSizeToFit numberOfLines={1}>
               つづきから
             </Text>
           </RpgButton>

@@ -323,7 +323,7 @@ export default function ParentDashboardScreen({
     if (!approvalTarget) return;
     const log = approvalTarget;
 
-    await supabase
+    const { error: updateErr } = await supabase
       .from("otetsudai_task_logs")
       .update({
         status: "approved",
@@ -333,6 +333,15 @@ export default function ParentDashboardScreen({
         approval_message: approvalMessage || null,
       })
       .eq("id", log.id);
+
+    if (updateErr) {
+      console.error("[handleApprove] task_logs update failed:", updateErr);
+      alert("エラー", `承認に失敗しました: ${updateErr.message}`, [{ text: "OK" }]);
+      return;
+    }
+
+    // 楽観的UI: pendingLogs から即削除（loadData の再取得を待たない）
+    setPendingLogs((prev) => prev.filter((l) => l.id !== log.id));
 
     const childWallet = wallets[log.child_id];
     if (childWallet && log.task) {
@@ -378,10 +387,17 @@ export default function ParentDashboardScreen({
       ...reasons.map((r) => ({
         text: r,
         onPress: async () => {
-          await supabase
+          const { error } = await supabase
             .from("otetsudai_task_logs")
             .update({ status: "rejected", reject_reason: r })
             .eq("id", logId);
+          if (error) {
+            console.error("[handleReject] update failed:", error);
+            alert("エラー", `却下に失敗しました: ${error.message}`, [{ text: "OK" }]);
+            return;
+          }
+          // 楽観的UI: pendingLogs から即削除
+          setPendingLogs((prev) => prev.filter((l) => l.id !== logId));
           await loadData();
         },
       })),

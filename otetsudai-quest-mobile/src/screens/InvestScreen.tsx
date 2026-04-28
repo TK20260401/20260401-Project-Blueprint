@@ -13,6 +13,7 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFocusEffect } from "@react-navigation/native";
 import { supabase } from "../lib/supabase";
 import { useTheme, type Palette } from "../theme";
 import { rf } from "../lib/responsive";
@@ -83,6 +84,13 @@ export default function InvestScreen({
     checkHasParent();
     loadData();
   }, [childId]);
+
+  // 画面復帰時にウォレット残高を再取得（親が承認した分の即時反映）
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
 
   async function checkHasParent() {
     try {
