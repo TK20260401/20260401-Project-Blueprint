@@ -20,6 +20,10 @@ const STAGE_RANK: Record<GrowthStage, number> = {
   adult: 4,
 };
 
+// 図鑑では「孵化（赤ちゃん）以降」のみを発見扱いにする
+// 卵のままのペットは姿が見えていないので未発見と同じ扱い
+const VISIBLE_STAGES: GrowthStage[] = ["baby", "child", "adult"];
+
 export async function getEncyclopedia(childId: string): Promise<EncyclopediaEntry[]> {
   const { data, error } = await supabase
     .from("otetsudai_pets")
@@ -37,14 +41,18 @@ export async function getEncyclopedia(childId: string): Promise<EncyclopediaEntr
   }
 
   return PET_TYPES.map((petType) => {
-    const matched = data.filter((row: any) => row.pet_type === petType);
+    const matched = data.filter(
+      (row: any) =>
+        row.pet_type === petType &&
+        VISIBLE_STAGES.includes(row.growth_stage as GrowthStage)
+    );
     if (matched.length === 0) {
       return { petType, highestStage: null, totalCount: 0, firstSeenAt: null };
     }
     const highest = matched.reduce<GrowthStage>((acc: GrowthStage, row: any) => {
       const stage = row.growth_stage as GrowthStage;
       return STAGE_RANK[stage] > STAGE_RANK[acc] ? stage : acc;
-    }, "egg");
+    }, "baby");
     return {
       petType,
       highestStage: highest,

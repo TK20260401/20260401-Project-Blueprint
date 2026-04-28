@@ -97,12 +97,14 @@ export default function PetEncyclopediaModal({ visible, onClose, childId }: Prop
                   >
                     <View style={styles.cellIconWrap}>
                       {discovered ? (
-                        <PetSvg
-                          type={entry.petType}
-                          stage={entry.highestStage as GrowthStage}
-                          size={56}
-                          animated={false}
-                        />
+                        <View style={styles.iconClip}>
+                          <PetSvg
+                            type={entry.petType}
+                            stage={entry.highestStage as GrowthStage}
+                            size={44}
+                            animated={false}
+                          />
+                        </View>
                       ) : (
                         <View style={styles.silhouette}>
                           <Text style={styles.silhouetteText}>？</Text>
@@ -111,7 +113,7 @@ export default function PetEncyclopediaModal({ visible, onClose, childId }: Prop
                     </View>
                     {discovered ? (
                       <>
-                        <Text style={styles.cellName}>{info.nameJa}</Text>
+                        <Text style={styles.cellName} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{info.nameJa}</Text>
                         <RubyText
                           style={styles.cellStage}
                           parts={STAGE_LABEL_PARTS[entry.highestStage as GrowthStage]}
@@ -241,13 +243,13 @@ function createStyles(p: Palette) {
     },
     cell: {
       width: "31%",
-      aspectRatio: 0.85,
+      aspectRatio: 0.7,
       borderRadius: 12,
       borderWidth: 2,
-      padding: 8,
+      padding: 6,
       alignItems: "center" as const,
       justifyContent: "center" as const,
-      gap: 2,
+      gap: 1,
     },
     cellLocked: {
       backgroundColor: p.surfaceMuted,
@@ -269,6 +271,12 @@ function createStyles(p: Palette) {
       alignItems: "center" as const,
       justifyContent: "center" as const,
     },
+    iconClip: {
+      width: 56,
+      height: 56,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
     silhouette: {
       width: 56,
       height: 56,
@@ -279,27 +287,32 @@ function createStyles(p: Palette) {
       borderWidth: 1,
       borderColor: p.border,
     },
+    silhouetteTextWrap: {
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+    },
     silhouetteText: {
       fontSize: 28,
       fontWeight: "900",
       color: p.textMuted,
     },
     cellName: {
-      fontSize: 12,
+      fontSize: 9,
       fontWeight: "700",
       color: p.textStrong,
+      marginTop: 2,
     },
     cellStage: {
-      fontSize: 10,
+      fontSize: 8,
       color: p.accent,
       fontWeight: "600",
     },
     cellCount: {
-      fontSize: 9,
+      fontSize: 7,
       color: p.textMuted,
     },
     cellLockText: {
-      fontSize: 10,
+      fontSize: 8,
       color: p.textMuted,
       fontWeight: "600",
     },
