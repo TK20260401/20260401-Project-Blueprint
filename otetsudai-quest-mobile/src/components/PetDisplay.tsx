@@ -80,6 +80,15 @@ const styles_overlay = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.4)",
     textShadowRadius: 2,
   },
+  // P5: 成長段階移行時のゴールドフラッシュ（PetSvg 全体を覆う）
+  evolveFlashLayer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 22,
+  },
 });
 
 export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
@@ -87,7 +96,39 @@ export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
   const styles = useMemo(() => createStyles(palette), [palette]);
   const reducedMotion = useReducedMotion();
   const scale = useRef(new Animated.Value(1)).current;
+  const evolveScale = useRef(new Animated.Value(1)).current;
+  const evolveFlash = useRef(new Animated.Value(0)).current;
   const [happy, setHappy] = useState(false);
+  const [evolved, setEvolved] = useState(false);
+  const prevStage = useRef<string | undefined>(pet?.growth_stage);
+
+  // P5: ペット成長段階移行アニメ — egg→baby/baby→child/child→adult のとき
+  useEffect(() => {
+    const cur = pet?.growth_stage;
+    if (!cur) {
+      prevStage.current = undefined;
+      return;
+    }
+    // 初回レンダーは prevStage の初期化のみ、演出スキップ
+    if (prevStage.current === undefined) {
+      prevStage.current = cur;
+      return;
+    }
+    if (cur !== prevStage.current) {
+      prevStage.current = cur;
+      if (reducedMotion) return;
+      setEvolved(true);
+      evolveScale.setValue(0.6);
+      evolveFlash.setValue(1);
+      Animated.parallel([
+        Animated.sequence([
+          Animated.spring(evolveScale, { toValue: 1.5, friction: 4, tension: 80, useNativeDriver: true }),
+          Animated.spring(evolveScale, { toValue: 1, friction: 5, useNativeDriver: true }),
+        ]),
+        Animated.timing(evolveFlash, { toValue: 0, duration: 700, useNativeDriver: true }),
+      ]).start(() => setEvolved(false));
+    }
+  }, [pet?.growth_stage, reducedMotion, evolveScale, evolveFlash]);
 
   function triggerHappy() {
     if (!reducedMotion) {
@@ -147,9 +188,18 @@ export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
   return (
     <TouchableOpacity onPress={handleManagePress} style={styles.container} activeOpacity={0.8}>
       <View>
-        <Animated.View style={{ transform: [{ scale }] }}>
+        <Animated.View style={{ transform: [{ scale: Animated.multiply(scale, evolveScale) }] }}>
           <PetSvg type={pet.pet_type} stage={pet.growth_stage} happiness={happiness} size={44} animated />
         </Animated.View>
+        {evolved && (
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              styles_overlay.evolveFlashLayer,
+              { opacity: evolveFlash, backgroundColor: palette.accent ?? "#ffd166" },
+            ]}
+          />
+        )}
         <HappyEffect active={happy} palette={palette} />
       </View>
       {pet.name ? <Text style={styles.petName}>{pet.name}</Text> : null}
