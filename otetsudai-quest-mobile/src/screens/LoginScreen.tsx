@@ -187,12 +187,29 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
       const userMeta = authData.user.user_metadata;
       const isAdmin = userMeta?.role === "admin";
 
-      // セッション保存（RLSクエリを使わない）
+      // 親の場合は otetsudai_users.id を解決（task_logs.approved_by 等の FK で使用するため）
+      // admin は otetsudai_users 行が無いので auth.users.id をそのまま使う
+      let dbUserId = authData.user.id;
+      let familyId: string | null = null;
+      let displayName = adminEmail.split("@")[0];
+      if (!isAdmin) {
+        const { data: parentRow } = await supabase
+          .from("otetsudai_users")
+          .select("id, family_id, name")
+          .eq("auth_id", authData.user.id)
+          .maybeSingle();
+        if (parentRow) {
+          dbUserId = parentRow.id;
+          familyId = parentRow.family_id ?? null;
+          if (parentRow.name) displayName = parentRow.name;
+        }
+      }
+
       await setSession({
-        userId: authData.user.id,
-        familyId: null,
+        userId: dbUserId,
+        familyId,
         role: isAdmin ? "admin" : "parent",
-        name: adminEmail.split("@")[0],
+        name: displayName,
         authId: authData.user.id,
       });
       // 直接ダッシュボードへ
@@ -934,7 +951,13 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
         {step === "family" && mode !== "child" && (
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>もどる</Text></View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <PixelDoorIcon size={14} />
+                <View style={{ alignItems: "center" }}>
+                  <Text style={styles.backText}>もどる</Text>
+                  <Text style={styles.backHint}>(まえへ)</Text>
+                </View>
+              </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={["おうちを", ["選", "えら"], "んでね"]} rubySize={6} />
             {families.map((f) => (
@@ -952,7 +975,13 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
         {step === "family" && mode === "child" && (
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>もどる</Text></View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <PixelDoorIcon size={14} />
+                <View style={{ alignItems: "center" }}>
+                  <Text style={styles.backText}>もどる</Text>
+                  <Text style={styles.backHint}>(まえへ)</Text>
+                </View>
+              </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={[["名前", "なまえ"], "を", ["選", "えら"], "んでね"]} rubySize={6} />
             {families.map((f) => (
@@ -973,7 +1002,13 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
         {step === "member" && (
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>{selectedFamily?.name}</Text></View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <PixelDoorIcon size={14} />
+                <View style={{ alignItems: "center" }}>
+                  <Text style={styles.backText}>{selectedFamily?.name}</Text>
+                  <Text style={styles.backHint}>(まえへ)</Text>
+                </View>
+              </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={[["誰", "だれ"], "かな？"]} rubySize={6} />
             {members.map((m) => (
@@ -1003,7 +1038,13 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
         {step === "pin" && (
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelDoorIcon size={14} /><Text style={styles.backText}>{selectedUser?.name}</Text></View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                <PixelDoorIcon size={14} />
+                <View style={{ alignItems: "center" }}>
+                  <Text style={styles.backText}>{selectedUser?.name}</Text>
+                  <Text style={styles.backHint}>(まえへ)</Text>
+                </View>
+              </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={["PINを", ["入", "い"], "れてね 🔑"]} rubySize={6} />
             <RubyText style={styles.hint} parts={[["自分", "じぶん"], "で", ["決", "き"], "めた4", ["桁", "けた"], "の", ["数字", "すうじ"], "を", ["入", "い"], "れてね"]} rubySize={5} />
@@ -1224,6 +1265,13 @@ function createStyles(p: Palette) {
       fontSize: 14,
       fontWeight: "bold",
       color: p.textMuted,
+    },
+    backHint: {
+      fontSize: 9,
+      fontWeight: "600",
+      color: p.textMuted,
+      opacity: 0.7,
+      marginTop: -1,
     },
     modeButton: {
       borderWidth: 2,

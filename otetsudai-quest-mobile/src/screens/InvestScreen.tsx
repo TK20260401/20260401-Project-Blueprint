@@ -436,11 +436,17 @@ export default function InvestScreen({
               <TouchableOpacity
                 onPress={() => navigation.goBack()}
                 style={styles.lockBackLink}
-                accessibilityLabel="もどる"
+                accessibilityLabel="まえに もどる"
                 accessibilityRole="button"
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
-                <Text style={styles.lockBackText}>もどる</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6, justifyContent: "center" }}>
+                  <PixelDoorIcon size={14} />
+                  <View style={{ alignItems: "center" }}>
+                    <Text style={styles.lockBackText}>もどる</Text>
+                    <Text style={styles.backHint}>(まえへ)</Text>
+                  </View>
+                </View>
               </TouchableOpacity>
             </View>
           </View>
@@ -467,8 +473,8 @@ export default function InvestScreen({
                 accessibilityLabel="閉じる"
                 accessibilityRole="button"
               >
-                <PixelHouseIcon size={14} />
-                <Text style={styles.backText}>もどる</Text>
+                <PixelCrossIcon size={14} />
+                <Text style={styles.backText}>とじる</Text>
               </TouchableOpacity>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
                 <PixelSeedlingIcon size={18} />
