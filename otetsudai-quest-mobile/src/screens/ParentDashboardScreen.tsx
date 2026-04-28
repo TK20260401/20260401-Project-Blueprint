@@ -318,17 +318,36 @@ export default function ParentDashboardScreen({
     setRefreshing(false);
   }
 
+  // session.userId が auth.users.id を保持しているケース（親ログインの既知の不整合）への対処
+  // otetsudai_task_logs.approved_by は otetsudai_users.id を要求するため、auth_id 経由で解決する
+  async function resolveDbUserId(): Promise<string | null> {
+    const session = await getSession();
+    if (!session?.authId) return userId || null;
+    const { data } = await supabase
+      .from("otetsudai_users")
+      .select("id")
+      .eq("auth_id", session.authId)
+      .maybeSingle();
+    return data?.id ?? null;
+  }
+
   // --- Approval ---
   async function handleApprove() {
     if (!approvalTarget) return;
     const log = approvalTarget;
+
+    const dbUserId = await resolveDbUserId();
+    if (!dbUserId) {
+      alert("エラー", "ユーザー情報が見つかりません。ログインし直してください。", [{ text: "OK" }]);
+      return;
+    }
 
     const { error: updateErr } = await supabase
       .from("otetsudai_task_logs")
       .update({
         status: "approved",
         approved_at: new Date().toISOString(),
-        approved_by: userId,
+        approved_by: dbUserId,
         approval_stamp: selectedStamp,
         approval_message: approvalMessage || null,
       })
@@ -413,15 +432,28 @@ export default function ParentDashboardScreen({
       return;
     }
 
-    await supabase
+    const dbUserId = await resolveDbUserId();
+    if (!dbUserId) {
+      alert("エラー", "ユーザー情報が見つかりません。ログインし直してください。", [{ text: "OK" }]);
+      return;
+    }
+
+    const { error: updateErr } = await supabase
       .from("otetsudai_spend_requests")
       .update({
         status: "approved",
         approved_at: new Date().toISOString(),
-        approved_by: userId,
+        approved_by: dbUserId,
         payment_status: "pending_payment",
       })
       .eq("id", req.id);
+
+    if (updateErr) {
+      console.error("[handleApproveSpend] update failed:", updateErr);
+      alert("エラー", `承認に失敗しました: ${updateErr.message}`, [{ text: "OK" }]);
+      return;
+    }
+    setPendingSpends((prev) => prev.filter((s) => s.id !== req.id));
 
     await supabase
       .from("otetsudai_wallets")
