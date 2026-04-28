@@ -242,7 +242,7 @@ export default function WalletDetailScreen({
               spendingBalance: spending,
             })}
           >
-            <PixelCartIcon size={20} />
+            <View style={styles.pocketIconBox}><PixelCartIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
               parts={[["取", "とり"], ["引", "ひき"]]}
@@ -269,7 +269,7 @@ export default function WalletDetailScreen({
             accessibilityLabel={`ためる ${saving}円`}
             onPress={() => setShowGoalModal(true)}
           >
-            <PixelPiggyIcon size={20} />
+            <View style={styles.pocketIconBox}><PixelPiggyIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
               parts={[["金", "きん"], ["庫", "こ"]]}
@@ -299,7 +299,7 @@ export default function WalletDetailScreen({
               investBalance: wallet?.invest_balance ?? 0,
             })}
           >
-            <PixelChartIcon size={20} />
+            <View style={styles.pocketIconBox}><PixelChartIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
               parts={[["錬", "れん"], ["成", "せい"]]}
@@ -740,6 +740,13 @@ function createStyles(p: Palette) {
       color: p.textMuted,
       marginTop: 2,
       textAlign: "center",
+    },
+    // 3SVGアイコンの寸法差を 20×20 固定枠で吸収（gridW×H 5×5/6×6/5×6 揃え）
+    pocketIconBox: {
+      width: 20,
+      height: 20,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
     },
 
     // Action Row
