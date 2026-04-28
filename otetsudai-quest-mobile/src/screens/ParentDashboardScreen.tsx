@@ -37,6 +37,7 @@ import RpgButton from "../components/RpgButton";
 import QuestCardFrame from "../components/QuestCardFrame";
 import TaskIconSvg from "../components/TaskIconSvg";
 import CoinKunChat from "../components/CoinKunChat";
+import ApprovalSuccessBurst from "../components/animations/ApprovalSuccessBurst";
 import { getQuestCardTier } from "../lib/rpg-stats";
 
 type PendingLog = TaskLog & { task: Task; child: User };
@@ -66,6 +67,7 @@ export default function ParentDashboardScreen({
 
   // Approval dialog
   const [approvalTarget, setApprovalTarget] = useState<PendingLog | null>(null);
+  const [showApprovalBurst, setShowApprovalBurst] = useState(false);
   const [selectedStamp, setSelectedStamp] = useState<string | null>(null);
   const [approvalMessage, setApprovalMessage] = useState("");
 
@@ -392,6 +394,7 @@ export default function ParentDashboardScreen({
     setApprovalTarget(null);
     setSelectedStamp(null);
     setApprovalMessage("");
+    setShowApprovalBurst(true);
     await loadData();
   }
 
@@ -1753,6 +1756,12 @@ export default function ParentDashboardScreen({
 
       {/* コインくん AIチャット（親アドバイザーモード） */}
       <CoinKunChat role="parent" />
+
+      {/* S4: 承認成功時の✓ + 星バースト + バナー */}
+      <ApprovalSuccessBurst
+        visible={showApprovalBurst}
+        onComplete={() => setShowApprovalBurst(false)}
+      />
     </SafeAreaView>
   );
 }
