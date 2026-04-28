@@ -245,7 +245,7 @@ export default function WalletDetailScreen({
             <PixelCartIcon size={20} />
             <RubyText
               style={styles.pocketLabel}
-              parts={[["取引", "とりひき"]]}
+              parts={[["取", "とり"], ["引", "ひき"]]}
               rubySize={7}
               rubyColor="rgba(255,255,255,0.6)"
             />
@@ -272,7 +272,7 @@ export default function WalletDetailScreen({
             <PixelPiggyIcon size={20} />
             <RubyText
               style={styles.pocketLabel}
-              parts={[["金庫", "きんこ"]]}
+              parts={[["金", "きん"], ["庫", "こ"]]}
               rubySize={7}
               rubyColor="rgba(255,255,255,0.6)"
             />
@@ -302,7 +302,7 @@ export default function WalletDetailScreen({
             <PixelChartIcon size={20} />
             <RubyText
               style={styles.pocketLabel}
-              parts={[["錬成", "れんせい"]]}
+              parts={[["錬", "れん"], ["成", "せい"]]}
               rubySize={7}
               rubyColor="rgba(255,255,255,0.6)"
             />

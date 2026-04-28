@@ -771,7 +771,7 @@ export default function ChildDashboardScreen({
           <PixelSwordIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["冒険", "ぼうけん"]]}
+            parts={[["冒", "ぼう"], ["険", "けん"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
@@ -795,7 +795,7 @@ export default function ChildDashboardScreen({
           <PixelCartIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["取引", "とりひき"]]}
+            parts={[["取", "とり"], ["引", "ひき"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
@@ -821,7 +821,7 @@ export default function ChildDashboardScreen({
           <PixelPiggyIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["金庫", "きんこ"]]}
+            parts={[["金", "きん"], ["庫", "こ"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
@@ -847,7 +847,7 @@ export default function ChildDashboardScreen({
           <PixelChartIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["錬成", "れんせい"]]}
+            parts={[["錬", "れん"], ["成", "せい"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
