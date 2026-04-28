@@ -768,7 +768,7 @@ export default function ChildDashboardScreen({
           accessibilityLabel="ぼうけんへ クエスト一覧へスクロール"
           accessibilityRole="button"
         >
-          <PixelSwordIcon size={24} />
+          <View style={styles.quickNavIconBox}><PixelSwordIcon size={24} /></View>
           <RubyText
             style={styles.quickNavLabel}
             parts={[["冒", "ぼう"], ["険", "けん"]]}
@@ -792,7 +792,7 @@ export default function ChildDashboardScreen({
           accessibilityLabel="つかう画面へ"
           accessibilityRole="button"
         >
-          <PixelCartIcon size={24} />
+          <View style={styles.quickNavIconBox}><PixelCartIcon size={24} /></View>
           <RubyText
             style={styles.quickNavLabel}
             parts={[["取", "とり"], ["引", "ひき"]]}
@@ -818,7 +818,7 @@ export default function ChildDashboardScreen({
           accessibilityLabel="ためる画面へ"
           accessibilityRole="button"
         >
-          <PixelPiggyIcon size={24} />
+          <View style={styles.quickNavIconBox}><PixelPiggyIcon size={24} /></View>
           <RubyText
             style={styles.quickNavLabel}
             parts={[["金", "きん"], ["庫", "こ"]]}
@@ -844,7 +844,7 @@ export default function ChildDashboardScreen({
           accessibilityLabel="ふやす画面へ"
           accessibilityRole="button"
         >
-          <PixelChartIcon size={24} />
+          <View style={styles.quickNavIconBox}><PixelChartIcon size={24} /></View>
           <RubyText
             style={styles.quickNavLabel}
             parts={[["錬", "れん"], ["成", "せい"]]}
@@ -2019,6 +2019,14 @@ function createStyles(p: Palette) {
     shadowRadius: 4,
     elevation: 4,
     minHeight: 100,
+  },
+  // 4種SVG（gridW×gridH が 4×6/5×5/6×6/5×6 とバラバラ）でも
+  // ボックス外形を 24×24 に固定し、下のテキスト位置を完全に揃える
+  quickNavIconBox: {
+    width: 24,
+    height: 24,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
   },
   quickNavLabel: {
     color: "#ffffff",
