@@ -911,7 +911,7 @@ export default function ChildDashboardScreen({
           <PixelCoinIcon size={18} />
           <View style={{ flex: 1 }}>
             <RubyText style={styles.refreshBtnLabel} parts={[["移", "うつ"], "す"]} rubySize={6} noWrap />
-            <RubyText style={styles.refreshBtnHint} parts={["（つかう・ためる・ふやす に うつす）"]} rubySize={5} noWrap />
+            <RubyText style={styles.refreshBtnHint} parts={["（おかねを ", ["移動", "いどう"], "する）"]} rubySize={5} noWrap />
           </View>
         </TouchableOpacity>
       </View>
