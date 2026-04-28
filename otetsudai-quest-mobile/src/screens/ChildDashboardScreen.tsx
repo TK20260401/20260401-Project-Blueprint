@@ -800,7 +800,7 @@ export default function ChildDashboardScreen({
             rubyColor="rgba(255,255,200,0.7)"
           />
           <Text style={styles.quickNavAmount}>
-            {(wallet?.spending_balance ?? 0).toLocaleString()}
+            {(wallet?.spending_balance ?? 0).toLocaleString()}円
           </Text>
         </TouchableOpacity>
 
@@ -825,7 +825,7 @@ export default function ChildDashboardScreen({
             rubyColor="rgba(255,255,200,0.7)"
           />
           <Text style={styles.quickNavAmount}>
-            {(wallet?.saving_balance ?? 0).toLocaleString()}
+            {(wallet?.saving_balance ?? 0).toLocaleString()}円
           </Text>
         </TouchableOpacity>
 
@@ -850,7 +850,7 @@ export default function ChildDashboardScreen({
             rubyColor="rgba(255,255,200,0.7)"
           />
           <Text style={styles.quickNavAmount}>
-            {(wallet?.invest_balance ?? 0).toLocaleString()}
+            {(wallet?.invest_balance ?? 0).toLocaleString()}円
           </Text>
         </TouchableOpacity>
       </View>
@@ -2025,17 +2025,22 @@ function createStyles(p: Palette) {
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
+  // 4ボタン下段のテキストラインを揃えるため、quickNavSub と quickNavAmount を
+  // 同じ fontSize / color / marginTop / lineHeight で統一
   quickNavSub: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 9,
+    color: "#ffffff",
+    fontSize: 11,
     fontWeight: "700" as const,
-    marginTop: 1,
+    marginTop: 2,
+    lineHeight: 14,
+    opacity: 0.95,
   },
   quickNavAmount: {
     color: "#ffffff",
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: "700" as const,
-    marginTop: 1,
+    marginTop: 2,
+    lineHeight: 14,
     opacity: 0.95,
   },
   walletFooter: {
