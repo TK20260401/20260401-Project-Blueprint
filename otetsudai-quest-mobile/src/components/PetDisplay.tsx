@@ -89,6 +89,19 @@ const styles_overlay = StyleSheet.create({
     bottom: 0,
     borderRadius: 22,
   },
+  // P6: 食事アニメ時の🍖アイコン（ペット右上）
+  eatIconWrap: {
+    position: "absolute",
+    top: -10,
+    right: -8,
+    width: 20,
+    height: 20,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  eatIcon: {
+    fontSize: 16,
+  },
 });
 
 export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
@@ -100,7 +113,10 @@ export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
   const evolveFlash = useRef(new Animated.Value(0)).current;
   const [happy, setHappy] = useState(false);
   const [evolved, setEvolved] = useState(false);
+  const [eating, setEating] = useState(false);
   const prevStage = useRef<string | undefined>(pet?.growth_stage);
+  const prevFedCount = useRef<number | undefined>(pet?.fed_count);
+  const eatBob = useRef(new Animated.Value(0)).current;
 
   // P5: ペット成長段階移行アニメ — egg→baby/baby→child/child→adult のとき
   useEffect(() => {
@@ -129,6 +145,34 @@ export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
       ]).start(() => setEvolved(false));
     }
   }, [pet?.growth_stage, reducedMotion, evolveScale, evolveFlash]);
+
+  // P6: ペット食事アニメ — fed_count が増えたら 2回 bob＋🍖アイコン浮上
+  useEffect(() => {
+    const cur = pet?.fed_count;
+    if (cur === undefined) {
+      prevFedCount.current = undefined;
+      return;
+    }
+    if (prevFedCount.current === undefined) {
+      prevFedCount.current = cur;
+      return;
+    }
+    if (cur > prevFedCount.current) {
+      prevFedCount.current = cur;
+      if (reducedMotion) return;
+      setEating(true);
+      eatBob.setValue(0);
+      Animated.sequence([
+        Animated.timing(eatBob, { toValue: -8, duration: 150, useNativeDriver: true }),
+        Animated.timing(eatBob, { toValue: 0, duration: 150, useNativeDriver: true }),
+        Animated.timing(eatBob, { toValue: -6, duration: 150, useNativeDriver: true }),
+        Animated.timing(eatBob, { toValue: 0, duration: 150, useNativeDriver: true }),
+      ]).start(() => setEating(false));
+    } else if (cur < prevFedCount.current) {
+      // リセットなど降順時は単に値更新
+      prevFedCount.current = cur;
+    }
+  }, [pet?.fed_count, reducedMotion, eatBob]);
 
   function triggerHappy() {
     if (!reducedMotion) {
@@ -188,7 +232,7 @@ export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
   return (
     <TouchableOpacity onPress={handleManagePress} style={styles.container} activeOpacity={0.8}>
       <View>
-        <Animated.View style={{ transform: [{ scale: Animated.multiply(scale, evolveScale) }] }}>
+        <Animated.View style={{ transform: [{ scale: Animated.multiply(scale, evolveScale) }, { translateY: eatBob }] }}>
           <PetSvg type={pet.pet_type} stage={pet.growth_stage} happiness={happiness} size={44} animated />
         </Animated.View>
         {evolved && (
@@ -199,6 +243,11 @@ export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
               { opacity: evolveFlash, backgroundColor: palette.accent ?? "#ffd166" },
             ]}
           />
+        )}
+        {eating && (
+          <View pointerEvents="none" style={styles_overlay.eatIconWrap}>
+            <Text style={styles_overlay.eatIcon}>🍖</Text>
+          </View>
         )}
         <HappyEffect active={happy} palette={palette} />
       </View>
