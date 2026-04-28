@@ -254,6 +254,7 @@ export default function WalletDetailScreen({
             >
               {spending.toLocaleString()}
             </Text>
+            <Text style={styles.pocketHint}>ほしいものを かう</Text>
           </TouchableOpacity>
 
           {/* ためる → 貯金目標セクション */}
@@ -280,6 +281,7 @@ export default function WalletDetailScreen({
             >
               {saving.toLocaleString()}
             </Text>
+            <Text style={styles.pocketHint}>あとで つかう</Text>
           </TouchableOpacity>
 
           {/* ふやす → Invest */}
@@ -309,6 +311,7 @@ export default function WalletDetailScreen({
             >
               {invest.toLocaleString()}
             </Text>
+            <Text style={styles.pocketHint}>かぶで そだてる</Text>
           </TouchableOpacity>
         </View>
 
@@ -731,6 +734,12 @@ function createStyles(p: Palette) {
     pocketAmount: {
       fontSize: 16,
       fontWeight: "bold",
+    },
+    pocketHint: {
+      fontSize: 10,
+      color: p.textMuted,
+      marginTop: 2,
+      textAlign: "center",
     },
 
     // Action Row
