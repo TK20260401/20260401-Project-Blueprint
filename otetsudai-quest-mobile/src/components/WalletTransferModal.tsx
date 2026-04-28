@@ -225,13 +225,10 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
           {error && <Text style={styles.errorText}>{error}</Text>}
 
           <View style={styles.actions}>
-            <TouchableOpacity onPress={onClose} style={styles.cancelBtn}>
-              <RubyText style={styles.cancelText} parts={["やめる"]} rubySize={5} />
-            </TouchableOpacity>
             <TouchableOpacity
               onPress={handleConfirm}
               disabled={!canConfirm}
-              style={[styles.confirmBtn, !canConfirm && { opacity: 0.4 }]}
+              style={[styles.confirmBtn, !canConfirm && { opacity: 0.4 }, { flex: 1 }]}
               accessibilityLabel="うつす"
               accessibilityRole="button"
             >
