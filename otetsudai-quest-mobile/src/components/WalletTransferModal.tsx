@@ -1,5 +1,17 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Modal, View, Text, TouchableOpacity, StyleSheet, TextInput } from "react-native";
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  StyleSheet,
+  TextInput,
+  KeyboardAvoidingView,
+  Keyboard,
+  Platform,
+  ScrollView,
+} from "react-native";
 import { useTheme, type Palette } from "../theme";
 import { RubyText } from "./Ruby";
 import { PixelCartIcon, PixelPiggyIcon, PixelChartIcon, PixelCoinIcon, PixelCheckIcon, PixelCrossIcon } from "./PixelIcons";
@@ -44,6 +56,7 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
   const [amount, setAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     if (visible) {
@@ -78,8 +91,21 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.card}>
+      <KeyboardAvoidingView
+        style={styles.flex1}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <View style={styles.overlay}>
+            <ScrollView
+              ref={scrollRef}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              bounces={true}
+            >
+              <TouchableWithoutFeedback>
+                <View style={styles.card}>
           <View style={styles.header}>
             <PixelCoinIcon size={20} />
             <RubyText style={styles.title} parts={["おかねを ", ["振替", "ふりかえ"]]} rubySize={6} />
@@ -173,8 +199,22 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
                   placeholderTextColor={palette.textPlaceholder}
                   style={styles.amountInput}
                   maxLength={7}
+                  returnKeyType="done"
+                  onFocus={() => {
+                    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250);
+                  }}
+                  onSubmitEditing={Keyboard.dismiss}
                 />
                 <Text style={styles.amountUnit}>円</Text>
+                <TouchableOpacity
+                  onPress={Keyboard.dismiss}
+                  style={styles.kbDoneBtn}
+                  accessibilityLabel="キーボードを とじる"
+                  accessibilityRole="button"
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={styles.kbDoneText}>OK</Text>
+                </TouchableOpacity>
               </View>
               {amountNum > fromBalance && (
                 <RubyText style={styles.errorText} parts={[`${fromBalance.toLocaleString()}円までだよ`]} rubySize={5} />
@@ -199,15 +239,21 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
               <RubyText style={styles.confirmText} parts={[["振替", "ふりかえ"], "る"]} rubySize={5} />
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
+                </View>
+              </TouchableWithoutFeedback>
+            </ScrollView>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 function createStyles(p: Palette) {
   return StyleSheet.create({
-    overlay: { flex: 1, backgroundColor: p.overlay, alignItems: "center", justifyContent: "center", padding: 16 },
+    flex1: { flex: 1 },
+    overlay: { flex: 1, backgroundColor: p.overlay },
+    scrollContent: { flexGrow: 1, alignItems: "center", justifyContent: "center", padding: 16, paddingBottom: 32 },
     card: { width: "100%", maxWidth: 420, backgroundColor: p.surface, borderRadius: 14, borderWidth: 2, borderColor: p.primary, padding: 16, gap: 8 },
     header: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
     title: { fontSize: 16, fontWeight: "700", color: p.textStrong, flex: 1 },
@@ -222,6 +268,8 @@ function createStyles(p: Palette) {
     amountRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 },
     amountInput: { flex: 1, fontSize: 18, fontWeight: "700", color: p.textStrong, backgroundColor: p.surfaceMuted, borderWidth: 1, borderColor: p.border, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, textAlign: "right" },
     amountUnit: { fontSize: 16, fontWeight: "700", color: p.textBase },
+    kbDoneBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: p.primaryDark, backgroundColor: p.primary },
+    kbDoneText: { fontSize: 13, fontWeight: "800", color: p.white },
     errorText: { fontSize: 11, color: p.red, marginTop: 4 },
     actions: { flexDirection: "row", gap: 8, marginTop: 12 },
     cancelBtn: { flex: 1, paddingVertical: 10, borderRadius: 8, borderWidth: 1, borderColor: p.border, backgroundColor: p.surfaceMuted, alignItems: "center" },
