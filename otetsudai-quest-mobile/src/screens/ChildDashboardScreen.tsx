@@ -771,12 +771,13 @@ export default function ChildDashboardScreen({
           <PixelSwordIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["冒", "ぼう"], ["険", "けん"]]}
+            parts={[["冒険", "ぼうけん"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
           />
           <Text style={styles.quickNavSub} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>クエストへ</Text>
+          <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>クエストに ちょうせん</Text>
         </TouchableOpacity>
 
         {/* つかう */}
@@ -794,7 +795,7 @@ export default function ChildDashboardScreen({
           <PixelCartIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["使", "つか"], "う"]}
+            parts={[["取引", "とりひき"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
@@ -802,9 +803,10 @@ export default function ChildDashboardScreen({
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {(wallet?.spending_balance ?? 0).toLocaleString()}円
           </Text>
+          <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>しょうにんと とりひき</Text>
         </TouchableOpacity>
 
-        {/* ためる */}
+        {/* 金庫 */}
         <TouchableOpacity
           style={[styles.quickNavBtn, { backgroundColor: palette.walletSave, shadowColor: palette.walletSave }, !wallet && { opacity: 0.5 }]}
           activeOpacity={0.7}
@@ -819,7 +821,7 @@ export default function ChildDashboardScreen({
           <PixelPiggyIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["貯", "た"], "める"]}
+            parts={[["金庫", "きんこ"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
@@ -827,9 +829,10 @@ export default function ChildDashboardScreen({
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {(wallet?.saving_balance ?? 0).toLocaleString()}円
           </Text>
+          <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>たからを しまう</Text>
         </TouchableOpacity>
 
-        {/* ふやす */}
+        {/* 錬成 */}
         <TouchableOpacity
           style={[styles.quickNavBtn, { backgroundColor: palette.walletInvest, shadowColor: palette.walletInvest }, !wallet && { opacity: 0.5 }]}
           activeOpacity={0.7}
@@ -844,7 +847,7 @@ export default function ChildDashboardScreen({
           <PixelChartIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["増", "ふ"], "やす"]}
+            parts={[["錬成", "れんせい"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
@@ -852,6 +855,7 @@ export default function ChildDashboardScreen({
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {(wallet?.invest_balance ?? 0).toLocaleString()}円
           </Text>
+          <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>お金を そだてる</Text>
         </TouchableOpacity>
       </View>
 
@@ -2004,7 +2008,7 @@ function createStyles(p: Palette) {
     flexBasis: "23%" as any,
     flexGrow: 1,
     alignItems: "center" as const,
-    justifyContent: "center" as const,
+    justifyContent: "flex-start" as const,
     paddingVertical: 10,
     paddingHorizontal: 4,
     borderRadius: 12,
@@ -2014,7 +2018,7 @@ function createStyles(p: Palette) {
     shadowOpacity: 0.35,
     shadowRadius: 4,
     elevation: 4,
-    minHeight: 72,
+    minHeight: 100,
   },
   quickNavLabel: {
     color: "#ffffff",
@@ -2043,6 +2047,14 @@ function createStyles(p: Palette) {
     marginTop: 2,
     lineHeight: 14,
     opacity: 0.95,
+  },
+  // 補強サブテキスト（取引/金庫/錬成 の下）— ラベルの意味を補う説明文
+  quickNavHint: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 9,
+    fontWeight: "600" as const,
+    marginTop: 1,
+    lineHeight: 12,
   },
   walletFooter: {
     flexDirection: "row" as const,

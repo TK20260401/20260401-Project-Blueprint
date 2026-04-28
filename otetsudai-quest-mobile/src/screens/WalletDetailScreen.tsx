@@ -245,7 +245,7 @@ export default function WalletDetailScreen({
             <PixelCartIcon size={20} />
             <RubyText
               style={styles.pocketLabel}
-              parts={[["使", "つか"], "う"]}
+              parts={[["取引", "とりひき"]]}
               rubySize={7}
               rubyColor="rgba(255,255,255,0.6)"
             />
@@ -254,7 +254,7 @@ export default function WalletDetailScreen({
             >
               {spending.toLocaleString()}
             </Text>
-            <Text style={styles.pocketHint}>ほしいものを かう</Text>
+            <Text style={styles.pocketHint}>しょうにんと とりひき</Text>
           </TouchableOpacity>
 
           {/* ためる → 貯金目標セクション */}
@@ -272,7 +272,7 @@ export default function WalletDetailScreen({
             <PixelPiggyIcon size={20} />
             <RubyText
               style={styles.pocketLabel}
-              parts={[["貯", "た"], "める"]}
+              parts={[["金庫", "きんこ"]]}
               rubySize={7}
               rubyColor="rgba(255,255,255,0.6)"
             />
@@ -281,7 +281,7 @@ export default function WalletDetailScreen({
             >
               {saving.toLocaleString()}
             </Text>
-            <Text style={styles.pocketHint}>あとで つかう</Text>
+            <Text style={styles.pocketHint}>たからを しまう</Text>
           </TouchableOpacity>
 
           {/* ふやす → Invest */}
@@ -302,7 +302,7 @@ export default function WalletDetailScreen({
             <PixelChartIcon size={20} />
             <RubyText
               style={styles.pocketLabel}
-              parts={[["増", "ふ"], "やす"]}
+              parts={[["錬成", "れんせい"]]}
               rubySize={7}
               rubyColor="rgba(255,255,255,0.6)"
             />
@@ -311,7 +311,7 @@ export default function WalletDetailScreen({
             >
               {invest.toLocaleString()}
             </Text>
-            <Text style={styles.pocketHint}>かぶで そだてる</Text>
+            <Text style={styles.pocketHint}>お金を そだてる</Text>
           </TouchableOpacity>
         </View>
 

@@ -36,9 +36,9 @@ type PotMeta = {
 };
 
 const POTS: PotMeta[] = [
-  { key: "spending", labelParts: [["使", "つか"], "う"], Icon: PixelCartIcon, bg: "walletSpendBg", border: "walletSpendBorder", text: "walletSpendText" },
-  { key: "saving",   labelParts: [["貯", "た"], "める"], Icon: PixelPiggyIcon, bg: "walletSaveBg",  border: "walletSaveBorder",  text: "walletSaveText" },
-  { key: "invest",   labelParts: [["増", "ふ"], "やす"], Icon: PixelChartIcon, bg: "walletInvestBg", border: "walletInvestBorder", text: "walletInvestText" },
+  { key: "spending", labelParts: [["取引", "とりひき"]], Icon: PixelCartIcon, bg: "walletSpendBg", border: "walletSpendBorder", text: "walletSpendText" },
+  { key: "saving",   labelParts: [["金庫", "きんこ"]], Icon: PixelPiggyIcon, bg: "walletSaveBg",  border: "walletSaveBorder",  text: "walletSaveText" },
+  { key: "invest",   labelParts: [["錬成", "れんせい"]], Icon: PixelChartIcon, bg: "walletInvestBg", border: "walletInvestBorder", text: "walletInvestText" },
 ];
 
 function balanceOf(wallet: Wallet | null, key: PotType): number {
