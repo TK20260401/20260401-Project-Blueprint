@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { useTheme, type Palette } from "../theme";
 import { RubyText } from "./Ruby";
-import { PixelCartIcon, PixelPiggyIcon, PixelChartIcon, PixelCoinIcon, PixelCheckIcon, PixelCrossIcon } from "./PixelIcons";
+import { PixelCartIcon, PixelPiggyIcon, PixelChartIcon, PixelCoinIcon, PixelCrossIcon } from "./PixelIcons";
 import type { Wallet } from "../lib/types";
 
 export type PotType = "spending" | "saving" | "invest";
@@ -70,14 +70,13 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
 
   const fromBalance = balanceOf(wallet, from || "spending");
   const amountNum = parseInt(amount.replace(/[^0-9]/g, ""), 10) || 0;
-  const canConfirm = !!from && !!to && from !== to && amountNum > 0 && amountNum <= fromBalance && !submitting;
 
-  async function handleConfirm() {
-    if (!canConfirm || !from || !to) return;
+  async function handleConfirmWith(amt: number) {
+    if (!from || !to || from === to || amt <= 0 || amt > fromBalance || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
-      await onConfirm(from, to, amountNum);
+      await onConfirm(from, to, amt);
       onClose();
     } catch (e: any) {
       setError(e?.message || "うつすのに しっぱいしました");
@@ -186,7 +185,7 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
                 {presets.map((v) => (
                   <TouchableOpacity
                     key={v}
-                    onPress={() => { setAmount(String(v)); setError(null); }}
+                    onPress={() => { setAmount(String(v)); setError(null); handleConfirmWith(v); }}
                     style={[styles.presetBtn, amountNum === v && { backgroundColor: palette.accent, borderColor: palette.accentDark }]}
                   >
                     <Text style={[styles.presetText, amountNum === v && { color: palette.white }]}>
@@ -212,9 +211,9 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
                 />
                 <Text style={styles.amountUnit}>円</Text>
                 <TouchableOpacity
-                  onPress={Keyboard.dismiss}
+                  onPress={() => { Keyboard.dismiss(); handleConfirmWith(amountNum); }}
                   style={styles.kbDoneBtn}
-                  accessibilityLabel="キーボードを とじる"
+                  accessibilityLabel="この金額で 移す"
                   accessibilityRole="button"
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
@@ -228,19 +227,6 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
           )}
 
           {error && <Text style={styles.errorText}>{error}</Text>}
-
-          <View style={styles.actions}>
-            <TouchableOpacity
-              onPress={handleConfirm}
-              disabled={!canConfirm}
-              style={[styles.confirmBtn, !canConfirm && { opacity: 0.4 }, { flex: 1 }]}
-              accessibilityLabel="うつす"
-              accessibilityRole="button"
-            >
-              <PixelCheckIcon size={16} />
-              <RubyText style={styles.confirmText} parts={[["移", "うつ"], "す"]} rubySize={5} />
-            </TouchableOpacity>
-          </View>
                 </View>
               </TouchableWithoutFeedback>
             </ScrollView>
