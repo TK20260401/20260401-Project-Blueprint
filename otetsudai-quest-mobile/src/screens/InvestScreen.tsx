@@ -278,11 +278,14 @@ export default function InvestScreen({
           onPress={() => navigation.navigate("ChildDashboard", { childId })}
           style={styles.backButton}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          accessibilityLabel="前の画面に戻る"
+          accessibilityLabel="おうちにもどる"
           accessibilityRole="button"
         >
-          <PixelHouseIcon size={14} />
-          <Text style={styles.backText}>もどる</Text>
+          <PixelHouseIcon size={16} />
+          <View style={{ alignItems: "center" }}>
+            <Text style={styles.backText}>もどる</Text>
+            <Text style={styles.backHint}>(TOPへ)</Text>
+          </View>
         </TouchableOpacity>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
           <View style={{ width: 18, height: 18, alignItems: "center", justifyContent: "center" }}>
@@ -671,7 +674,8 @@ function createStyles(p: Palette) {
       borderWidth: 2,
       borderColor: p.primary,
     },
-    backText: { fontSize: 16, fontWeight: "bold", color: p.textMuted },
+    backText: { fontSize: 14, fontWeight: "bold", color: p.textMuted },
+    backHint: { fontSize: 9, fontWeight: "600", color: p.textMuted, opacity: 0.7, marginTop: -1 },
     headerTitle: { fontSize: rf(18), fontWeight: "bold", color: p.primaryDark, flexShrink: 1 },
 
     scrollContent: { padding: 16, paddingBottom: 140 },

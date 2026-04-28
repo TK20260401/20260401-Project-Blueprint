@@ -195,7 +195,13 @@ export default function WalletDetailScreen({
           style={styles.backButton}
           accessibilityLabel="おうちに もどる"
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelHouseIcon size={14} /><Text style={styles.backText}>もどる</Text></View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+            <PixelHouseIcon size={16} />
+            <View style={{ alignItems: "center" }}>
+              <Text style={styles.backText}>もどる</Text>
+              <Text style={styles.backHint}>(TOPへ)</Text>
+            </View>
+          </View>
         </TouchableOpacity>
         <View style={styles.headerTitleGroup}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -653,9 +659,16 @@ function createStyles(p: Palette) {
       backgroundColor: p.background,
     },
     backText: {
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: "bold",
       color: p.textMuted,
+    },
+    backHint: {
+      fontSize: 9,
+      fontWeight: "600",
+      color: p.textMuted,
+      opacity: 0.7,
+      marginTop: -1,
     },
     headerTitleGroup: {
       flexDirection: "row",

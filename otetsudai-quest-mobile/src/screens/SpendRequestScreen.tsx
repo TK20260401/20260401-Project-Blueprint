@@ -176,7 +176,10 @@ export default function SpendRequestScreen({
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <PixelHouseIcon size={18} />
-              <Text style={styles.backText}>もどる</Text>
+              <View style={{ alignItems: "center" }}>
+                <Text style={styles.backText}>もどる</Text>
+                <Text style={styles.backHint}>(TOPへ)</Text>
+              </View>
             </View>
           </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
@@ -319,9 +322,16 @@ function createStyles(p: Palette) {
       backgroundColor: p.background,
     },
     backText: {
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: "bold",
       color: p.textMuted,
+    },
+    backHint: {
+      fontSize: 9,
+      fontWeight: "600",
+      color: p.textMuted,
+      opacity: 0.7,
+      marginTop: -1,
     },
 
     // Balance card
