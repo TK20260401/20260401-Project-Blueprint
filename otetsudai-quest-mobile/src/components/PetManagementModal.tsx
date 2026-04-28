@@ -88,7 +88,7 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
           </TouchableOpacity>
         </View>
 
-        <RubyText style={styles.subtitle} parts={["アクティブに できるのは 1", ["匹", "ひき"], "だけ！"]} rubySize={4} />
+        <RubyText style={styles.subtitle} parts={["アクティブにできるのは1", ["匹", "ひき"], "だけ！"]} rubySize={4} noWrap />
 
         <TouchableOpacity
           onPress={() => setEncyclopediaOpen(true)}
@@ -148,7 +148,7 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                           <TextInput
                             value={nameDraft}
                             onChangeText={setNameDraft}
-                            placeholder="なまえ"
+                            placeholder="名前（なまえ）"
                             placeholderTextColor={palette.textPlaceholder}
                             style={styles.nameInput}
                             maxLength={12}
@@ -168,21 +168,34 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                             setNameDraft(pet.name || "");
                           }}
                         >
-                          <Text style={styles.petName}>
-                            {pet.name || "なまえを つけよう ✏️"}
-                          </Text>
+                          {pet.name ? (
+                            <Text style={styles.petName}>{pet.name}</Text>
+                          ) : (
+                            <RubyText
+                              style={styles.petName}
+                              parts={[["名前", "なまえ"], "を ", ["付", "つ"], "けよう ✏️"]}
+                              rubySize={5}
+                              noWrap
+                            />
+                          )}
                         </TouchableOpacity>
                       )}
-                      <Text style={styles.petType}>
-                        {info.nameJa} ・{" "}
-                        {pet.growth_stage === "egg"
-                          ? "たまご"
-                          : pet.growth_stage === "baby"
-                            ? "ベビー"
-                            : pet.growth_stage === "child"
-                              ? "こども"
-                              : "おとな"}
-                      </Text>
+                      <RubyText
+                        style={styles.petType}
+                        parts={[
+                          info.nameJa,
+                          " ・ ",
+                          ...(pet.growth_stage === "egg"
+                            ? [["卵", "たまご"] as [string, string]]
+                            : pet.growth_stage === "baby"
+                              ? [["赤", "あか"] as [string, string], "ちゃん"]
+                              : pet.growth_stage === "child"
+                                ? [["子", "こ"] as [string, string], "ども"]
+                                : [["大人", "おとな"] as [string, string]]),
+                        ]}
+                        rubySize={4}
+                        noWrap
+                      />
                       <View style={styles.progressTrack}>
                         <View
                           style={[

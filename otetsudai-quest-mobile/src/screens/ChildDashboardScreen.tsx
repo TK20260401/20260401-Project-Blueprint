@@ -28,6 +28,7 @@ import type { Task, Wallet, Transaction, Badge, FamilySettings, SpendRequest, Us
 import { getActivePet, processQuestCompletionForPets, hatchEgg, type PetType, type PetQuestResult } from "../lib/pets";
 import PetDisplay from "../components/PetDisplay";
 import PetManagementModal from "../components/PetManagementModal";
+import PetEncyclopediaModal from "../components/PetEncyclopediaModal";
 import TrophyCaseModal from "../components/TrophyCaseModal";
 import DailyLoginModal from "../components/DailyLoginModal";
 import { getDailyLoginStatus } from "../lib/daily-login";
@@ -139,6 +140,7 @@ export default function ChildDashboardScreen({
   // ペット
   const [activePet, setActivePet] = useState<Pet | null>(null);
   const [petManageVisible, setPetManageVisible] = useState(false);
+  const [petEncyclopediaVisible, setPetEncyclopediaVisible] = useState(false);
   const [trophyVisible, setTrophyVisible] = useState(false);
   const [dailyLoginVisible, setDailyLoginVisible] = useState(false);
   const [dailyLoginChecked, setDailyLoginChecked] = useState(false);
@@ -967,12 +969,20 @@ export default function ChildDashboardScreen({
               }}
               onManage={() => setPetManageVisible(true)}
             />
-            <TouchableOpacity onPress={() => setShopVisible(true)} style={styles.shopBtn}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <PixelShopIcon size={14} />
-                <Text style={styles.shopBtnText}>ショップ</Text>
-              </View>
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
+              <TouchableOpacity onPress={() => setShopVisible(true)} style={styles.shopBtn}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <PixelShopIcon size={14} />
+                  <Text style={styles.shopBtnText}>ショップ</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setPetEncyclopediaVisible(true)} style={styles.shopBtn}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <PixelStarIcon size={14} />
+                  <RubyText style={styles.shopBtnText} parts={[["図鑑", "ずかん"]]} rubySize={4} noWrap />
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.levelInfo}>
             <View style={styles.rowWrap}>
@@ -1600,6 +1610,13 @@ export default function ChildDashboardScreen({
         onClose={() => setPetManageVisible(false)}
         childId={childId}
         onChanged={loadData}
+      />
+
+      {/* ペット図鑑 */}
+      <PetEncyclopediaModal
+        visible={petEncyclopediaVisible}
+        onClose={() => setPetEncyclopediaVisible(false)}
+        childId={childId}
       />
 
       {/* トロフィーケース */}
