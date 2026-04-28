@@ -855,16 +855,16 @@ export default function ChildDashboardScreen({
         </TouchableOpacity>
       </View>
 
-      {/* おさいふ こうしん＋ふりかえ — 銀行/証券の入出金モデル */}
+      {/* おさいふ 点検＋ふりかえ — 銀行/証券の入出金モデル */}
       <View style={styles.walletActionsRow}>
         <TouchableOpacity
           style={styles.refreshBtn}
           onPress={onRefresh}
           disabled={refreshing}
           activeOpacity={0.7}
-          accessibilityLabel="おさいふを こうしんする"
+          accessibilityLabel="おさいふを てんけんする"
           accessibilityRole="button"
-          accessibilityHint="さいきんの きんがくに こうしんします"
+          accessibilityHint="さいしんの もちものに します"
         >
           {refreshing ? (
             <ActivityIndicator size="small" color={palette.accent} />
@@ -877,17 +877,17 @@ export default function ChildDashboardScreen({
             <RubyText
               style={styles.refreshBtnLabel}
               parts={refreshing
-                ? ["こうしん ちゅう..."]
+                ? [["点検", "てんけん"], "ちゅう..."]
                 : refreshDoneAt
-                ? ["こうしん しました ✨"]
-                : [["更新", "こうしん"]]}
+                ? [["点検", "てんけん"], "しました ✨"]
+                : [["点検", "てんけん"]]}
               rubySize={6}
               noWrap
             />
             {!refreshing && !refreshDoneAt && (
               <RubyText
                 style={styles.refreshBtnHint}
-                parts={["（さいきんの きんがくに する）"]}
+                parts={["（", ["最新", "さいしん"], "の", ["持", "も"], "ちものに する）"]}
                 rubySize={5}
                 noWrap
               />
