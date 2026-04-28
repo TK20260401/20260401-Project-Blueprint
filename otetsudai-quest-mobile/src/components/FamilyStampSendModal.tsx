@@ -49,41 +49,56 @@ export default function FamilyStampSendModal({
   const [selectedStamp, setSelectedStamp] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   const recipients = useMemo(
     () => familyMembers.filter((m) => m.id !== senderId),
     [familyMembers, senderId]
   );
 
-  const canSend = selectedRecipient && (selectedStamp || message.trim().length > 0);
+  const trimmedMessage = message.trim();
+  const canSend =
+    !!selectedRecipient &&
+    selectedRecipient.length > 0 &&
+    (!!selectedStamp || trimmedMessage.length > 0);
 
   function resetForm() {
     setSelectedRecipient(null);
     setSelectedStamp(null);
     setMessage("");
+    setSendError(null);
   }
 
   async function handleSend() {
     if (!canSend) return;
     setSending(true);
+    setSendError(null);
 
-    const { error } = await supabase.from("otetsudai_family_messages").insert({
+    const payload = {
       family_id: familyId,
       sender_id: senderId,
       recipient_id: selectedRecipient,
       stamp_id: selectedStamp,
-      message: message.trim() || null,
-    });
+      message: trimmedMessage.length > 0 ? trimmedMessage : null,
+    };
+
+    const { error } = await supabase
+      .from("otetsudai_family_messages")
+      .insert(payload);
 
     setSending(false);
 
-    if (!error) {
-      if (Platform.OS !== "web") {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-      resetForm();
-      onSent();
+    if (error) {
+      console.error("[family-stamp] insert failed", { error, payload });
+      setSendError(error.message ?? "送信に失敗しました。もう一度お試しください。");
+      return;
     }
+
+    if (Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+    resetForm();
+    onSent();
   }
 
   function handleClose() {
@@ -215,6 +230,10 @@ export default function FamilyStampSendModal({
                   </View>
                 )}
               </TouchableOpacity>
+
+              {sendError ? (
+                <Text style={styles.errorText}>{sendError}</Text>
+              ) : null}
 
               <Text style={styles.hint}>
                 ※ スタンプ か メッセージの どちらかを いれてね
@@ -380,6 +399,13 @@ function createStyles(p: Palette) {
       textAlign: "center",
       marginTop: 8,
       marginBottom: 8,
+    },
+    errorText: {
+      fontSize: 12,
+      color: p.red,
+      textAlign: "center",
+      marginTop: 8,
+      fontWeight: "bold",
     },
   });
 }
