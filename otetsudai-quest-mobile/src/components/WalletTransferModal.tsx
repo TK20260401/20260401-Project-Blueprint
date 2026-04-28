@@ -106,12 +106,17 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
             >
               <TouchableWithoutFeedback>
                 <View style={styles.card}>
+          <TouchableOpacity
+            onPress={onClose}
+            accessibilityLabel="とじる"
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.closeBtnTopRight}
+          >
+            <PixelCrossIcon size={20} />
+          </TouchableOpacity>
           <View style={styles.header}>
             <PixelCoinIcon size={20} />
             <RubyText style={styles.title} parts={["おかねを ", ["移", "うつ"], "す"]} rubySize={6} />
-            <TouchableOpacity onPress={onClose} accessibilityLabel="とじる" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <PixelCrossIcon size={20} />
-            </TouchableOpacity>
           </View>
 
           {/* どこから */}
@@ -251,7 +256,19 @@ function createStyles(p: Palette) {
     flex1: { flex: 1 },
     overlay: { flex: 1, backgroundColor: p.overlay },
     scrollContent: { flexGrow: 1, alignItems: "center", justifyContent: "center", padding: 16, paddingBottom: 32 },
-    card: { width: "100%", maxWidth: 420, backgroundColor: p.surface, borderRadius: 14, borderWidth: 2, borderColor: p.primary, padding: 16, gap: 8 },
+    card: { width: "100%", maxWidth: 420, backgroundColor: p.surface, borderRadius: 14, borderWidth: 2, borderColor: p.primary, padding: 16, gap: 8, position: "relative" as const },
+    closeBtnTopRight: {
+      position: "absolute" as const,
+      top: 8,
+      right: 8,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      backgroundColor: p.surfaceMuted,
+      zIndex: 10,
+    },
     header: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
     title: { fontSize: 16, fontWeight: "700", color: p.textStrong, flex: 1 },
     section: { fontSize: 12, fontWeight: "700", color: p.textBase, marginTop: 6 },
