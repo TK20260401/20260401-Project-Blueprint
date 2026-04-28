@@ -765,18 +765,18 @@ export default function ChildDashboardScreen({
           onPress={() => {
             scrollRef.current?.scrollTo({ y: questSectionY.current, animated: true });
           }}
-          accessibilityLabel="クエスト一覧へスクロール"
+          accessibilityLabel="ぼうけんへ クエスト一覧へスクロール"
           accessibilityRole="button"
         >
           <PixelSwordIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["稼", "かせ"], "ぐ"]}
+            parts={[["冒険", "ぼうけん"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
           />
-          <Text style={styles.quickNavSub}>クエスト</Text>
+          <Text style={styles.quickNavSub} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>クエストへ</Text>
         </TouchableOpacity>
 
         {/* つかう */}
@@ -799,7 +799,7 @@ export default function ChildDashboardScreen({
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
           />
-          <Text style={styles.quickNavAmount}>
+          <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {(wallet?.spending_balance ?? 0).toLocaleString()}円
           </Text>
         </TouchableOpacity>
@@ -824,7 +824,7 @@ export default function ChildDashboardScreen({
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
           />
-          <Text style={styles.quickNavAmount}>
+          <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {(wallet?.saving_balance ?? 0).toLocaleString()}円
           </Text>
         </TouchableOpacity>
@@ -849,7 +849,7 @@ export default function ChildDashboardScreen({
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
           />
-          <Text style={styles.quickNavAmount}>
+          <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {(wallet?.invest_balance ?? 0).toLocaleString()}円
           </Text>
         </TouchableOpacity>
