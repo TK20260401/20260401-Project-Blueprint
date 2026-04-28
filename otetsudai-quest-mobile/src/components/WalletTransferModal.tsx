@@ -80,7 +80,7 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
       await onConfirm(from, to, amountNum);
       onClose();
     } catch (e: any) {
-      setError(e?.message || "ふりかえに しっぱいしました");
+      setError(e?.message || "うつすのに しっぱいしました");
       setSubmitting(false);
     }
   }
@@ -108,7 +108,7 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
                 <View style={styles.card}>
           <View style={styles.header}>
             <PixelCoinIcon size={20} />
-            <RubyText style={styles.title} parts={["おかねを ", ["振替", "ふりかえ"]]} rubySize={6} />
+            <RubyText style={styles.title} parts={["おかねを ", ["移", "うつ"], "す"]} rubySize={6} />
             <TouchableOpacity onPress={onClose} accessibilityLabel="とじる" hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <PixelCrossIcon size={20} />
             </TouchableOpacity>
@@ -232,11 +232,11 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
               onPress={handleConfirm}
               disabled={!canConfirm}
               style={[styles.confirmBtn, !canConfirm && { opacity: 0.4 }]}
-              accessibilityLabel="ふりかえる"
+              accessibilityLabel="うつす"
               accessibilityRole="button"
             >
               <PixelCheckIcon size={16} />
-              <RubyText style={styles.confirmText} parts={[["振替", "ふりかえ"], "る"]} rubySize={5} />
+              <RubyText style={styles.confirmText} parts={[["移", "うつ"], "す"]} rubySize={5} />
             </TouchableOpacity>
           </View>
                 </View>
