@@ -15,6 +15,7 @@ import {
 import { useTheme, type Palette } from "../theme";
 import { RubyText } from "./Ruby";
 import { PixelCartIcon, PixelPiggyIcon, PixelChartIcon, PixelCoinIcon, PixelCrossIcon } from "./PixelIcons";
+import * as Haptics from "expo-haptics";
 import type { Wallet } from "../lib/types";
 
 export type PotType = "spending" | "saving" | "invest";
@@ -77,8 +78,10 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
     setError(null);
     try {
       await onConfirm(from, to, amt);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       onClose();
     } catch (e: any) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       setError(e?.message || "うつすのに しっぱいしました");
       setSubmitting(false);
     }
@@ -127,7 +130,13 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
               return (
                 <TouchableOpacity
                   key={pot.key}
-                  onPress={() => { setFrom(pot.key); if (to === pot.key) setTo(null); setAmount(""); setError(null); }}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setFrom(pot.key);
+                    if (to === pot.key) setTo(null);
+                    setAmount("");
+                    setError(null);
+                  }}
                   disabled={bal <= 0}
                   style={[
                     styles.potBtn,
@@ -157,7 +166,11 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
                   return (
                     <TouchableOpacity
                       key={pot.key}
-                      onPress={() => { setTo(pot.key); setError(null); }}
+                      onPress={() => {
+                        Haptics.selectionAsync().catch(() => {});
+                        setTo(pot.key);
+                        setError(null);
+                      }}
                       disabled={disabled}
                       style={[
                         styles.potBtn,
@@ -185,7 +198,12 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
                 {presets.map((v) => (
                   <TouchableOpacity
                     key={v}
-                    onPress={() => { setAmount(String(v)); setError(null); handleConfirmWith(v); }}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                      setAmount(String(v));
+                      setError(null);
+                      handleConfirmWith(v);
+                    }}
                     style={[styles.presetBtn, amountNum === v && { backgroundColor: palette.accent, borderColor: palette.accentDark }]}
                   >
                     <Text style={[styles.presetText, amountNum === v && { color: palette.white }]}>
@@ -211,7 +229,11 @@ export default function WalletTransferModal({ visible, onClose, wallet, onConfir
                 />
                 <Text style={styles.amountUnit}>円</Text>
                 <TouchableOpacity
-                  onPress={() => { Keyboard.dismiss(); handleConfirmWith(amountNum); }}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                    Keyboard.dismiss();
+                    handleConfirmWith(amountNum);
+                  }}
                   style={styles.kbDoneBtn}
                   accessibilityLabel="この金額で 移す"
                   accessibilityRole="button"
