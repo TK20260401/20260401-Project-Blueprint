@@ -288,7 +288,7 @@ export default function InvestScreen({
         </TouchableOpacity>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
           <PixelSeedlingIcon size={18} />
-          <RubyText style={styles.headerTitle} parts={[["投資", "とうし"]]} rubySize={6} />
+          <RubyText style={styles.headerTitle} parts={[["錬", "れん"], ["成", "せい"]]} rubySize={6} />
         </View>
       </View>
 

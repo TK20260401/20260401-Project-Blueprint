@@ -200,7 +200,7 @@ export default function WalletDetailScreen({
         <View style={styles.headerTitleGroup}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <PixelCoinIcon size={22} />
-            <AutoRubyText text="お財布" style={styles.headerTitle} rubySize={7} />
+            <RubyText style={styles.headerTitle} parts={[["金", "きん"], ["庫", "こ"]]} rubySize={7} />
           </View>
           <Text
             style={styles.headerTotalAmount}

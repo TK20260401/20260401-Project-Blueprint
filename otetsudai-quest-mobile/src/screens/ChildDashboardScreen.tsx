@@ -1163,7 +1163,7 @@ export default function ChildDashboardScreen({
             {tab === "quests" ? (
               <RubyText
                 style={styles.screenTitleText}
-                parts={[`${childName} のクエスト`]}
+                parts={[`${childName} の `, ["冒", "ぼう"], ["険", "けん"]]}
                 rubySize={5}
                 noWrap
               />
@@ -1994,15 +1994,15 @@ function createStyles(p: Palette) {
     borderColor: p.accent,
   },
   refreshBtnLabel: {
-    fontSize: 13,
+    fontSize: 10,
     fontWeight: "700" as const,
     color: p.textBase,
   },
   refreshBtnHint: {
-    fontSize: 9,
+    fontSize: 6,
     color: p.textMuted,
     marginTop: 2,
-    lineHeight: 12,
+    lineHeight: 9,
   },
   quickNavBtn: {
     flexBasis: "23%" as any,
