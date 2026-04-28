@@ -170,9 +170,9 @@ export default function SpendRequestScreen({
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            onPress={() => navigation.navigate("ChildDashboard", { childId })}
             accessibilityRole="button"
-            accessibilityLabel="もどる"
+            accessibilityLabel="おうちに もどる"
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <PixelHouseIcon size={18} />

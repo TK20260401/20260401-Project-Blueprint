@@ -191,9 +191,9 @@ export default function WalletDetailScreen({
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate("ChildDashboard", { childId })}
           style={styles.backButton}
-          accessibilityLabel="もどる"
+          accessibilityLabel="おうちに もどる"
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelHouseIcon size={14} /><Text style={styles.backText}>もどる</Text></View>
         </TouchableOpacity>
