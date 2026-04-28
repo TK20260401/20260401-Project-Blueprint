@@ -771,7 +771,7 @@ export default function ChildDashboardScreen({
           <PixelSwordIcon size={24} />
           <RubyText
             style={styles.quickNavLabel}
-            parts={[["冒険", "ぼうけん"]]}
+            parts={[["冒", "ぼう"], ["険", "けん"]]}
             rubySize={7}
             noWrap
             rubyColor="rgba(255,255,200,0.7)"
