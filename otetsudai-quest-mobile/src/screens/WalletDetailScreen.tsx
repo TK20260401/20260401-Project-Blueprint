@@ -197,9 +197,19 @@ export default function WalletDetailScreen({
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelHouseIcon size={14} /><Text style={styles.backText}>もどる</Text></View>
         </TouchableOpacity>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <PixelCoinIcon size={22} />
-          <AutoRubyText text="お財布" style={styles.headerTitle} rubySize={7} />
+        <View style={styles.headerTitleGroup}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <PixelCoinIcon size={22} />
+            <AutoRubyText text="お財布" style={styles.headerTitle} rubySize={7} />
+          </View>
+          <Text
+            style={styles.headerTotalAmount}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+            accessibilityLabel={`ぜんぶで ${total.toLocaleString()}えん`}
+          >
+            {total.toLocaleString()}円
+          </Text>
         </View>
         <View style={styles.headerSpacer} />
       </View>
@@ -213,26 +223,7 @@ export default function WalletDetailScreen({
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* ── 1. Total Balance Card ── */}
-        <View style={styles.totalCard}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <PixelChestOpenIcon size={22} />
-            <AutoRubyText
-              text="全部のお金"
-              style={styles.totalLabel}
-              rubySize={7}
-            />
-          </View>
-          <Text
-            style={styles.totalAmount}
-            adjustsFontSizeToFit
-            numberOfLines={1}
-          >
-            {total.toLocaleString()}円
-          </Text>
-        </View>
-
-        {/* ── 2. Three Pocket Cards ── */}
+        {/* ── 1. Three Pocket Cards（総額はヘッダーに統合） ── */}
         <CoinSplitAnimation visible={showCoinSplit} onComplete={() => setShowCoinSplit(false)} />
         <View style={styles.pocketRow}>
           {/* つかう → SpendRequest */}
@@ -660,6 +651,17 @@ function createStyles(p: Palette) {
       fontSize: 16,
       fontWeight: "bold",
       color: p.textMuted,
+    },
+    headerTitleGroup: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      flexShrink: 1,
+    },
+    headerTotalAmount: {
+      fontSize: rf(22),
+      fontWeight: "bold",
+      color: p.accent,
     },
     headerTitle: {
       fontSize: rf(18),
