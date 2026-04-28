@@ -85,12 +85,6 @@ export default function InvestScreen({
     loadData();
   }, [childId]);
 
-  // 画面復帰時にウォレット残高を再取得（親が承認した分の即時反映）
-  useFocusEffect(
-    useCallback(() => {
-      loadData();
-    }, [loadData])
-  );
 
   async function checkHasParent() {
     try {
@@ -156,6 +150,10 @@ export default function InvestScreen({
     setLoading(false);
     setRefreshing(false);
   }, [childId]);
+
+  // 画面復帰時にウォレット残高を再取得（親が承認した分の即時反映）
+  // loadData は useCallback 済みで stable
+  useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
 
   async function handleSync() {
     if (lastSync) {
@@ -287,7 +285,9 @@ export default function InvestScreen({
           <Text style={styles.backText}>もどる</Text>
         </TouchableOpacity>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
-          <PixelSeedlingIcon size={18} />
+          <View style={{ width: 18, height: 18, alignItems: "center", justifyContent: "center" }}>
+            <PixelSeedlingIcon size={18} />
+          </View>
           <RubyText style={styles.headerTitle} parts={[["錬", "れん"], ["成", "せい"]]} rubySize={6} />
         </View>
       </View>

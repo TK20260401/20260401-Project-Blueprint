@@ -180,7 +180,9 @@ export default function SpendRequestScreen({
             </View>
           </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
-            <PixelCoinIcon size={18} />
+            <View style={{ width: 18, height: 18, alignItems: "center", justifyContent: "center" }}>
+              <PixelCoinIcon size={18} />
+            </View>
             <RubyText parts={[["取", "とり"], ["引", "ひき"]]} style={styles.title} rubySize={6} noWrap />
           </View>
         </View>

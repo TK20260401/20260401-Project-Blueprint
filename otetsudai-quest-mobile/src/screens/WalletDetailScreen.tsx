@@ -199,7 +199,9 @@ export default function WalletDetailScreen({
         </TouchableOpacity>
         <View style={styles.headerTitleGroup}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <PixelCoinIcon size={22} />
+            <View style={{ width: 22, height: 22, alignItems: "center", justifyContent: "center" }}>
+              <PixelCoinIcon size={22} />
+            </View>
             <RubyText style={styles.headerTitle} parts={[["金", "きん"], ["庫", "こ"]]} rubySize={7} />
           </View>
           <Text
