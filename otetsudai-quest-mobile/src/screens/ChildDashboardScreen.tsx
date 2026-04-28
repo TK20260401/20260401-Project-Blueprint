@@ -1995,9 +1995,10 @@ function createStyles(p: Palette) {
     color: p.textBase,
   },
   refreshBtnHint: {
-    fontSize: 10,
+    fontSize: 9,
     color: p.textMuted,
-    marginTop: 1,
+    marginTop: 2,
+    lineHeight: 12,
   },
   quickNavBtn: {
     flexBasis: "23%" as any,
