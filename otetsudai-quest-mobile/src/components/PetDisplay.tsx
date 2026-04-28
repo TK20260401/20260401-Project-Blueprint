@@ -1,11 +1,12 @@
-import React, { useMemo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Pressable } from "react-native";
+import React, { useMemo, useRef, useState, useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, Pressable, Animated, Easing } from "react-native";
 import type { Pet } from "../lib/types";
 import { PET_TYPE_INFO, GROWTH_THRESHOLDS, HATCH_QUESTS_REQUIRED, calculateHappiness } from "../lib/pets";
 import PetSvg from "./PetSvg";
 import EggShake from "./animations/EggShake";
 import { RubyStr } from "./Ruby";
 import { useTheme, type Palette } from "../theme";
+import { useReducedMotion } from "../lib/useReducedMotion";
 
 type Props = {
   pet: Pet | null;
@@ -13,9 +14,96 @@ type Props = {
   onManage?: () => void;
 };
 
+// P4: ペットタップ時の喜び演出 — bounce + ハート3個飛散
+function HappyEffect({ active, palette }: { active: boolean; palette: Palette }) {
+  const reducedMotion = useReducedMotion();
+  const hearts = useRef([0, 1, 2].map(() => ({
+    y: new Animated.Value(0),
+    opacity: new Animated.Value(0),
+    scale: new Animated.Value(0.6),
+  }))).current;
+
+  useEffect(() => {
+    if (!active || reducedMotion) return;
+    hearts.forEach((h, i) => {
+      h.y.setValue(0);
+      h.opacity.setValue(0);
+      h.scale.setValue(0.6);
+      Animated.parallel([
+        Animated.timing(h.y, { toValue: -28, duration: 600, delay: i * 60, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.sequence([
+          Animated.timing(h.opacity, { toValue: 1, duration: 100, delay: i * 60, useNativeDriver: true }),
+          Animated.timing(h.opacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+        ]),
+        Animated.timing(h.scale, { toValue: 1.0, duration: 200, delay: i * 60, useNativeDriver: true }),
+      ]).start();
+    });
+  }, [active, reducedMotion, hearts]);
+
+  if (!active) return null;
+  return (
+    <View pointerEvents="none" style={styles_overlay.heartsContainer}>
+      {hearts.map((h, i) => (
+        <Animated.Text
+          key={i}
+          style={[
+            styles_overlay.heart,
+            {
+              color: palette.red,
+              left: i === 0 ? -12 : i === 1 ? 0 : 12,
+              transform: [{ translateY: h.y }, { scale: h.scale }],
+              opacity: h.opacity,
+            },
+          ]}
+        >
+          ♥
+        </Animated.Text>
+      ))}
+    </View>
+  );
+}
+
+const styles_overlay = StyleSheet.create({
+  heartsContainer: {
+    position: "absolute",
+    top: 0,
+    left: "50%",
+    width: 0,
+    height: 0,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  heart: {
+    position: "absolute",
+    fontSize: 16,
+    fontWeight: "900" as const,
+    textShadowColor: "rgba(0,0,0,0.4)",
+    textShadowRadius: 2,
+  },
+});
+
 export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
   const { palette } = useTheme();
   const styles = useMemo(() => createStyles(palette), [palette]);
+  const reducedMotion = useReducedMotion();
+  const scale = useRef(new Animated.Value(1)).current;
+  const [happy, setHappy] = useState(false);
+
+  function triggerHappy() {
+    if (!reducedMotion) {
+      Animated.sequence([
+        Animated.timing(scale, { toValue: 1.18, duration: 120, useNativeDriver: true }),
+        Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }),
+      ]).start();
+    }
+    setHappy(true);
+    setTimeout(() => setHappy(false), 700);
+  }
+
+  function handleManagePress() {
+    triggerHappy();
+    setTimeout(() => onManage?.(), 200);
+  }
 
   if (!pet) {
     return (
@@ -57,8 +145,13 @@ export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
     : 100;
 
   return (
-    <TouchableOpacity onPress={onManage} style={styles.container} activeOpacity={0.8}>
-      <PetSvg type={pet.pet_type} stage={pet.growth_stage} happiness={happiness} size={44} animated />
+    <TouchableOpacity onPress={handleManagePress} style={styles.container} activeOpacity={0.8}>
+      <View>
+        <Animated.View style={{ transform: [{ scale }] }}>
+          <PetSvg type={pet.pet_type} stage={pet.growth_stage} happiness={happiness} size={44} animated />
+        </Animated.View>
+        <HappyEffect active={happy} palette={palette} />
+      </View>
       {pet.name ? <Text style={styles.petName}>{pet.name}</Text> : null}
       <Text style={styles.petType}>{info.nameJa}</Text>
       {nextThreshold ? (
