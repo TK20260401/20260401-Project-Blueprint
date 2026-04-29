@@ -93,7 +93,6 @@ function createStyles(p: Palette) {
     // ダンジョンテーマでは surface (dark purple) を使用。以前 "#FFFFFF"
     // ハードコードで白地となり、textStrong (near-white) の本文が沈んでいた。
     content: {
-      backgroundColor: p.surface,
       paddingHorizontal: 14,
       paddingVertical: 12,
     },

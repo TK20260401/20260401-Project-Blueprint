@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Pet } from "../lib/types";
@@ -23,7 +25,7 @@ import PetSvg from "./PetSvg";
 import RpgButton from "./RpgButton";
 import { PixelPawIcon, PixelStarIcon } from "./PixelIcons";
 import RpgCard from "./RpgCard";
-import { RubyText } from "./Ruby";
+import { AutoRubyText } from "./Ruby";
 import PetEncyclopediaModal from "./PetEncyclopediaModal";
 import { useTheme, type Palette } from "../theme";
 
@@ -77,18 +79,31 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
 
   return (
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onClose}>
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <KeyboardAvoidingView
+        style={[styles.container, { paddingTop: insets.top }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <View style={styles.header}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
             <PixelPawIcon size={18} />
-            <RubyText style={styles.headerTitle} parts={[["仲間", "なかま"], "ペット"]} rubySize={5} />
+            <AutoRubyText text="ペット図鑑" style={styles.headerTitle} rubySize={6} noWrap />
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            accessibilityLabel="ペットずかんを閉じる"
+            accessibilityRole="button"
+          >
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
         </View>
 
-        <RubyText style={styles.subtitle} parts={["アクティブにできるのは1", ["匹", "ひき"], "だけ！"]} rubySize={4} noWrap />
+        <AutoRubyText
+          text="アクティブにできるのは1匹だけ！"
+          style={styles.subtitle}
+          rubySize={6}
+          noWrap
+        />
 
         <TouchableOpacity
           onPress={() => setEncyclopediaOpen(true)}
@@ -97,25 +112,28 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
           accessibilityRole="button"
         >
           <PixelStarIcon size={16} />
-          <RubyText
+          <AutoRubyText
+            text="ペット図鑑を見る"
             style={styles.encyclopediaBtnText}
-            parts={["ペット", ["図鑑", "ずかん"], "を ", ["見", "み"], "る"]}
             rubySize={5}
           />
         </TouchableOpacity>
 
         <ScrollView
           contentContainerStyle={{ padding: 12, paddingBottom: insets.bottom + 20 }}
+          keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator
         >
           {loading ? (
             <ActivityIndicator color={palette.primary} style={{ marginTop: 40 }} />
           ) : pets.length === 0 ? (
             <View style={styles.emptyWrap}>
-              <Text style={styles.emptyText}>まだ ペットは いないよ</Text>
-              <Text style={styles.emptyHint}>
-                クエストを クリアすると たまごが みつかるかも！
-              </Text>
+              <AutoRubyText text="まだペットはいないよ" style={styles.emptyText} rubySize={6} />
+              <AutoRubyText
+                text="クエストをクリアすると卵が見つかるかも！"
+                style={styles.emptyHint}
+                rubySize={5}
+              />
             </View>
           ) : (
             pets.map((pet) => {
@@ -148,7 +166,7 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                           <TextInput
                             value={nameDraft}
                             onChangeText={setNameDraft}
-                            placeholder="名前（なまえ）"
+                            placeholder="名前"
                             placeholderTextColor={palette.textPlaceholder}
                             style={styles.nameInput}
                             maxLength={12}
@@ -157,6 +175,8 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                           <TouchableOpacity
                             onPress={() => handleSaveName(pet.id)}
                             style={styles.okBtn}
+                            accessibilityLabel="ペットの名前を保存"
+                            accessibilityRole="button"
                           >
                             <Text style={styles.okText}>OK</Text>
                           </TouchableOpacity>
@@ -167,35 +187,26 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                             setEditingId(pet.id);
                             setNameDraft(pet.name || "");
                           }}
+                          accessibilityLabel={`${pet.name || "なまえを つけよう"} ペットの名前を編集`}
+                          accessibilityRole="button"
                         >
-                          {pet.name ? (
-                            <Text style={styles.petName}>{pet.name}</Text>
-                          ) : (
-                            <RubyText
-                              style={styles.petName}
-                              parts={[["名前", "なまえ"], "を ", ["付", "つ"], "けよう ✏️"]}
-                              rubySize={5}
-                              noWrap
-                            />
-                          )}
+                          <AutoRubyText
+                            text={pet.name || "名前を付けよう ✏️"}
+                            style={styles.petName}
+                            rubySize={5}
+                          />
                         </TouchableOpacity>
                       )}
-                      <RubyText
-                        style={styles.petType}
-                        parts={[
-                          info.nameJa,
-                          " ・ ",
-                          ...(pet.growth_stage === "egg"
-                            ? [["卵", "たまご"] as [string, string]]
-                            : pet.growth_stage === "baby"
-                              ? [["赤", "あか"] as [string, string], "ちゃん"]
-                              : pet.growth_stage === "child"
-                                ? [["子", "こ"] as [string, string], "ども"]
-                                : [["大人", "おとな"] as [string, string]]),
-                        ]}
-                        rubySize={4}
-                        noWrap
-                      />
+                      <Text style={styles.petType}>
+                        {info.nameJa} ・{" "}
+                        {pet.growth_stage === "egg"
+                          ? "卵"
+                          : pet.growth_stage === "baby"
+                            ? "赤ちゃん"
+                            : pet.growth_stage === "child"
+                              ? "子ども"
+                              : "大人"}
+                      </Text>
                       <View style={styles.progressTrack}>
                         <View
                           style={[
@@ -210,8 +221,8 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                       </View>
                       <Text style={styles.progressLabel}>
                         {pet.growth_stage === "egg"
-                          ? `あと ${Math.max(0, HATCH_QUESTS_REQUIRED - pet.quests_since_acquired)} クエストで かえる`
-                          : `しあわせ ${happiness}％ ・ ごはん ${pet.fed_count}かい`}
+                          ? `あと ${Math.max(0, HATCH_QUESTS_REQUIRED - pet.quests_since_acquired)} クエストで孵る`
+                          : `幸せ ${happiness}％ ・ ごはん ${pet.fed_count}回`}
                       </Text>
                     </View>
                   </View>
@@ -219,13 +230,20 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                     {pet.is_active ? (
                       <Text style={styles.activeBadge}>⭐ アクティブ</Text>
                     ) : (
-                      <RpgButton
-                        tier="violet"
-                        size="sm"
-                        onPress={() => handleSetActive(pet.id)}
-                      >
-                        アクティブにする
-                      </RpgButton>
+                      <>
+                        <RpgButton
+                          tier="violet"
+                          size="sm"
+                          onPress={() => handleSetActive(pet.id)}
+                        >
+                          アクティブにする
+                        </RpgButton>
+                        <AutoRubyText
+                          text="ホーム画面で一緒に冒険するよ"
+                          style={styles.buttonHint}
+                          rubySize={5}
+                        />
+                      </>
                     )}
                   </View>
                 </RpgCard>
@@ -235,11 +253,11 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
 
           <View style={{ marginTop: 12 }}>
             <RpgButton tier="silver" size="md" onPress={onClose}>
-              とじる
+              閉じる
             </RpgButton>
           </View>
         </ScrollView>
-      </View>
+      </KeyboardAvoidingView>
       <PetEncyclopediaModal
         visible={encyclopediaOpen}
         onClose={() => setEncyclopediaOpen(false)}
@@ -275,7 +293,8 @@ function createStyles(p: Palette) {
       alignItems: "center",
       justifyContent: "center",
       borderRadius: 18,
-      backgroundColor: p.surfaceMuted,
+      borderWidth: 1.5,
+      borderColor: p.border,
     },
     closeText: {
       fontSize: 16,
@@ -298,9 +317,8 @@ function createStyles(p: Palette) {
       paddingVertical: 10,
       paddingHorizontal: 12,
       borderRadius: 12,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.accent,
-      backgroundColor: p.surfaceMuted,
     },
     encyclopediaBtnText: {
       fontSize: 13,
@@ -339,9 +357,8 @@ function createStyles(p: Palette) {
     },
     nameInput: {
       flex: 1,
-      backgroundColor: p.surfaceMuted,
       borderRadius: 8,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       paddingHorizontal: 10,
       paddingVertical: 6,
@@ -371,8 +388,9 @@ function createStyles(p: Palette) {
     },
     progressTrack: {
       height: 5,
-      backgroundColor: p.surfaceMuted,
       borderRadius: 3,
+      borderWidth: 0.5,
+      borderColor: p.border,
       overflow: "hidden",
       marginTop: 4,
     },
@@ -390,6 +408,12 @@ function createStyles(p: Palette) {
       color: p.accent,
       textAlign: "center",
       paddingVertical: 6,
+    },
+    buttonHint: {
+      fontSize: 10,
+      color: p.textMuted,
+      textAlign: "center",
+      marginTop: 4,
     },
   });
 }

@@ -20,6 +20,7 @@ import {
 } from "../lib/shop";
 import RpgButton from "./RpgButton";
 import { PixelShopIcon } from "./PixelIcons";
+import { AutoRubyText } from "./Ruby";
 import { useTheme, type Palette } from "../theme";
 
 type Props = {
@@ -69,18 +70,18 @@ export default function ShopModal({
   async function handleBuy(itemId: string, price: number) {
     if (!walletId) return;
     if (spendingBalance < price) {
-      setToast({ msg: "お金が たりないよ", tone: "err" });
+      setToast({ msg: "コロが足りないよ", tone: "err" });
       return;
     }
     setBusy(itemId);
     const result = await purchaseItem(childId, walletId, itemId);
     setBusy(null);
     if (result.success) {
-      setToast({ msg: "こうにゅうしたよ！", tone: "ok" });
+      setToast({ msg: "購入したよ！", tone: "ok" });
       await refresh();
       onChanged?.();
     } else {
-      setToast({ msg: result.error || "しっぱい", tone: "err" });
+      setToast({ msg: result.error || "失敗したよ", tone: "err" });
     }
   }
 
@@ -108,13 +109,25 @@ export default function ShopModal({
             <PixelShopIcon size={20} />
             <Text style={styles.headerTitle}>ショップ</Text>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeBtn}
+            accessibilityLabel="ショップを閉じる"
+            accessibilityRole="button"
+          >
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.subtitle}>
-          「つかう」のおかね: {spendingBalance.toLocaleString()}円
-        </Text>
+        <AutoRubyText
+          text={`「使う」のお金: ${spendingBalance.toLocaleString()}コロ`}
+          style={styles.subtitle}
+          rubySize={6}
+        />
+        <AutoRubyText
+          text="買って装備すると、名前の横に称号がつくよ"
+          style={styles.shopHint}
+          rubySize={5}
+        />
 
         {toast && (
           <View
@@ -123,14 +136,14 @@ export default function ShopModal({
               toast.tone === "ok" ? styles.toastOk : styles.toastErr,
             ]}
           >
-            <Text
+            <AutoRubyText
+              text={toast.msg}
               style={[
                 styles.toastText,
                 { color: toast.tone === "ok" ? palette.green : palette.red },
               ]}
-            >
-              {toast.msg}
-            </Text>
+              rubySize={6}
+            />
           </View>
         )}
 
@@ -147,8 +160,10 @@ export default function ShopModal({
                   onPress={handleUnequip}
                   disabled={busy === "unequip"}
                   style={styles.unequipBtn}
+                  accessibilityLabel="称号を外す"
+                  accessibilityRole="button"
                 >
-                  <Text style={styles.unequipText}>しょうごうを はずす</Text>
+                  <AutoRubyText text="称号を外す" style={styles.unequipText} rubySize={5} noWrap />
                 </TouchableOpacity>
               )}
 
@@ -163,8 +178,7 @@ export default function ShopModal({
                     style={[
                       styles.itemRow,
                       {
-                        borderColor: isEquipped ? palette.primary : rc.border,
-                        backgroundColor: isEquipped ? palette.primaryLight : rc.bg,
+                        borderColor: isEquipped ? palette.primary : palette.border,
                       },
                     ]}
                   >
@@ -177,12 +191,12 @@ export default function ShopModal({
                         {item.description}
                       </Text>
                       <Text style={[styles.itemMeta, { color: rc.text }]}>
-                        {item.rarity.toUpperCase()} ・ {item.price}円
+                        {item.rarity.toUpperCase()} ・ {item.price}コロ
                       </Text>
                     </View>
                     <View style={styles.itemAction}>
                       {isEquipped ? (
-                        <Text style={styles.equippedText}>⭐{"\n"}そうび中</Text>
+                        <AutoRubyText text={"⭐\n装備中"} style={styles.equippedText} rubySize={5} />
                       ) : owned ? (
                         <RpgButton
                           tier="violet"
@@ -190,7 +204,7 @@ export default function ShopModal({
                           onPress={() => handleEquip(item.id)}
                           disabled={busy === item.id}
                         >
-                          そうび
+                          装備
                         </RpgButton>
                       ) : (
                         <RpgButton
@@ -199,7 +213,7 @@ export default function ShopModal({
                           onPress={() => handleBuy(item.id, item.price)}
                           disabled={busy === item.id || !canAfford || !walletId}
                         >
-                          {busy === item.id ? "..." : canAfford ? "かう" : "不足"}
+                          {busy === item.id ? "..." : canAfford ? "買う" : "コロ不足"}
                         </RpgButton>
                       )}
                     </View>
@@ -211,7 +225,7 @@ export default function ShopModal({
 
           <View style={{ marginTop: 12 }}>
             <RpgButton tier="silver" size="md" onPress={onClose}>
-              とじる
+              閉じる
             </RpgButton>
           </View>
         </ScrollView>
@@ -246,7 +260,8 @@ function createStyles(p: Palette) {
       alignItems: "center",
       justifyContent: "center",
       borderRadius: 18,
-      backgroundColor: p.surfaceMuted,
+      borderWidth: 1.5,
+      borderColor: p.border,
     },
     closeText: {
       fontSize: 16,
@@ -257,7 +272,15 @@ function createStyles(p: Palette) {
       color: p.textMuted,
       textAlign: "center",
       paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingTop: 8,
+      paddingBottom: 2,
+    },
+    shopHint: {
+      fontSize: 10,
+      color: p.textMuted,
+      textAlign: "center",
+      paddingHorizontal: 16,
+      paddingBottom: 8,
     },
     toast: {
       marginHorizontal: 12,
@@ -294,7 +317,7 @@ function createStyles(p: Palette) {
       alignItems: "center",
       padding: 12,
       borderRadius: 12,
-      borderWidth: 2,
+      borderWidth: 1.5,
       marginBottom: 8,
       gap: 12,
     },

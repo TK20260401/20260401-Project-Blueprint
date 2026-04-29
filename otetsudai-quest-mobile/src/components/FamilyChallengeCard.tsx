@@ -7,6 +7,7 @@ import { rf } from "../lib/responsive";
 import { AutoRubyText, RubyText } from "./Ruby";
 import type { FamilyChallenge, User } from "../lib/types";
 import { PixelCrownIcon, PixelGiftIcon, PixelConfettiIcon } from "./PixelIcons";
+import CharacterSvg from "./CharacterSvg";
 
 type Props = {
   challenge: FamilyChallenge;
@@ -87,8 +88,8 @@ export default function FamilyChallengeCard({
           style={styles.header}
           parts={
             isComplete
-              ? [["家族", "かぞく"], "チャレンジ ", ["達成", "たっせい"], "！"]
-              : [["家族", "かぞく"], "チャレンジ"]
+              ? [["冒険団", "ぼうけんだん"], "チャレンジ ", ["達成", "たっせい"], "！"]
+              : [["冒険団", "ぼうけんだん"], "チャレンジ"]
           }
           rubySize={6}
         />
@@ -127,7 +128,9 @@ export default function FamilyChallengeCard({
             : 0;
           return (
             <View key={p.childId} style={styles.memberRow}>
-              <Text style={styles.memberIcon}>{p.icon}</Text>
+              <View style={styles.memberIcon}>
+                <CharacterSvg level={1} mood="normal" size={20} />
+              </View>
               <Text
                 style={styles.memberName}
                 numberOfLines={1}
@@ -155,7 +158,7 @@ export default function FamilyChallengeCard({
         <RubyText
           style={styles.totalText}
           parts={[
-            ["家族", "かぞく"],
+            ["冒険団", "ぼうけんだん"],
             ["合計", "ごうけい"],
             `: ${totalCount}/${challenge.target_quests} クエスト`,
           ]}
@@ -181,7 +184,7 @@ export default function FamilyChallengeCard({
           <PixelGiftIcon size={16} />
           <RubyText
             style={styles.bonusText}
-            parts={[["達成", "たっせい"], `ボーナス: みんなに ${challenge.bonus_amount}`, ["円", "えん"], "！"]}
+            parts={[["達成", "たっせい"], `ボーナス: みんなに ${challenge.bonus_amount}`, "コロ", "！"]}
             rubySize={5}
             noWrap
           />
@@ -280,21 +283,15 @@ function PixelBossMonster({ defeated = false, size = 64 }: { defeated?: boolean;
 function createStyles(p: Palette) {
   return StyleSheet.create({
     container: {
-      backgroundColor: p.surface,
       borderRadius: 16,
-      padding: 16,
+      padding: 14,
+      marginHorizontal: 12,
       marginBottom: 12,
       borderWidth: 2,
       borderColor: p.accent,
-      shadowColor: p.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
-      elevation: 3,
     },
     containerComplete: {
       borderColor: p.green,
-      backgroundColor: p.greenLight,
     },
     header: {
       fontSize: rf(14),
@@ -325,8 +322,10 @@ function createStyles(p: Palette) {
       gap: 6,
     },
     memberIcon: {
-      fontSize: 18,
       width: 24,
+      height: 24,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
     },
     memberName: {
       fontSize: 12,

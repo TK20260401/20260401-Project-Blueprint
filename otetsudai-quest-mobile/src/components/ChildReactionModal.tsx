@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
+import { useAppAlert } from "./AppAlert";
 import { useTheme, type Palette } from "../theme";
 import { rf } from "../lib/responsive";
 import { CHILD_STAMPS } from "../lib/child-stamps";
@@ -38,6 +39,7 @@ type Props = {
 export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
   const { palette } = useTheme();
   const styles = useMemo(() => createStyles(palette), [palette]);
+  const { alert } = useAppAlert();
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedStamp, setSelectedStamp] = useState<string | null>(null);
@@ -50,22 +52,34 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
   if (logs.length === 0) return null;
   const log = logs[currentIndex];
   const parentStampDef = log.parentStamp ? getStampById(log.parentStamp) : null;
-  const canSend = selectedStamp || message.trim().length > 0;
+  // スタンプ・メッセージ単体/併用いずれでも送信可
+  const canSend = Boolean(selectedStamp) || message.trim().length > 0;
 
   async function handleSend() {
-    if (!canSend) return;
+    if (!canSend || sending) return;
     setSending(true);
 
-    await supabase
+    const { error, data } = await supabase
       .from("otetsudai_task_logs")
       .update({
         child_reaction_stamp: selectedStamp,
         child_reaction_message: message.trim() || null,
         child_reaction_at: new Date().toISOString(),
       })
-      .eq("id", log.id);
+      .eq("id", log.id)
+      .select("id");
 
     setSending(false);
+
+    if (error) {
+      alert("送信できませんでした", `もう一度試してね\n(${error.message})`);
+      return;
+    }
+    if (!data || data.length === 0) {
+      alert("送信できませんでした", "このメッセージにはもう返事しているかも");
+      return;
+    }
+
     setSelectedStamp(null);
     setMessage("");
 
@@ -105,7 +119,7 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <PixelLetterIcon size={22} />
-            <Text style={styles.header} adjustsFontSizeToFit numberOfLines={1}>おやからの メッセージ</Text>
+            <AutoRubyText text="親からのメッセージ" style={styles.header} rubySize={6} noWrap />
           </View>
 
           {/* 親メッセージ表示 */}
@@ -116,7 +130,7 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <PixelCoinIcon size={16} />
-              <Text style={styles.rewardText}>{log.rewardAmount}えん</Text>
+              <Text style={styles.rewardText}>{log.rewardAmount}コロ</Text>
             </View>
 
             {parentStampDef && (
@@ -137,11 +151,11 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
 
           {/* 区切り */}
           <View style={styles.divider}>
-            <Text style={styles.dividerText}>↓ おへんじ しよう！ ↓</Text>
+            <AutoRubyText text="↓ 返事しよう！ ↓" style={styles.dividerText} rubySize={5} />
           </View>
 
           {/* スタンプ選択 */}
-          <Text style={styles.sectionLabel}>スタンプを えらんでね</Text>
+          <AutoRubyText text="スタンプを選んでね" style={styles.sectionLabel} rubySize={5} />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -157,6 +171,9 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
                 onPress={() =>
                   setSelectedStamp(selectedStamp === s.id ? null : s.id)
                 }
+                accessibilityLabel={`スタンプ ${s.label}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected: selectedStamp === s.id }}
               >
                 <View style={styles.stampSvgWrap}>
                   <StampSvg id={s.id} size={28} />
@@ -178,7 +195,7 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
             style={styles.textInput}
             value={message}
             onChangeText={setMessage}
-            placeholder="おやに ひとこと！（にゅうりょく しなくても OK）"
+            placeholder="親に一言！（入力しなくてもOK）"
             placeholderTextColor={palette.textPlaceholder}
             multiline
             maxLength={100}
@@ -192,24 +209,31 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
             style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
             onPress={handleSend}
             disabled={!canSend || sending}
+            accessibilityLabel={sending ? "送信中" : "親にメッセージを送る"}
+            accessibilityRole="button"
           >
             {sending ? (
-              <Text style={styles.sendText}>おくりちゅう...</Text>
+              <Text style={styles.sendText}>送り中...</Text>
             ) : (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <PixelLetterIcon size={18} />
-                <Text style={styles.sendText}>おくる！</Text>
+                <Text style={styles.sendText}>送る！</Text>
               </View>
             )}
           </TouchableOpacity>
 
           <Text style={styles.hint}>
-            ※ スタンプ か メッセージの どちらかは かならず いれてね
+            ※ スタンプかメッセージのどちらかは必ず入れてね
           </Text>
 
           {onSkip && (
-            <TouchableOpacity style={styles.skipButton} onPress={onSkip}>
-              <Text style={styles.skipText}>あとで へんじする</Text>
+            <TouchableOpacity
+              style={styles.skipButton}
+              onPress={onSkip}
+              accessibilityLabel="後で返事する"
+              accessibilityRole="button"
+            >
+              <AutoRubyText text="後で返事する" style={styles.skipText} rubySize={5} />
             </TouchableOpacity>
           )}
         </ScrollView>
@@ -241,10 +265,9 @@ function createStyles(p: Palette) {
       marginBottom: 16,
     },
     parentCard: {
-      backgroundColor: p.accentLight,
       borderRadius: 16,
       padding: 20,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.accent,
       alignItems: "center",
     },
@@ -272,11 +295,12 @@ function createStyles(p: Palette) {
       color: p.textStrong,
     },
     parentMsgBubble: {
-      backgroundColor: p.surface,
       borderRadius: 12,
       padding: 12,
       width: "100%",
       marginTop: 8,
+      borderWidth: 1.5,
+      borderColor: p.border,
     },
     parentMsgText: {
       fontSize: 15,
@@ -304,16 +328,14 @@ function createStyles(p: Palette) {
     },
     stampItem: {
       alignItems: "center",
-      backgroundColor: p.surface,
       borderRadius: 12,
       padding: 10,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.border,
       minWidth: 72,
     },
     stampItemSelected: {
       borderColor: p.primary,
-      backgroundColor: p.primaryLight,
     },
     stampEmoji: { fontSize: 28 },
     stampSvgWrap: {
@@ -333,7 +355,7 @@ function createStyles(p: Palette) {
       fontWeight: "bold",
     },
     textInput: {
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       borderRadius: 12,
       padding: 14,
@@ -341,7 +363,7 @@ function createStyles(p: Palette) {
       minHeight: 50,
       marginTop: 12,
       marginBottom: 12,
-      backgroundColor: p.surfaceMuted,
+      color: p.textStrong,
     },
     sendButton: {
       backgroundColor: p.primary,

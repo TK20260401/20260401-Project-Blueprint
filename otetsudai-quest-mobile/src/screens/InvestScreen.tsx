@@ -10,6 +10,7 @@ import {
   TextInput,
   Modal,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -84,7 +85,6 @@ export default function InvestScreen({
     checkHasParent();
     loadData();
   }, [childId]);
-
 
   async function checkHasParent() {
     try {
@@ -297,6 +297,7 @@ export default function InvestScreen({
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
         minimumZoomScale={1}
         maximumZoomScale={3}
         bouncesZoom
@@ -323,7 +324,7 @@ export default function InvestScreen({
             ) : isCoolingDown ? (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <PixelHourglassIcon size={12} />
-                <Text style={styles.syncButtonText}>あと{Math.ceil(cooldownRemain / 60000)}分</Text>
+                <AutoRubyText text={`あと${Math.ceil(cooldownRemain / 60000)}分`} style={styles.syncButtonText} rubySize={4} noWrap />
               </View>
             ) : (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
@@ -356,11 +357,14 @@ export default function InvestScreen({
           </View>
         ) : (
           <View style={styles.portfolioSection}>
-            <RubyText
-              style={styles.sectionTitle}
-              parts={[["保有", "ほゆう"], ["銘柄", "めいがら"]]}
-              rubySize={5}
-            />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 8 }}>
+              <PixelBarChartIcon size={16} />
+              <RubyText
+                style={styles.sectionTitle}
+                parts={[["保有", "ほゆう"], ["銘柄", "めいがら"]]}
+                rubySize={5}
+              />
+            </View>
             {portfolios.map((p) => {
               const { amount: gain, percent, isUp } = calcGainLoss(p);
               return (
@@ -473,7 +477,7 @@ export default function InvestScreen({
                 accessibilityLabel="閉じる"
                 accessibilityRole="button"
               >
-                <PixelCrossIcon size={14} />
+                <PixelHouseIcon size={16} />
                 <Text style={styles.backText}>とじる</Text>
               </TouchableOpacity>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
@@ -522,16 +526,15 @@ export default function InvestScreen({
                           setOrderError("");
                         }}
                       >
-                        <Text
+                        <AutoRubyText
                           style={[
                             styles.categoryTabText,
                             activeCategory === cat.key && styles.categoryTabTextActive,
                           ]}
-                          numberOfLines={1}
-                          adjustsFontSizeToFit
-                        >
-                          {cat.label}
-                        </Text>
+                          text={cat.label}
+                          rubySize={4}
+                          noWrap
+                        />
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -563,8 +566,8 @@ export default function InvestScreen({
                     >
                       <Text style={styles.stockIcon}>{stock.icon}</Text>
                       <View style={styles.flex1}>
-                        <View style={styles.stockNameRow}>
-                          <Text style={styles.stockName} numberOfLines={1}>
+                        <View style={{ flexDirection: "column", gap: 2 }}>
+                          <Text style={styles.stockName}>
                             {stock.name_ja || stock.name}
                           </Text>
                           <Text style={styles.stockSymbol}>{stock.symbol}</Text>
@@ -595,9 +598,7 @@ export default function InvestScreen({
                     </TouchableOpacity>
                   ))}
                   {filteredStocks.length === 0 && (
-                    <Text style={styles.emptyStockText}>
-                      この カテゴリの 銘柄は ありません
-                    </Text>
+                    <AutoRubyText text="このカテゴリの銘柄はありません" style={styles.emptyStockText} rubySize={5} />
                   )}
 
                   {/* Amount input */}
@@ -614,7 +615,7 @@ export default function InvestScreen({
                     placeholderTextColor={palette.textPlaceholder}
                     keyboardType="number-pad"
                     onFocus={() => {
-                      setTimeout(() => orderScrollRef.current?.scrollToEnd({ animated: true }), 200);
+                      setTimeout(() => orderScrollRef.current?.scrollToEnd({ animated: true }), 400);
                     }}
                   />
                   <AutoRubyText text="100円から投資できるよ" style={styles.amountHint} rubySize={4} />
@@ -688,11 +689,10 @@ function createStyles(p: Palette) {
 
     // Balance card
     balanceCard: {
-      backgroundColor: p.walletInvestBg,
       borderRadius: 16,
       padding: 20,
       alignItems: "center",
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletInvestBorder,
       marginBottom: 16,
     },
@@ -701,11 +701,10 @@ function createStyles(p: Palette) {
     lastSyncText: { fontSize: 10, color: p.textMuted, marginTop: 4 },
     syncButton: {
       marginTop: 10,
-      backgroundColor: p.surface,
       borderRadius: 8,
       paddingVertical: 6,
       paddingHorizontal: 14,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletInvestBorder,
     },
     syncButtonDisabled: { opacity: 0.5 },
@@ -715,11 +714,10 @@ function createStyles(p: Palette) {
     emptyCard: { alignItems: "center", paddingVertical: 20 },
     emptyText: { fontSize: rf(14), color: p.textMuted, textAlign: "center" },
     tipCard: {
-      backgroundColor: p.walletInvestBg,
       borderRadius: 12,
       padding: 16,
       marginTop: 16,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletInvestBorder,
       width: "100%",
     },
@@ -735,8 +733,7 @@ function createStyles(p: Palette) {
       justifyContent: "space-between",
       padding: 14,
       borderRadius: 12,
-      backgroundColor: p.surface,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletInvestBorder,
       marginBottom: 8,
     },
@@ -764,13 +761,8 @@ function createStyles(p: Palette) {
       borderRadius: 16,
       paddingVertical: 18,
       alignItems: "center",
-      borderWidth: 3,
+      borderWidth: 1.5,
       borderColor: p.accent,
-      shadowColor: p.walletInvest,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.5,
-      shadowRadius: 8,
-      elevation: 8,
     },
     // 緑地に白文字はコントラスト比 ~3:1 と低いため黒文字＋太字＋シャドウで
     // 視認性を確保
@@ -792,11 +784,10 @@ function createStyles(p: Palette) {
     successSub: { fontSize: rf(14), color: p.textMuted, marginTop: 4 },
 
     orderBalanceCard: {
-      backgroundColor: p.walletInvestBg,
       borderRadius: 12,
       padding: 14,
       alignItems: "center",
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletInvestBorder,
       marginBottom: 16,
     },
@@ -817,14 +808,12 @@ function createStyles(p: Palette) {
       paddingVertical: 10,
       paddingHorizontal: 4,
       borderRadius: 10,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
-      backgroundColor: p.surfaceMuted,
       alignItems: "center",
       justifyContent: "center",
     },
     categoryTabActive: {
-      backgroundColor: p.walletInvestBg,
       borderColor: p.walletInvestBorder,
     },
     categoryTabText: { fontSize: 11, color: p.textMuted, textAlign: "center" },
@@ -836,15 +825,13 @@ function createStyles(p: Palette) {
       alignItems: "center",
       padding: 12,
       borderRadius: 12,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.border,
-      backgroundColor: p.surface,
       marginBottom: 8,
       gap: 10,
     },
     stockCardSelected: {
       borderColor: p.walletInvestBorder,
-      backgroundColor: p.walletInvestBg,
     },
     stockIcon: { fontSize: 28 },
     stockNameRow: { flexDirection: "row", alignItems: "center", gap: 6 },
@@ -857,13 +844,13 @@ function createStyles(p: Palette) {
     emptyStockText: { fontSize: 13, color: p.textMuted, textAlign: "center", paddingVertical: 16 },
 
     amountInput: {
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       borderRadius: 12,
       padding: 14,
       fontSize: rf(20),
       textAlign: "center",
-      backgroundColor: p.surfaceMuted,
+      color: p.textStrong,
     },
     amountHint: { fontSize: 10, color: p.textMuted, textAlign: "center", marginTop: 4 },
 
@@ -875,11 +862,6 @@ function createStyles(p: Palette) {
       paddingVertical: 16,
       alignItems: "center",
       marginTop: 16,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
     },
     orderButtonDisabled: { opacity: 0.5 },
     orderButtonText: {

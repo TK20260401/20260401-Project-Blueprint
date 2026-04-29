@@ -931,7 +931,7 @@ export default function ChildDashboardScreen({
         {/* キャラクター育成 */}
         <RpgCard
           tier="violet"
-          style={{ marginHorizontal: 12, marginTop: 12, overflow: "hidden" }}
+          style={{ marginHorizontal: 12, marginTop: 12, marginBottom: 12, overflow: "hidden" }}
           contentStyle={{ flexDirection: "row", alignItems: "flex-start" }}
         >
           <BackgroundAmbient preset="home" width={400} height={300} />
@@ -1092,7 +1092,7 @@ export default function ChildDashboardScreen({
           </RpgCard>
         )}
 
-        {/* 家族チャレンジ */}
+        {/* 冒険団チャレンジ */}
         {activeChallenge && (
           <FamilyChallengeCard
             challenge={activeChallenge}
@@ -1101,12 +1101,12 @@ export default function ChildDashboardScreen({
         )}
 
         {/* ファミリースタンプリレー */}
-        <View>
+        <View style={{ marginHorizontal: 12, marginBottom: 12 }}>
           <FamilyMessageCard messages={familyMessages} currentUserId={childId} />
           <AnimatedButton
             onPress={() => setStampSendVisible(true)}
             style={styles.stampRelayBtn}
-            accessibilityLabel="かぞくに エールを おくる"
+            accessibilityLabel="エールを送る"
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelLetterIcon size={16} /><RubyText style={styles.stampRelayBtnText} parts={["エールを", ["送", "おく"], "る"]} rubySize={5} /></View>
           </AnimatedButton>
@@ -1120,9 +1120,9 @@ export default function ChildDashboardScreen({
                 key={req.id}
                 style={[
                   styles.spendStatusCard,
-                  req.status === "pending" && { backgroundColor: palette.accentLight },
-                  req.status === "approved" && { backgroundColor: palette.greenLight },
-                  req.status === "rejected" && { backgroundColor: palette.redLight },
+                  req.status === "pending" && { borderColor: palette.accent },
+                  req.status === "approved" && { borderColor: palette.green },
+                  req.status === "rejected" && { borderColor: palette.red },
                 ]}
               >
                 <View style={styles.spendStatusIcon}>
@@ -1134,12 +1134,12 @@ export default function ChildDashboardScreen({
                   </Text>
                   <Text style={styles.spendStatusLabel}>
                     {req.status === "pending"
-                      ? "申請中"
+                      ? "しんせいちゅう"
                       : req.status === "approved" && req.payment_status === "pending_payment"
-                      ? "承認済み お金をまってね"
+                      ? "しょうにんずみ おかねをまってね"
                       : req.status === "approved" && req.payment_status === "paid"
-                      ? "お金 もらったよ！"
-                      : "許可されませんでした"}
+                      ? "おかね もらったよ！"
+                      : "きょかされませんでした"}
                   </Text>
                 </View>
               </View>
@@ -1158,7 +1158,7 @@ export default function ChildDashboardScreen({
             {badges.length === 0 && (
               <AutoRubyText text="クエストをクリアしてスキルを解放しよう！" style={styles.emptyHint} rubySize={6} />
             )}
-            <Text style={styles.trophyHint}>タップで トロフィーケースを ひらく</Text>
+            <AutoRubyText text="タップでトロフィーケースを開く" style={styles.trophyHint} rubySize={4} />
           </RpgCard>
         </TouchableOpacity>
 
@@ -1173,14 +1173,14 @@ export default function ChildDashboardScreen({
             {tab === "quests" ? (
               <RubyText
                 style={styles.screenTitleText}
-                parts={[`${childName} の `, ["冒", "ぼう"], ["険", "けん"]]}
+                parts={[`${childName} のクエスト`]}
                 rubySize={5}
                 noWrap
               />
             ) : (
               <RubyText
                 style={styles.screenTitleText}
-                parts={[`${childName} の`, ["履歴", "りれき"]]}
+                parts={[`${childName} の`, ["冒険", "ぼうけん"], "ログ"]}
                 rubySize={5}
                 noWrap
               />
@@ -1188,7 +1188,7 @@ export default function ChildDashboardScreen({
             {tab === "quests" ? (
               <RubyText
                 style={styles.screenTitleSub}
-                parts={[["今", "いま"], "やるクエストを", ["選", "えら"], "ぼう"]}
+                parts={[["受注", "じゅちゅう"], "するクエストを", ["選", "えら"], "ぼう"]}
                 rubySize={4}
                 noWrap
               />
@@ -1212,27 +1212,33 @@ export default function ChildDashboardScreen({
             accessibilityState={{ selected: tab === "quests" }}
             accessibilityLabel="クエストタブ"
           >
-            <Text
-              style={[
-                styles.tabText,
-                tab === "quests" && styles.tabTextActive,
-              ]}
-            >
-              クエスト
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <PixelSwordIcon size={14} />
+              <Text
+                style={[
+                  styles.tabText,
+                  tab === "quests" && styles.tabTextActive,
+                ]}
+              >
+                クエスト
+              </Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tabButton, tab === "history" && styles.tabActive]}
             onPress={() => setTab("history")}
             accessibilityRole="tab"
             accessibilityState={{ selected: tab === "history" }}
-            accessibilityLabel="りれきタブ"
+            accessibilityLabel="冒険ログタブ"
           >
-            <RubyText
-              style={tab === "history" ? styles.tabTextActive : styles.tabText}
-              parts={[["履歴", "りれき"]]}
-              rubySize={6}
-            />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+              <PixelBookIcon size={14} />
+              <RubyText
+                style={tab === "history" ? styles.tabTextActive : styles.tabText}
+                parts={[["冒険", "ぼうけん"], "ログ"]}
+                rubySize={6}
+              />
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -1244,10 +1250,10 @@ export default function ChildDashboardScreen({
               <PixelStarIcon size={22} />
               <RubyText style={styles.specialSectionTitle} parts={[["特別", "とくべつ"], "クエスト"]} />
             </View>
-            {tasks.filter((t) => t.is_special && isSpecialActive(t) && !submittedTodayIds.includes(t.id)).length > 0 ? (
+            {tasks.filter((t) => t.is_special && isSpecialActive(t)).length > 0 ? (
               <>
                 {tasks
-                  .filter((t) => t.is_special && isSpecialActive(t) && !submittedTodayIds.includes(t.id))
+                  .filter((t) => t.is_special && isSpecialActive(t))
                   .map((task) => (
                     <View key={task.id} style={styles.specialQuestCard}>
                       <View style={styles.specialQuestHeader}>
@@ -1268,7 +1274,7 @@ export default function ChildDashboardScreen({
                           <TaskIconSvg title={task.title} size={28} />
                         </View>
                         <View style={styles.questDetails}>
-                          <AutoRubyText text={task.title} style={styles.specialQuestTitle} rubySize={7} />
+                          <AutoRubyText text={task.title} style={styles.specialQuestTitle} rubySize={7} noWrap />
                           <View style={styles.rewardRow}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                               <PixelCoinIcon size={14} />
@@ -1299,7 +1305,7 @@ export default function ChildDashboardScreen({
                           style={styles.specialClearButton}
                           onPress={() => confirmAndComplete(task)}
                           disabled={submitting === task.id}
-                          accessibilityLabel={`とくべつクエスト${task.title}をクリア`}
+                          accessibilityLabel={`特別クエスト${task.title}をクリア`}
                         >
                           <Text style={styles.clearButtonText}>
                             {submitting === task.id ? "..." : "★ クリア！"}
@@ -1320,7 +1326,7 @@ export default function ChildDashboardScreen({
             {/* 通常クエスト */}
             {tasks.filter((t) => !t.is_special && !submittedTodayIds.includes(t.id)).length > 0 && (
               <>
-                {tasks.filter((t) => t.is_special && isSpecialActive(t) && !submittedTodayIds.includes(t.id)).length > 0 && (
+                {tasks.filter((t) => t.is_special && isSpecialActive(t)).length > 0 && (
                   <AutoRubyText text="クエスト" style={[styles.sectionTitle, { marginTop: 16 }]} rubySize={7} />
                 )}
                 {tasks
@@ -1332,7 +1338,7 @@ export default function ChildDashboardScreen({
                           <TaskIconSvg title={task.title} size={28} />
                         </View>
                         <View style={styles.questDetails}>
-                          <AutoRubyText text={task.title} style={styles.questTitle} rubySize={7} />
+                          <AutoRubyText text={task.title} style={styles.questTitle} rubySize={7} noWrap />
                           <View style={styles.rewardRow}>
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                               <PixelCoinIcon size={14} />
@@ -1376,7 +1382,7 @@ export default function ChildDashboardScreen({
                           <AnimatedButton
                             style={styles.priceUpButton}
                             onPress={() => setPriceRequestTask(task)}
-                            accessibilityLabel={`${task.title}のねあげリクエスト`}
+                            accessibilityLabel={`${task.title}の値上げリクエスト`}
                           >
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 1 }}>
                               <PixelCoinIcon size={12} />
@@ -1394,17 +1400,22 @@ export default function ChildDashboardScreen({
               <View style={styles.emptyCard}>
                 <PixelMapIcon size={40} />
                 <AutoRubyText text="クエストが まだないよ" style={[styles.emptyText, { paddingVertical: 0, fontWeight: "bold" }]} rubySize={7} />
-                <AutoRubyText text="親に たのんで クエストを つくってもらおう！" style={[styles.emptyText, { paddingVertical: 4, fontSize: 12 }]} rubySize={6} />
+                <AutoRubyText text="親に たのんで クエストを つくってもらおう！" style={styles.emptyHint} rubySize={6} />
               </View>
             )}
 
             {/* じぶんクエスト提案 */}
             <AnimatedButton
               style={styles.proposalButton}
-              onPress={() => setProposalVisible(true)}
-              accessibilityLabel="じぶんクエストを提案する"
+              onPress={() => {
+                setProposalTitle("");
+                setProposalReason("");
+                setProposalReward("");
+                setProposalVisible(true);
+              }}
+              accessibilityLabel="じぶんクエスト提案。オリジナルクエストを作る"
             >
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelLightbulbIcon size={18} /><RubyText style={styles.proposalButtonText} parts={[["自分", "じぶん"], "クエストを", ["提案", "ていあん"], "する"]} rubySize={5} /></View>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelLightbulbIcon size={18} /><RubyText style={styles.proposalButtonText} parts={[["自分", "じぶん"], "でクエストを ", ["作", "つく"], "る"]} rubySize={5} /></View>
               {pendingProposals > 0 && (
                 <Text style={styles.proposalPending}>（{pendingProposals}件 返事待ち）</Text>
               )}
@@ -1660,11 +1671,11 @@ export default function ChildDashboardScreen({
             <TouchableOpacity
               onPress={() => setNudgeVisible(false)}
               style={styles.nudgeSkipLink}
-              accessibilityLabel="あとで"
+              accessibilityLabel="後で"
               accessibilityRole="button"
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-              <Text style={styles.nudgeSkipText}>あとで</Text>
+              <Text style={styles.nudgeSkipText}>後で</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1693,11 +1704,23 @@ export default function ChildDashboardScreen({
       <CoinKunChat role="child" />
 
       {/* じぶんクエスト提案モーダル */}
-      <Modal visible={proposalVisible} transparent animationType="slide" onRequestClose={() => setProposalVisible(false)}>
+      <Modal visible={proposalVisible} transparent animationType="slide" onRequestClose={() => {
+        setProposalVisible(false);
+        setProposalTitle("");
+        setProposalReason("");
+        setProposalReward("");
+      }}>
         <KeyboardAvoidingView style={styles.proposalOverlay} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-          <View style={styles.proposalCard}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelLightbulbIcon size={20} /><RubyText style={styles.proposalModalTitle} parts={[["自分", "じぶん"], "クエストを", ["提案", "ていあん"]]} rubySize={6} /></View>
-            <AutoRubyText text="おうちのひとに新しいクエストを提案しよう！" style={styles.proposalModalSub} rubySize={5} noWrap />
+          <ScrollView
+            style={{ borderRadius: 16, flexGrow: 0, maxHeight: "85%", backgroundColor: palette.surface }}
+            contentContainerStyle={styles.proposalCard}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            showsVerticalScrollIndicator
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelLightbulbIcon size={20} /><RubyText style={styles.proposalModalTitle} parts={[["自分", "じぶん"], "でクエストを ", ["作", "つく"], "る"]} rubySize={6} /></View>
+            <RubyText style={[styles.proposalModalSub, { marginBottom: 0 }]} parts={[["親", "おや"], "に"]} rubySize={5} />
+            <RubyText style={styles.proposalModalSub} parts={[["新", "あたら"], "しいクエストを", ["出", "だ"], "そう！"]} rubySize={5} />
 
             <RubyText
               style={styles.proposalLabel}
@@ -1734,7 +1757,7 @@ export default function ChildDashboardScreen({
 
             <RubyText
               style={styles.proposalLabel}
-              parts={[["希望", "きぼう"], "のご", ["褒美", "ほうび"], "（", ["円", "えん"], "）"]}
+              parts={[["報酬", "ほうしゅう"], "リクエスト（", "円", "）"]}
               rubySize={5}
               noWrap
             />
@@ -1750,11 +1773,16 @@ export default function ChildDashboardScreen({
             />
 
             <View style={styles.proposalActions}>
-              <TouchableOpacity style={styles.proposalCancel} onPress={() => setProposalVisible(false)}>
+              <TouchableOpacity style={styles.proposalCancel} onPress={() => {
+                setProposalVisible(false);
+                setProposalTitle("");
+                setProposalReason("");
+                setProposalReward("");
+              }}>
                 <RubyText
                   style={styles.proposalCancelText}
-                  parts={[["止", "や"], "める"]}
-                  rubySize={5}
+                  parts={[["撤退", "てったい"]]}
+                  rubySize={4}
                   noWrap
                 />
               </TouchableOpacity>
@@ -1767,20 +1795,18 @@ export default function ChildDashboardScreen({
                   <RubyText
                     style={styles.proposalSubmitText}
                     parts={[["送信", "そうしん"], ["中", "ちゅう"], "..."]}
-                    rubySize={5}
-                    noWrap
+                    rubySize={4}
                   />
                 ) : (
                   <RubyText
                     style={styles.proposalSubmitText}
-                    parts={[["提案", "ていあん"], "する！"]}
-                    rubySize={5}
-                    noWrap
+                    parts={["クエストを", ["出", "だ"], "す！"]}
+                    rubySize={4}
                   />
                 )}
               </AnimatedButton>
             </View>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
@@ -1831,26 +1857,17 @@ function createStyles(p: Palette) {
     flexDirection: "row",
     alignItems: "flex-start",
     margin: 12,
-    marginBottom: 0,
     padding: 16,
     borderRadius: 12,
-    borderWidth: 1,
-    shadowColor: p.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1.5,
   },
   levelCardActive: {
-    backgroundColor: p.primaryLight,
     borderColor: p.borderStrong,
   },
   levelCardNormal: {
-    backgroundColor: p.accentLight,
     borderColor: p.goldBorder,
   },
   levelCardLonely: {
-    backgroundColor: p.walletSaveBg,
     borderColor: p.walletSaveBorder,
   },
   characterColumn: {
@@ -1868,17 +1885,17 @@ function createStyles(p: Palette) {
   levelInfo: { flex: 1, overflow: "hidden" as const },
   levelTitle: { fontSize: rf(14), fontWeight: "bold" as const, color: p.textStrong },
   speechBubble: {
-    backgroundColor: `${p.surface}b3`,
     borderRadius: 8,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingTop: 10,
+    paddingBottom: 4,
     marginTop: 4,
     marginBottom: 6,
   },
   speechText: {
-    fontSize: 12,
+    fontSize: 10,
     color: p.textStrong,
-    lineHeight: 20,
+    lineHeight: 16,
   },
   progressRow: {
     flexDirection: "row" as const,
@@ -1912,16 +1929,12 @@ function createStyles(p: Palette) {
 
   // Wallet
   walletCard: {
-    backgroundColor: p.surface,
     margin: 12,
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
-    shadowColor: p.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: p.border,
   },
   walletTitleRow: {
     flexDirection: "row" as const,
@@ -1994,8 +2007,7 @@ function createStyles(p: Palette) {
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: p.surfaceMuted,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
   },
   transferBtn: {
@@ -2006,8 +2018,7 @@ function createStyles(p: Palette) {
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: `${p.accent}1A`,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.accent,
   },
   refreshBtnLabel: {
@@ -2031,10 +2042,6 @@ function createStyles(p: Palette) {
     borderRadius: 12,
     borderWidth: 2,
     borderColor: "rgba(255,255,255,0.3)",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 4,
-    elevation: 4,
     minHeight: 100,
   },
   // 4種SVG（gridW×gridH が 4×6/5×5/6×6/5×6 とバラバラ）でも
@@ -2055,8 +2062,6 @@ function createStyles(p: Palette) {
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
   },
-  // 4ボタン下段のテキストラインを揃えるため、quickNavSub と quickNavAmount を
-  // 同じ fontSize / color / marginTop / lineHeight で統一
   quickNavSub: {
     color: "#ffffff",
     fontSize: 11,
@@ -2122,11 +2127,6 @@ function createStyles(p: Palette) {
     marginTop: 12,
     borderWidth: 2,
     borderColor: p.walletInvestBorder,
-    shadowColor: p.walletInvest,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
   },
   investMainCtaText: {
     color: p.white,
@@ -2143,11 +2143,6 @@ function createStyles(p: Palette) {
     marginTop: 12,
     borderWidth: 3,
     borderColor: p.walletInvestBorder,
-    shadowColor: p.walletInvest,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 8,
   },
   investTopCtaText: {
     color: p.white,
@@ -2172,6 +2167,8 @@ function createStyles(p: Palette) {
     borderRadius: 10,
     padding: 10,
     gap: 8,
+    borderWidth: 1,
+    borderColor: p.border,
   },
   spendStatusIcon: { width: 24, alignItems: "center" as const, justifyContent: "center" as const },
   spendStatusText: {
@@ -2196,7 +2193,6 @@ function createStyles(p: Palette) {
   // Badges
   // Stamp notifications
   stampCard: {
-    backgroundColor: p.accentLight,
     margin: 12,
     marginBottom: 0,
     padding: 16,
@@ -2207,10 +2203,11 @@ function createStyles(p: Palette) {
   stampNotif: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: p.surface,
     borderRadius: 10,
     padding: 10,
     marginBottom: 6,
+    borderWidth: 1,
+    borderColor: p.border,
   },
   stampNotifEmoji: { fontSize: 32, marginRight: 10 },
   stampNotifSvgWrap: {
@@ -2225,11 +2222,12 @@ function createStyles(p: Palette) {
   stampNotifMsg: { fontSize: 13, color: p.primaryDark, marginTop: 2 },
 
   badgeCard: {
-    backgroundColor: p.surface,
     margin: 12,
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: p.border,
   },
   sectionTitleRow: {
     flexDirection: "row" as const,
@@ -2297,19 +2295,15 @@ function createStyles(p: Palette) {
   screenTitleBar: {
     marginHorizontal: 12,
     marginBottom: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: p.surface,
-    borderWidth: 1,
-    borderColor: `${p.primary}66`,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    gap: 8,
+    gap: 6,
   },
   screenTitleAccent: {
-    width: 4,
-    height: 20,
+    width: 3,
+    height: 16,
     backgroundColor: p.primary,
     borderRadius: 2,
   },
@@ -2335,17 +2329,11 @@ function createStyles(p: Palette) {
     marginBottom: 8,
   },
   specialQuestCard: {
-    backgroundColor: p.goldLight,
     borderWidth: 2,
     borderColor: p.goldBorder,
     padding: 14,
     borderRadius: 14,
     marginBottom: 10,
-    shadowColor: p.gold,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
   },
   specialQuestHeader: {
     flexDirection: "row" as const,
@@ -2370,10 +2358,10 @@ function createStyles(p: Palette) {
     borderRadius: 6,
   },
   specialQuestTitle: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "bold" as const,
     color: p.textStrong,
-    lineHeight: 26,
+    lineHeight: 20,
   },
   specialQuestReward: {
     fontSize: 14,
@@ -2397,15 +2385,16 @@ function createStyles(p: Palette) {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: p.surface,
     padding: 14,
     borderRadius: 12,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: p.border,
   },
   questInfo: { flexDirection: "row", alignItems: "center", flex: 1 },
   questIcon: { width: 32, marginRight: 10, alignItems: "center" as const, justifyContent: "center" as const },
   questDetails: { flex: 1 },
-  questTitle: { fontSize: 15, fontWeight: "bold", color: p.textStrong, lineHeight: 24 },
+  questTitle: { fontSize: 13, fontWeight: "bold", color: p.textStrong, lineHeight: 20 },
   rewardRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
@@ -2456,10 +2445,11 @@ function createStyles(p: Palette) {
   historyItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: p.surface,
     padding: 12,
     borderRadius: 10,
     marginBottom: 6,
+    borderWidth: 1,
+    borderColor: p.border,
   },
   historyType: { marginRight: 10, width: 28, alignItems: "center" as const, justifyContent: "center" as const },
   historyInfo: { flex: 1 },
@@ -2475,10 +2465,11 @@ function createStyles(p: Palette) {
   },
   emptyCard: {
     alignItems: "center" as const,
-    backgroundColor: p.surface,
     borderRadius: 12,
     padding: 24,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: p.border,
   },
   emptyHint: {
     textAlign: "center",
@@ -2488,10 +2479,10 @@ function createStyles(p: Palette) {
   },
   trophyHint: {
     textAlign: "center",
-    color: p.textMuted,
+    color: p.primary,
     fontSize: 10,
     marginTop: 8,
-    fontStyle: "italic",
+    textDecorationLine: "underline",
   },
   titleBadge: {
     paddingHorizontal: 6,
@@ -2521,7 +2512,6 @@ function createStyles(p: Palette) {
     fontWeight: "bold",
   },
   emptySpecialCard: {
-    backgroundColor: p.accentLight,
     borderRadius: 12,
     padding: 24,
     alignItems: "center",
@@ -2545,12 +2535,13 @@ function createStyles(p: Palette) {
     marginBottom: 8,
   },
   repliedCard: {
-    backgroundColor: p.surface,
     borderRadius: 10,
     padding: 12,
     marginBottom: 6,
     borderLeftWidth: 3,
     borderLeftColor: p.primary,
+    borderWidth: 1,
+    borderColor: p.border,
   },
   repliedTaskName: {
     fontSize: 13,
@@ -2588,7 +2579,7 @@ function createStyles(p: Palette) {
     padding: 12,
     gap: 10,
     borderWidth: 2,
-    borderColor: "#FFD700",
+    borderColor: p.goldBorder,
   },
   questClearBubble: {
     flex: 1,
@@ -2634,12 +2625,30 @@ function createStyles(p: Palette) {
   weeklyStatLabel: { fontSize: rf(11), color: p.textMuted },
   bottomSpacer: { height: 40 },
 
-  // じぶんクエスト提案
+  // プリセット選択（クエストを えらぶ）
+  presetPickerButton: {
+    marginHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 0,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: p.accent,
+    alignItems: "center" as const,
+    minHeight: 48,
+    justifyContent: "center" as const,
+  },
+  presetPickerSub: {
+    fontSize: 11,
+    color: p.textMuted,
+    marginTop: 2,
+  },
+
+  // MYクエスト提案
   proposalButton: {
     margin: 12,
     padding: 14,
     borderRadius: 12,
-    backgroundColor: p.primaryLight,
     borderWidth: 1,
     borderColor: p.primary,
     alignItems: "center" as const,
@@ -2651,16 +2660,18 @@ function createStyles(p: Palette) {
   proposalOverlay: {
     flex: 1,
     backgroundColor: p.overlay,
-    justifyContent: "center" as const,
+    justifyContent: "flex-end" as const,
     padding: 20,
+    paddingBottom: 40,
   },
   proposalCard: {
     backgroundColor: p.surface,
     borderRadius: 16,
     padding: 20,
+    flexGrow: 0,
   },
   proposalModalTitle: { fontSize: rf(18), fontWeight: "bold" as const, color: p.textStrong, marginBottom: 4 },
-  proposalModalSub: { fontSize: 12, color: p.textMuted, marginBottom: 16 },
+  proposalModalSub: { fontSize: 12, color: p.textMuted, marginBottom: 16, textAlign: "center" as const },
   proposalLabel: { fontSize: 13, fontWeight: "bold" as const, color: p.textStrong, marginTop: 8, marginBottom: 4 },
   proposalInput: {
     borderWidth: 1,
@@ -2669,30 +2680,30 @@ function createStyles(p: Palette) {
     padding: 14,
     fontSize: 15,
     backgroundColor: p.surfaceMuted,
+    color: p.textStrong,
   },
   proposalActions: { flexDirection: "row" as const, gap: 10, marginTop: 16 },
   proposalCancel: {
     flex: 1,
-    padding: 14,
-    minHeight: 48,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     borderRadius: 10,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     backgroundColor: p.surfaceMuted,
   },
-  proposalCancelText: { fontSize: 16, fontWeight: "bold" as const, color: p.textMuted },
+  proposalCancelText: { fontSize: 14, fontWeight: "bold" as const, color: p.textMuted },
   proposalSubmit: {
     flex: 2,
-    padding: 14,
-    minHeight: 48,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
     borderRadius: 10,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     backgroundColor: p.primary,
   },
-  proposalSubmitText: { fontSize: 16, fontWeight: "bold" as const, color: p.white },
+  proposalSubmitText: { fontSize: 14, fontWeight: "bold" as const, color: p.white },
   stampRelayBtn: {
-    backgroundColor: p.primaryLight,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center" as const,
@@ -2703,7 +2714,7 @@ function createStyles(p: Palette) {
     justifyContent: "center" as const,
   },
   stampRelayBtnText: {
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "bold" as const,
     color: p.primaryDark,
   },

@@ -10,6 +10,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  PanResponder,
+  Animated,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { PixelCoinIcon, PixelChatIcon, PixelCrossIcon } from "./PixelIcons";
@@ -34,7 +37,7 @@ const GUEST_SUGGESTIONS = [
   "このアプリはなに？",
   "始めかたをおしえて",
   "どんな機能がある？",
-  "親はなにができる？",
+  "冒険団マスターはなにができる？",
 ];
 
 // Web版と同じ /api/chat を呼び出す（Vercelデプロイ済みのURL）
@@ -50,6 +53,33 @@ export default function CoinKunChat({ role }: { role: Role }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
+
+  // ドラッグ移動用
+  const { width: screenW, height: screenH } = Dimensions.get("window");
+  const fabSize = 56;
+  const pan = useRef(new Animated.ValueXY({ x: screenW - fabSize - 16, y: screenH - fabSize - 20 - (insets.bottom || 0) })).current;
+  const isDragging = useRef(false);
+
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5,
+    onPanResponderGrant: () => {
+      isDragging.current = false;
+      pan.extractOffset();
+    },
+    onPanResponderMove: (_, gs) => {
+      if (Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5) {
+        isDragging.current = true;
+      }
+      Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false })(_, gs);
+    },
+    onPanResponderRelease: () => {
+      pan.flattenOffset();
+      if (!isDragging.current) {
+        setOpen(true);
+      }
+    },
+  }), [pan]);
 
   const isChild = role === "child";
   const suggestions =
@@ -82,7 +112,7 @@ export default function CoinKunChat({ role }: { role: Role }) {
         {
           role: "assistant",
           content: isChild
-            ? "ごめんね、うまくいかなかったよ"
+            ? "ごめんね、上手くいかなかったよ"
             : "エラーが発生しました。",
         },
       ]);
@@ -95,21 +125,21 @@ export default function CoinKunChat({ role }: { role: Role }) {
 
   return (
     <>
-      {/* フローティングボタン */}
-      <TouchableOpacity
-        onPress={() => setOpen(true)}
+      {/* フローティングボタン（ドラッグ移動可能） */}
+      <Animated.View
+        {...panResponder.panHandlers}
         style={[
           styles.fab,
           {
             backgroundColor: accentColor,
-            bottom: 20 + (insets.bottom || 0),
+            transform: pan.getTranslateTransform(),
           },
         ]}
         accessibilityLabel="AIアシスタント"
         accessibilityRole="button"
       >
         {isChild ? <PixelCoinIcon size={26} /> : <PixelChatIcon size={26} />}
-      </TouchableOpacity>
+      </Animated.View>
 
       {/* チャットモーダル */}
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
@@ -146,10 +176,10 @@ export default function CoinKunChat({ role }: { role: Role }) {
                 <View style={styles.emptyState}>
                   <Text style={styles.emptyText}>
                     {role === "child"
-                      ? "コインくんになんでもきいてね！"
+                      ? "コインくんに何でも聞いてね！"
                       : role === "parent"
                         ? "クエスト教育についてご相談ください"
-                        : "ジョブサガについて何でもきいてね！"}
+                        : "ジョブサガについて何でも聞いてね！"}
                   </Text>
                 </View>
               )}
@@ -201,7 +231,7 @@ export default function CoinKunChat({ role }: { role: Role }) {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder={isChild ? "きいてみよう..." : "メッセージを入力..."}
+                placeholder={isChild ? "聞いてみよう..." : "メッセージを入力..."}
                 placeholderTextColor={palette.textPlaceholder}
                 style={styles.input}
                 editable={!loading}
@@ -230,7 +260,8 @@ function createStyles(p: Palette) {
   return StyleSheet.create({
     fab: {
       position: "absolute",
-      right: 16,
+      top: 0,
+      left: 0,
       width: 56,
       height: 56,
       borderRadius: 28,

@@ -34,9 +34,10 @@ type Props = {
   onLoginSuccess: () => void;
   mode?: LoginMode;
   onBack?: () => void;
+  onRecover?: () => void;
 };
 
-export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
+export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }: Props) {
   const { palette } = useTheme();
   const styles = useMemo(() => createStyles(palette), [palette]);
   const { alert } = useAppAlert();
@@ -65,7 +66,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
   // Family add
   const [newFamilyName, setNewFamilyName] = useState("");
   const [addingFamily, setAddingFamily] = useState(false);
-  // 家族メンバー管理
+  // 冒険団メンバー管理
   const [managingFamily, setManagingFamily] = useState<Family | null>(null);
   const [familyMembers, setFamilyMembers] = useState<User[]>([]);
   const [newChildName, setNewChildName] = useState("");
@@ -85,6 +86,16 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
     loadFamilies();
   }, []);
 
+  // PIN入力中: キーボード表示時にボタンが見えるよう自動スクロール
+  useEffect(() => {
+    if (step !== "pin") return;
+    const event = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const sub = Keyboard.addListener(event, () => {
+      setTimeout(() => childScrollRef.current?.scrollToEnd({ animated: true }), 100);
+    });
+    return () => sub.remove();
+  }, [step]);
+
   // mode="parent" の場合、初回からadminステップなのでisSignUpをリセット
   useEffect(() => {
     if (mode === "parent") {
@@ -100,14 +111,14 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
     setFamilies(data || []);
     setLoading(false);
 
-    // 子供モード: 家族が1つなら自動スキップ
-    if (mode === "child" && data && data.length === 1) {
+    // 子供モード: 冒険団は常に1つ。選択画面を表示せず直接メンバー選択へ
+    if (mode === "child" && data && data.length > 0) {
       handleFamilySelect(data[0]);
     }
   }
 
   async function loadMyFamilies(authId: string) {
-    // 自分が所有する家族 + 山田家（見本）
+    // 自分が所有する冒険団 + 山田家（見本）
     const { data } = await supabase
       .from("otetsudai_families")
       .select("*")
@@ -261,12 +272,12 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
             authId: authData.user.id,
           });
         }
-        // 新規登録 → 家族管理画面へ
+        // 新規登録 → 冒険団管理画面へ
         if (newAdminUser) setLoggedInUserId(newAdminUser.id);
         if (authData.user) setLoggedInAuthId(authData.user.id);
         setAdminLoggedIn(true);
         await loadMyFamilies(authData.user?.id || "");
-        alert("🎉 登録完了", "家族を追加してはじめましょう！");
+        alert("🎉 登録完了", "冒険団を追加してはじめましょう！");
       }
     } catch {
       setError("登録に失敗しました");
@@ -277,7 +288,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
   const SAMPLE_FAMILY_NAME = "山田家";
 
   function handleDeleteFamily(family: Family) {
-    alert("家族を削除", `「${family.name}」を削除しますか？\n関連するデータも全て削除されます。`, [
+    alert("冒険団を削除", `「${family.name}」を削除しますか？\n関連するデータも全て削除されます。`, [
       { text: "キャンセル", style: "cancel" },
       {
         text: "削除する",
@@ -340,7 +351,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
         await loadFamilies();
       }
     } catch {
-      alert("エラー", "家族の追加に失敗しました");
+      alert("エラー", "冒険団の追加に失敗しました");
     }
     setAddingFamily(false);
   }
@@ -455,7 +466,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
       setStep("member");
     } else if (step === "member") {
       if (mode === "child") {
-        // 子供モードでは家族選択をスキップしたので、そのまま戻る
+        // 子供モードでは冒険団選択をスキップしたので、そのまま戻る
         if (onBack) { onBack(); return; }
         return;
       }
@@ -595,15 +606,15 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
             <>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 8 }}>
                 <PixelHouseIcon size={40} />
-                <Text style={[styles.titleAdmin, { marginBottom: 0 }]}>家族管理</Text>
+                <Text style={[styles.titleAdmin, { marginBottom: 0 }]}>冒険団管理</Text>
               </View>
 
-              {/* 家族一覧 */}
+              {/* 冒険団一覧 */}
               {managingFamily ? (
                 <>
-                  {/* 家族メンバー管理画面 */}
+                  {/* 冒険団メンバー管理画面 */}
                   <TouchableOpacity style={styles.backButton} onPress={() => { setManagingFamily(null); setFamilyMembers([]); }}>
-                    <PixelDoorIcon size={14} /><Text style={styles.backText}>家族一覧に戻る</Text>
+                    <PixelDoorIcon size={14} /><Text style={styles.backText}>冒険団一覧に戻る</Text>
                   </TouchableOpacity>
                   <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 8, marginBottom: 12 }}>
                     <PixelHouseIcon size={18} />
@@ -864,13 +875,13 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
                 </>
               )}
 
-              {/* 家族追加（メンバー管理中は非表示） */}
+              {/* 冒険団追加（メンバー管理中は非表示） */}
               {!managingFamily && (
                 <>
                   <View style={styles.addFamilyRow}>
                     <TextInput
                       style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                      placeholder="新しい家族名（例: 田中家）"
+                      placeholder="新しい冒険団名（例: 田中の冒険団）"
                       placeholderTextColor={palette.textPlaceholder}
                       value={newFamilyName}
                       onChangeText={setNewFamilyName}
@@ -883,7 +894,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
                     disabled={addingFamily || !newFamilyName.trim()}
                   >
                     <Text style={styles.buttonText}>
-                      {addingFamily ? "追加中..." : "＋ 家族を追加"}
+                      {addingFamily ? "追加中..." : "＋ 冒険団を追加"}
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -900,14 +911,15 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "position" : undefined}
-      contentContainerStyle={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
     <ScrollView
       ref={childScrollRef}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, step === "pin" && { justifyContent: "flex-start", paddingTop: 40 }]}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="interactive"
+      showsVerticalScrollIndicator
+      alwaysBounceVertical
     >
       <View style={styles.card}>
         {/* Header — PIN入力中は非表示にしてキーボードスペース確保 */}
@@ -918,31 +930,34 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
               <PixelHeroSvg type="mage" size={48} animated mode="walk" />
             </View>
             <Text style={styles.title} adjustsFontSizeToFit numberOfLines={1}>ジョブサガ</Text>
-            <RubyText style={styles.subtitle} parts={["クエストをクリアして、", ["金貨", "きんか"], "をかせごう！"]} rubySize={5} />
+            <View style={{ alignItems: "center", marginBottom: 20 }}>
+              <AutoRubyText text="クエストをクリアして、" style={[styles.subtitle, { marginBottom: 0 }]} rubySize={5} />
+              <AutoRubyText text="金貨を稼ごう！" style={[styles.subtitle, { marginBottom: 0 }]} rubySize={5} />
+            </View>
           </>
         )}
 
         {/* Step: Mode selection */}
         {step === "mode" && (
           <>
-            <Text style={styles.label}>どっちのモード？</Text>
+            <RubyText style={styles.label} parts={["どっちのモード？"]} rubySize={5} />
             <View style={{ marginBottom: 12 }}>
               <RpgButton tier="gold" size="lg" fullWidth onPress={() => { setStep("family"); loadFamilies(); }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                   <PixelPersonIcon size={24} />
-                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#2A1800" }}>子供モード</Text>
+                  <RubyText style={{ fontSize: 18, fontWeight: "bold", color: "#2A1800" }} parts={[["子供", "こども"], "モード"]} rubySize={5} noWrap />
                 </View>
               </RpgButton>
-              <RubyText style={[styles.modeHint, { textAlign: "center", marginTop: 4 }]} parts={["おうちを", ["選", "えら"], "んでログイン"]} rubySize={5} />
+              <RubyText style={[styles.modeHint, { textAlign: "center", marginTop: 4 }]} parts={[["冒険団", "ぼうけんだん"], "を", ["選", "えら"], "んでログイン"]} rubySize={5} />
             </View>
             <View style={{ marginBottom: 8 }}>
               <RpgButton tier="violet" size="lg" fullWidth onPress={() => { setStep("admin"); setIsSignUp(false); setError(""); }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                  <PixelFamilyIcon size={24} />
-                  <Text style={{ fontSize: 18, fontWeight: "bold", color: "#FFFFFF" }}>親モード</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <PixelFamilyIcon size={22} />
+                  <RubyText style={{ fontSize: 13, fontWeight: "bold", color: "#FFFFFF" }} parts={[["冒険団", "ぼうけんだん"], "マスター"]} rubySize={4} noWrap />
                 </View>
               </RpgButton>
-              <Text style={[styles.modeHint, { textAlign: "center", marginTop: 4 }]}>メール・パスワードでログイン</Text>
+              <AutoRubyText text="メール・パスワードでログイン" style={[styles.modeHint, { textAlign: "center", marginTop: 4 }]} rubySize={4} />
             </View>
           </>
         )}
@@ -959,44 +974,19 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
                 </View>
               </View>
             </TouchableOpacity>
-            <RubyText style={styles.label} parts={["おうちを", ["選", "えら"], "んでね"]} rubySize={6} />
+            <RubyText style={styles.label} parts={[["冒険団", "ぼうけんだん"], "を", ["選", "えら"], "んでね"]} rubySize={6} />
             {families.map((f) => (
               <TouchableOpacity
                 key={f.id}
                 style={styles.selectButton}
                 onPress={() => handleFamilySelect(f)}
               >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flex: 1 }}><PixelHouseIcon size={16} /><Text style={styles.selectText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{f.name}</Text></View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4, flex: 1 }}><PixelHouseIcon size={16} /><AutoRubyText text={f.name} style={styles.selectText} rubySize={5} /></View>
               </TouchableOpacity>
             ))}
           </>
         )}
-        {/* 子供モード: 家族スキップ → 全子供から名前を選ぶ */}
-        {step === "family" && mode === "child" && (
-          <>
-            <TouchableOpacity style={styles.backButton} onPress={goBack}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <PixelDoorIcon size={14} />
-                <View style={{ alignItems: "center" }}>
-                  <Text style={styles.backText}>もどる</Text>
-                  <Text style={styles.backHint}>(まえへ)</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-            <RubyText style={styles.label} parts={[["名前", "なまえ"], "を", ["選", "えら"], "んでね"]} rubySize={6} />
-            {families.map((f) => (
-              <TouchableOpacity
-                key={f.id}
-                style={styles.selectButton}
-                onPress={() => handleFamilySelect(f)}
-              >
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
-                  <Text style={styles.selectText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>{f.name}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </>
-        )}
+        {/* 子供モード: 冒険団は1つ。loadFamilies()で自動スキップ済み。UIなし */}
 
         {/* Step: Member selection */}
         {step === "member" && (
@@ -1010,7 +1000,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
                 </View>
               </View>
             </TouchableOpacity>
-            <RubyText style={styles.label} parts={[["誰", "だれ"], "かな？"]} rubySize={6} />
+            <RubyText style={styles.label} parts={[["冒険者", "ぼうけんしゃ"], "を", ["選", "えら"], "びます"]} rubySize={6} />
             {members.map((m) => (
               <TouchableOpacity
                 key={m.id}
@@ -1075,8 +1065,19 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack }: Props) {
             </TouchableOpacity>
             {error ? <Text style={styles.error}>{error}</Text> : null}
             <RpgButton tier="gold" size="lg" fullWidth onPress={() => { Keyboard.dismiss(); handlePinLogin(); }}>
-              はじめる！
+              <RubyText style={{ fontSize: rf(18), fontWeight: "bold", color: "#2A1800" }} parts={[["冒険", "ぼうけん"], "に", ["出発", "しゅっぱつ"], "！"]} rubySize={6} />
             </RpgButton>
+            {onRecover && (
+              <TouchableOpacity style={styles.recoverLink} onPress={onRecover}>
+                <RubyText
+                  style={styles.recoverText}
+                  parts={["PINを", ["忘", "わす"], "れた？"]}
+                  rubySize={5}
+                />
+              </TouchableOpacity>
+            )}
+            {/* キーボード表示時にスクロールでボタンが見えるようスペース確保 */}
+            <View style={{ height: 120 }} />
           </>
         )}
       </View>
@@ -1250,7 +1251,7 @@ function createStyles(p: Palette) {
     backButton: {
       marginTop: 16,
       marginBottom: 12,
-      alignSelf: "center",
+      alignSelf: "flex-start",
       flexDirection: "row",
       alignItems: "center",
       gap: 6,
@@ -1324,6 +1325,16 @@ function createStyles(p: Palette) {
       flexDirection: "row",
       gap: 8,
       marginTop: 12,
+    },
+    recoverLink: {
+      marginTop: 16,
+      alignItems: "center",
+      paddingVertical: 8,
+    },
+    recoverText: {
+      fontSize: 13,
+      color: p.primary,
+      textDecorationLine: "underline",
     },
     legalRow: {
       flexDirection: "row",

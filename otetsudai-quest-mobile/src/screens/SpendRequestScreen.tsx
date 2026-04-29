@@ -87,7 +87,7 @@ export default function SpendRequestScreen({
       alert("エラー", "リクエストできませんでした");
       return;
     }
-    alert("📩 リクエストおくったよ！", "おやの へんじを まってね！", [
+    alert("📩 リクエスト送ったよ！", "冒険団マスターの返事を待ってね！", [
       { text: "OK", onPress: () => navigation.goBack() },
     ]);
   }
@@ -99,30 +99,30 @@ export default function SpendRequestScreen({
       <SafeAreaView style={styles.safe}>
         <View style={styles.container}>
           <View style={styles.header}>
-            <AutoRubyText text="かくにん" style={styles.title} rubySize={8} />
+            <AutoRubyText text="確認" style={styles.title} rubySize={8} />
           </View>
 
           <View style={styles.confirmCard}>
             <AutoRubyText
-              text="つかう きんがく"
+              text="使う金額"
               style={styles.confirmLabel}
               rubySize={7}
             />
             <Text style={styles.confirmAmount}>
               {parsedAmount.toLocaleString()}
-              <Text style={styles.confirmYen}>円</Text>
+              <Text style={styles.confirmYen}>コロ</Text>
             </Text>
 
-            <AutoRubyText text="なにに" style={styles.confirmLabel} rubySize={7} />
+            <AutoRubyText text="何に" style={styles.confirmLabel} rubySize={7} />
             <AutoRubyText
               text={`「${purpose.trim()}」`}
               style={styles.confirmPurpose}
               rubySize={7}
             />
 
-            <AutoRubyText text="のこり" style={styles.confirmLabel} rubySize={7} />
+            <AutoRubyText text="残り" style={styles.confirmLabel} rubySize={7} />
             <Text style={styles.confirmRemaining}>
-              {remaining.toLocaleString()}円
+              {remaining.toLocaleString()}コロ
             </Text>
           </View>
 
@@ -134,7 +134,7 @@ export default function SpendRequestScreen({
               accessibilityLabel="もどる"
             >
               <AutoRubyText
-                text="← もどる"
+                text="← 戻る"
                 style={styles.confirmBackBtnText}
                 rubySize={7}
               />
@@ -148,7 +148,7 @@ export default function SpendRequestScreen({
               accessibilityLabel="リクエストする"
             >
               <AutoRubyText
-                text={sending ? "おくっているよ…" : "📩 リクエストする！"}
+                text={sending ? "送っているよ…" : "📩 リクエストする！"}
                 style={styles.submitButtonText}
                 rubySize={7}
               />
@@ -172,21 +172,16 @@ export default function SpendRequestScreen({
             style={styles.backButton}
             onPress={() => navigation.navigate("ChildDashboard", { childId })}
             accessibilityRole="button"
-            accessibilityLabel="おうちに もどる"
+            accessibilityLabel="戻る"
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <PixelHouseIcon size={18} />
-              <View style={{ alignItems: "center" }}>
-                <Text style={styles.backText}>もどる</Text>
-                <Text style={styles.backHint}>(TOPへ)</Text>
-              </View>
+              <PixelHouseIcon size={12} />
+              <AutoRubyText text="← 戻る" style={styles.backText} rubySize={5} noWrap />
             </View>
           </TouchableOpacity>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
-            <View style={{ width: 18, height: 18, alignItems: "center", justifyContent: "center" }}>
-              <PixelCoinIcon size={18} />
-            </View>
-            <RubyText parts={[["取", "とり"], ["引", "ひき"]]} style={styles.title} rubySize={6} noWrap />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center", marginTop: -4 }}>
+            <View style={{ marginTop: 12 }}><PixelCoinIcon size={18} /></View>
+            <RubyText parts={["オーダー！"]} style={styles.title} rubySize={6} noWrap />
           </View>
         </View>
 
@@ -200,11 +195,14 @@ export default function SpendRequestScreen({
         >
           {/* Balance display */}
           <View style={styles.balanceCard}>
-            <AutoRubyText
-              text={`使えるお金: ${spendingBalance.toLocaleString()}円`}
-              style={styles.balanceText}
-              rubySize={7}
-            />
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <PixelCoinIcon size={20} />
+              <AutoRubyText
+                text={`手持ちコイン: ${spendingBalance.toLocaleString()}コロ`}
+                style={styles.balanceText}
+                rubySize={7}
+              />
+            </View>
           </View>
 
           {/* Amount display */}
@@ -213,13 +211,13 @@ export default function SpendRequestScreen({
               <Text style={styles.amountValue}>
                 {amount.length > 0 ? parseInt(amount, 10).toLocaleString() : "0"}
               </Text>
-              <Text style={styles.amountYen}>円</Text>
+              <Text style={styles.amountYen}>コロ</Text>
             </View>
           </ShakeView>
 
           {overBalance && (
             <AutoRubyText
-              text="のこりが たりないよ"
+              text="残りが足りないよ"
               style={styles.warningText}
               rubySize={7}
             />
@@ -263,7 +261,7 @@ export default function SpendRequestScreen({
             accessibilityLabel="つぎへ"
           >
             <AutoRubyText
-              text="つぎへ →"
+              text="次へ →"
               style={styles.nextButtonText}
               rubySize={7}
             />
@@ -306,32 +304,24 @@ function createStyles(p: Palette) {
     title: {
       fontSize: rf(18),
       fontWeight: "bold",
-      color: p.primaryDark,
       color: p.textStrong,
       textAlign: "center",
     },
     backButton: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
+      gap: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
       borderRadius: 8,
       borderWidth: 2,
       borderColor: p.primary,
       backgroundColor: p.background,
     },
     backText: {
-      fontSize: 14,
+      fontSize: 8,
       fontWeight: "bold",
       color: p.textMuted,
-    },
-    backHint: {
-      fontSize: 9,
-      fontWeight: "600",
-      color: p.textMuted,
-      opacity: 0.7,
-      marginTop: -1,
     },
 
     // Balance card

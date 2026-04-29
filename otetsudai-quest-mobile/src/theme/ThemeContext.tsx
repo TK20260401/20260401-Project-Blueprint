@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useMemo, useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { palettes, type Palette, type PaletteName } from "./palettes";
+import { toGrayscalePalette } from "./grayscale";
+import { useAccessibility } from "../accessibility";
 
 type ThemeContextType = {
   palette: Palette;
@@ -11,8 +13,8 @@ type ThemeContextType = {
 const STORAGE_KEY = "app_palette";
 
 const ThemeContext = createContext<ThemeContextType>({
-  palette: palettes.dungeon,
-  paletteName: "dungeon",
+  palette: palettes.forest,
+  paletteName: "forest",
   setPalette: () => {},
 });
 
@@ -22,22 +24,26 @@ export function useTheme() {
 
 export function ThemeProvider({
   children,
-  initial = "dungeon",
+  initial = "forest",
 }: {
   children: React.ReactNode;
   initial?: PaletteName;
 }) {
   const [paletteName, setPaletteName] = useState<PaletteName>(initial);
+  const { monochrome } = useAccessibility();
 
   const setPalette = useCallback((name: PaletteName) => {
     setPaletteName(name);
     AsyncStorage.setItem(STORAGE_KEY, name).catch(() => {});
   }, []);
 
+  const palette = useMemo(() => {
+    const base = palettes[paletteName];
+    return monochrome ? toGrayscalePalette(base) : base;
+  }, [paletteName, monochrome]);
+
   return (
-    <ThemeContext.Provider
-      value={{ palette: palettes[paletteName], paletteName, setPalette }}
-    >
+    <ThemeContext.Provider value={{ palette, paletteName, setPalette }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -49,5 +55,5 @@ export async function loadSavedPalette(): Promise<PaletteName> {
     const saved = await AsyncStorage.getItem(STORAGE_KEY);
     if (saved && saved in palettes) return saved as PaletteName;
   } catch {}
-  return "dungeon";
+  return "forest";
 }

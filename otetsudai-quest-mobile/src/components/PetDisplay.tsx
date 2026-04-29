@@ -4,7 +4,6 @@ import type { Pet } from "../lib/types";
 import { PET_TYPE_INFO, GROWTH_THRESHOLDS, HATCH_QUESTS_REQUIRED, calculateHappiness } from "../lib/pets";
 import PetSvg from "./PetSvg";
 import EggShake from "./animations/EggShake";
-import { RubyStr } from "./Ruby";
 import { useTheme, type Palette } from "../theme";
 import { useReducedMotion } from "../lib/useReducedMotion";
 
@@ -192,8 +191,9 @@ export default function PetDisplay({ pet, onTapEgg, onManage }: Props) {
 
   if (!pet) {
     return (
-      <TouchableOpacity onPress={onManage} style={styles.emptyBtn}>
-        <RubyStr text="ペットを[探|さが]そう！" style={styles.emptyText} rubySize={6} noWrap />
+      <TouchableOpacity onPress={onManage} style={styles.emptyBtn} activeOpacity={0.7}>
+        <Text style={styles.emptyEmoji}>🐾</Text>
+        <Text style={styles.emptyText}>ペット</Text>
       </TouchableOpacity>
     );
   }
@@ -269,13 +269,25 @@ function createStyles(palette: Palette) {
       marginTop: 4,
     },
     emptyBtn: {
-      marginTop: 4,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      marginTop: 8,
+      marginBottom: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: palette.primary,
+      backgroundColor: palette.primaryLight,
+    },
+    emptyEmoji: {
+      fontSize: 14,
     },
     emptyText: {
-      fontSize: 8,
-      color: palette.textMuted,
+      fontSize: 10,
+      fontWeight: "bold",
+      color: palette.primary,
     },
     progressTrack: {
       width: 56,

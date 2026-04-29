@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import { useTheme, type Palette } from "../theme";
@@ -39,7 +41,7 @@ export default function PriceRequestModal({ visible, task, onClose, onSent }: Pr
   async function handleSend() {
     const proposed = parseInt(amount);
     if (!proposed || proposed <= task.reward_amount) {
-      alert("⚠️", "いまの おだちんより おおきい きんがくを いれてね");
+      alert("⚠️", "今のお駄賃より大きい金額を入れてね");
       return;
     }
     setSending(true);
@@ -52,13 +54,16 @@ export default function PriceRequestModal({ visible, task, onClose, onSent }: Pr
       })
       .eq("id", task.id);
     setSending(false);
-    alert("📩 リクエストおくったよ！", "おやの へんじを まってね！");
+    alert("📩 リクエスト送ったよ！", "冒険団マスターの返事を待ってね！");
     onSent();
   }
 
   return (
     <Modal transparent animationType="slide" visible={visible}>
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={[
@@ -94,7 +99,7 @@ export default function PriceRequestModal({ visible, task, onClose, onSent }: Pr
               />
               <RubyText
                 style={styles.currentAmount}
-                parts={[`${task.reward_amount}`, ["円", "えん"]]}
+                parts={[`${task.reward_amount}`, "コロ"]}
                 rubySize={5}
                 noWrap
               />
@@ -123,7 +128,7 @@ export default function PriceRequestModal({ visible, task, onClose, onSent }: Pr
               />
               <RubyText
                 style={styles.yen}
-                parts={[["円", "えん"]]}
+                parts={["コロ"]}
                 rubySize={5}
                 noWrap
               />
@@ -133,7 +138,7 @@ export default function PriceRequestModal({ visible, task, onClose, onSent }: Pr
               style={styles.messageInput}
               value={message}
               onChangeText={setMessage}
-              placeholderParts={[["親", "おや"], "に", ["一言", "ひとこと"], "（なくてもOK）"]}
+              placeholderParts={[["冒険団", "ぼうけんだん"], "マスターに", ["一言", "ひとこと"], "（なくてもOK）"]}
               placeholderRubySize={4}
               placeholderNoWrap
               placeholderTextColor={palette.textPlaceholder}
@@ -145,7 +150,12 @@ export default function PriceRequestModal({ visible, task, onClose, onSent }: Pr
             />
 
             <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={onClose}
+                accessibilityLabel="やめる"
+                accessibilityRole="button"
+              >
                 <RubyText
                   style={styles.cancelText}
                   parts={[["止", "や"], "める"]}
@@ -157,6 +167,8 @@ export default function PriceRequestModal({ visible, task, onClose, onSent }: Pr
                 style={[styles.sendButton, sending && { opacity: 0.5 }]}
                 onPress={handleSend}
                 disabled={sending}
+                accessibilityLabel={sending ? "送信中" : "リクエストを送る"}
+                accessibilityRole="button"
               >
                 {sending ? (
                   <RubyText
@@ -178,7 +190,7 @@ export default function PriceRequestModal({ visible, task, onClose, onSent }: Pr
             </View>
           </View>
         </ScrollView>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -191,9 +203,11 @@ function createStyles(p: Palette) {
       padding: 20,
     },
     card: {
-      backgroundColor: p.surface,
       borderRadius: 16,
       padding: 20,
+      backgroundColor: p.background,
+      borderWidth: 1.5,
+      borderColor: p.border,
     },
     titleRow: {
       flexDirection: "row" as const,
@@ -218,9 +232,10 @@ function createStyles(p: Palette) {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      backgroundColor: p.surfaceMuted,
       borderRadius: 10,
       padding: 12,
+      borderWidth: 1.5,
+      borderColor: p.border,
     },
     currentLabel: { fontSize: 14, color: p.textMuted },
     currentAmount: { fontSize: 18, fontWeight: "bold", color: p.textStrong },
@@ -229,11 +244,10 @@ function createStyles(p: Palette) {
     inputRow: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: p.primaryLight,
       borderRadius: 10,
       padding: 12,
       marginBottom: 12,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.primary,
     },
     inputLabel: { fontSize: 14, color: p.primary, flex: 1 },
@@ -248,14 +262,14 @@ function createStyles(p: Palette) {
     },
     yen: { fontSize: 16, color: p.primary, marginLeft: 4 },
     messageInput: {
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       borderRadius: 12,
       padding: 14,
       fontSize: 15,
       minHeight: 50,
       marginBottom: 16,
-      backgroundColor: p.surfaceMuted,
+      color: p.textStrong,
     },
     buttonRow: {
       flexDirection: "row",
@@ -268,7 +282,8 @@ function createStyles(p: Palette) {
       borderRadius: 10,
       alignItems: "center",
       justifyContent: "center",
-      backgroundColor: p.surfaceMuted,
+      borderWidth: 1.5,
+      borderColor: p.border,
     },
     cancelText: { fontSize: 16, fontWeight: "bold", color: p.textMuted },
     sendButton: {

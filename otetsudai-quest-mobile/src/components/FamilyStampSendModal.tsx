@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo } from "react";
+import React, { useRef, useState, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { useTheme, type Palette } from "../theme";
-import { RubyText } from "./Ruby";
+import { RubyText, AutoRubyText } from "./Ruby";
 import { rf } from "../lib/responsive";
 import { FAMILY_STAMPS } from "../lib/family-stamps";
 import { useKeyboardHeight } from "../lib/useKeyboardHeight";
@@ -55,6 +55,14 @@ export default function FamilyStampSendModal({
     () => familyMembers.filter((m) => m.id !== senderId),
     [familyMembers, senderId]
   );
+
+  // 送り先が1人だけなら選択UIを出さずに自動選択。
+  // 2人以上いる時のみ「団員を選ぶ」セクションを表示する。
+  useEffect(() => {
+    if (recipients.length === 1 && selectedRecipient !== recipients[0].id) {
+      setSelectedRecipient(recipients[0].id);
+    }
+  }, [recipients, selectedRecipient]);
 
   const trimmedMessage = message.trim();
   const canSend =
@@ -121,51 +129,56 @@ export default function FamilyStampSendModal({
             >
               {/* ヘッダー */}
               <View style={styles.headerRow}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}><PixelLetterIcon size={20} /><RubyText style={styles.header} parts={["エールを", ["送", "おく"], "る"]} rubySize={6} /></View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}><PixelLetterIcon size={20} /><RubyText style={styles.header} parts={[["団員", "だんいん"], "メッセージ"]} rubySize={6} /></View>
                 <TouchableOpacity
                   onPress={handleClose}
                   style={styles.closeBtn}
-                  accessibilityLabel="とじる"
+                  accessibilityLabel="閉じる"
                   accessibilityRole="button"
                 >
                   <Text style={styles.closeBtnText}>✕</Text>
                 </TouchableOpacity>
               </View>
 
-              {/* 送り先選択 */}
-              <Text style={styles.sectionLabel}>だれに おくる？</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.recipientRow}
-              >
-                {recipients.map((m) => (
-                  <TouchableOpacity
-                    key={m.id}
-                    style={[
-                      styles.recipientItem,
-                      selectedRecipient === m.id && styles.recipientItemSelected,
-                    ]}
-                    onPress={() => setSelectedRecipient(m.id)}
-                    accessibilityLabel={`${m.name}に おくる`}
-                    accessibilityRole="button"
+              {/* 送り先選択: 候補が2人以上いる時のみ表示。
+                  1人だけの時は useEffect で自動選択済み。 */}
+              {recipients.length >= 2 && (
+                <>
+                  <RubyText style={styles.sectionLabel} parts={[["団員", "だんいん"], "を", ["選", "えら"], "ぶ"]} rubySize={5} />
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.recipientRow}
                   >
-                    <Text style={styles.recipientIcon}>{m.icon}</Text>
-                    <Text
-                      style={[
-                        styles.recipientName,
-                        selectedRecipient === m.id && styles.recipientNameSelected,
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {m.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                    {recipients.map((m) => (
+                      <TouchableOpacity
+                        key={m.id}
+                        style={[
+                          styles.recipientItem,
+                          selectedRecipient === m.id && styles.recipientItemSelected,
+                        ]}
+                        onPress={() => setSelectedRecipient(m.id)}
+                        accessibilityLabel={`${m.name}に送る`}
+                        accessibilityRole="button"
+                      >
+                        <Text style={styles.recipientIcon}>{m.icon}</Text>
+                        <Text
+                          style={[
+                            styles.recipientName,
+                            selectedRecipient === m.id && styles.recipientNameSelected,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {m.name}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </>
+              )}
 
               {/* スタンプ選択 */}
-              <Text style={styles.sectionLabel}>スタンプを えらぼう</Text>
+              <RubyText style={styles.sectionLabel} parts={[["団員", "だんいん"], "にスタンプ"]} rubySize={5} />
               <View style={styles.stampGrid}>
                 {FAMILY_STAMPS.map((s) => (
                   <TouchableOpacity
@@ -201,7 +214,7 @@ export default function FamilyStampSendModal({
                 style={styles.textInput}
                 value={message}
                 onChangeText={setMessage}
-                placeholder="ひとこと メッセージ（なくても OK）"
+                placeholder="一言メッセージ（なくてもOK）"
                 placeholderTextColor={palette.textPlaceholder}
                 multiline
                 maxLength={100}
@@ -218,15 +231,15 @@ export default function FamilyStampSendModal({
                 style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
                 onPress={handleSend}
                 disabled={!canSend || sending}
-                accessibilityLabel="エールを おくる"
+                accessibilityLabel="団員メッセージを送る"
                 accessibilityRole="button"
               >
                 {sending ? (
-                  <Text style={styles.sendText}>おくりちゅう...</Text>
+                  <Text style={styles.sendText}>送り中...</Text>
                 ) : (
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                     <PixelLetterIcon size={20} />
-                    <RubyText style={styles.sendText} parts={["エールを", ["送", "おく"], "る！"]} rubySize={5} />
+                    <RubyText style={styles.sendText} parts={[["団員", "だんいん"], "メッセージを", ["送", "おく"], "る！"]} rubySize={5} />
                   </View>
                 )}
               </TouchableOpacity>
@@ -235,9 +248,7 @@ export default function FamilyStampSendModal({
                 <Text style={styles.errorText}>{sendError}</Text>
               ) : null}
 
-              <Text style={styles.hint}>
-                ※ スタンプ か メッセージの どちらかを いれてね
-              </Text>
+              <Text style={styles.hint}>{"※ スタンプかメッセージの\n　 どちらかを入れてね"}</Text>
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -389,14 +400,14 @@ function createStyles(p: Palette) {
       backgroundColor: p.textMuted,
     },
     sendText: {
-      fontSize: 18,
+      fontSize: 14,
       fontWeight: "bold",
       color: p.white,
     },
     hint: {
       fontSize: 11,
       color: p.textMuted,
-      textAlign: "center",
+      textAlign: "left",
       marginTop: 8,
       marginBottom: 8,
     },

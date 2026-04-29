@@ -269,7 +269,7 @@ export default function ParentDashboardScreen({
       setAllMembers(membersRes.data || []);
       setFamilyMessages(fmsgRes.data || []);
 
-      // アクティブな家族チャレンジ
+      // アクティブな冒険団チャレンジ
       const today = new Date().toISOString().slice(0, 10);
       const { data: challengeData } = await supabase
         .from("otetsudai_family_challenges")
@@ -297,7 +297,7 @@ export default function ParentDashboardScreen({
     endDate.setDate(endDate.getDate() + 6);
     const titles = [
       "みんなで 20クエスト クリアしよう！",
-      "家族で力を合わせよう！",
+      "冒険団で力を合わせよう！",
       "今週も頑張ろう！",
       "目指せクエストマスター！",
     ];
@@ -587,7 +587,7 @@ export default function ParentDashboardScreen({
   }
 
   async function handleDeleteTask(taskId: string) {
-    alert("削除", "この クエストを 削除しますか？", [
+    alert("削除", "このクエストを削除しますか？", [
       { text: "キャンセル", style: "cancel" },
       {
         text: "削除する",
@@ -687,7 +687,7 @@ export default function ParentDashboardScreen({
   const pendingCount = pendingLogs.length + pendingSpends.length + questProposals.length;
 
   return (
-    <SafeAreaView style={styles.container} accessibilityLabel="おやダッシュボード">
+    <SafeAreaView style={styles.container} accessibilityLabel="親ダッシュボード">
       <View style={{ paddingHorizontal: 12, paddingTop: 8 }}>
         <GameStatusHeader
           title="クエストマスター"
@@ -966,7 +966,7 @@ export default function ParentDashboardScreen({
               </>
             )}
 
-            {/* じぶんクエスト提案 */}
+            {/* MYクエスト提案 */}
             {questProposals.length > 0 && (
               <>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 16 }}><PixelScrollIcon size={18} /><Text style={styles.sectionTitle}>{`じぶんクエスト提案 (${questProposals.length})`}</Text></View>
@@ -1107,6 +1107,16 @@ export default function ParentDashboardScreen({
                 </View>
               </View>
             )}
+
+            {/* 🪙 通貨ガイド（親向けFAQ） */}
+            <View style={styles.settingsPanel}>
+              <Text style={styles.settingsPanelTitle}>🪙 つうかガイド</Text>
+              <Text style={{ fontSize: 13, color: palette.textBase, lineHeight: 20, paddingHorizontal: 4, paddingVertical: 4 }}>
+                このアプリの通貨単位は「コロ」です。{"\n"}
+                <Text style={{ fontWeight: "bold", color: palette.textStrong }}>1コロ ＝ 1円</Text> として、お子様に実際のお金の感覚を学んでいただけます。{"\n\n"}
+                例：500コロ 貯めたら、500円分の価値があります。お駄賃として渡す金額をそのままコロで設定してください。
+              </Text>
+            </View>
 
             <View style={styles.actionRow}>
               <TouchableOpacity
@@ -1772,17 +1782,16 @@ function createStyles(p: Palette) {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: p.surfaceMuted,
+    backgroundColor: p.background,
   },
-  container: { flex: 1, backgroundColor: p.surfaceMuted },
+  container: { flex: 1, backgroundColor: p.background },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: p.surface,
-    borderBottomWidth: 1,
+    borderBottomWidth: 1.5,
     borderBottomColor: p.border,
   },
   headerTitle: { fontSize: 18, fontWeight: "bold", color: p.primaryDark, flex: 1 },
@@ -1790,7 +1799,8 @@ function createStyles(p: Palette) {
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: p.surfaceMuted,
+    borderWidth: 1.5,
+    borderColor: p.border,
     minHeight: 44,
     justifyContent: "center" as const,
   },
@@ -1824,8 +1834,7 @@ function createStyles(p: Palette) {
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: p.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: `${p.primary}66`,
     flexDirection: "row" as const,
     alignItems: "center" as const,
@@ -1886,17 +1895,11 @@ function createStyles(p: Palette) {
 
   // Approval cards
   approvalCard: {
-    backgroundColor: p.surface,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
-    shadowColor: p.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   approvalInfo: { flexDirection: "row", alignItems: "center", marginBottom: 10 },
   approvalIcon: { marginRight: 10, width: 32, alignItems: "center" as const, justifyContent: "center" as const },
@@ -1913,7 +1916,8 @@ function createStyles(p: Palette) {
   approveText: { color: p.white, fontWeight: "bold", fontSize: 14 },
   rejectButton: {
     flex: 1,
-    backgroundColor: p.surfaceMuted,
+    borderWidth: 1.5,
+    borderColor: p.border,
     borderRadius: 10,
     padding: 10,
     alignItems: "center",
@@ -1923,11 +1927,10 @@ function createStyles(p: Palette) {
   // Special quest
   // 特別クエスト設定パネル
   settingsPanel: {
-    backgroundColor: p.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.goldBorder,
   },
   settingsPanelTitle: {
@@ -1954,8 +1957,7 @@ function createStyles(p: Palette) {
     marginTop: 4,
   },
   specialTaskCard: {
-    backgroundColor: p.goldLight,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.goldBorder,
   },
   specialToggle: {
@@ -1968,7 +1970,6 @@ function createStyles(p: Palette) {
     marginBottom: 4,
   },
   specialToggleActive: {
-    backgroundColor: p.goldLight,
     borderColor: p.goldBorder,
     borderStyle: "solid" as const,
   },
@@ -1984,11 +1985,10 @@ function createStyles(p: Palette) {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: p.surfaceMuted,
+    borderWidth: 1.5,
+    borderColor: p.border,
   },
   difficultyActive: {
-    backgroundColor: p.goldLight,
-    borderWidth: 1,
     borderColor: p.goldBorder,
   },
   difficultyText: {
@@ -2011,11 +2011,10 @@ function createStyles(p: Palette) {
   },
   addButtonText: { color: p.white, fontWeight: "bold", fontSize: 16 },
   taskCard: {
-    backgroundColor: p.surface,
     borderRadius: 12,
     padding: 14,
     marginBottom: 8,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
   },
   taskInactive: { opacity: 0.5 },
@@ -2030,17 +2029,11 @@ function createStyles(p: Palette) {
 
   // Children cards
   childCard: {
-    backgroundColor: p.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.borderStrong,
-    shadowColor: p.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 2,
   },
   childName: {
     fontSize: 18,
@@ -2079,17 +2072,11 @@ function createStyles(p: Palette) {
   },
   emptyCard: {
     alignItems: "center" as const,
-    backgroundColor: p.surface,
     borderRadius: 12,
     padding: 32,
     marginBottom: 8,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
-    shadowColor: p.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 2,
   },
   emptyCardText: {
     textAlign: "center" as const,
@@ -2117,9 +2104,11 @@ function createStyles(p: Palette) {
     padding: 20,
   },
   modalContent: {
-    backgroundColor: p.surface,
+    backgroundColor: p.background,
     borderRadius: 16,
     padding: 20,
+    borderWidth: 1.5,
+    borderColor: p.border,
   },
   modalTitle: {
     fontSize: rf(18),
@@ -2158,30 +2147,30 @@ function createStyles(p: Palette) {
     alignItems: "center",
     padding: 8,
     borderRadius: 10,
-    backgroundColor: p.surfaceMuted,
+    borderWidth: 1.5,
+    borderColor: p.border,
   },
   stampSelected: {
-    backgroundColor: p.accentLight,
-    borderWidth: 2,
     borderColor: p.accent,
   },
   stampEmoji: { fontSize: 28 },
   stampText: { fontSize: 9, color: p.textMuted, marginTop: 2 },
   messageInput: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
     marginBottom: 16,
-    backgroundColor: p.surfaceMuted,
+    color: p.textStrong,
   },
   modalActions: { flexDirection: "row", gap: 10 },
   modalCancel: {
     flex: 1,
     padding: 14,
     borderRadius: 10,
-    backgroundColor: p.surfaceMuted,
+    borderWidth: 1.5,
+    borderColor: p.border,
     alignItems: "center",
   },
   modalCancelText: { color: p.textMuted, fontWeight: "bold" },
@@ -2203,22 +2192,21 @@ function createStyles(p: Palette) {
     marginBottom: 4,
   },
   formInput: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderRadius: 12,
     padding: 14,
     fontSize: 15,
-    backgroundColor: p.surfaceMuted,
+    color: p.textStrong,
   },
   datePickerButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderRadius: 10,
     padding: 12,
-    backgroundColor: p.surfaceMuted,
   },
   datePickerText: {
     fontSize: 14,
@@ -2234,11 +2222,10 @@ function createStyles(p: Palette) {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderRadius: 10,
     padding: 14,
-    backgroundColor: p.surfaceMuted,
     marginBottom: 12,
   } as const,
   dropdownText: { fontSize: 15, color: p.textStrong, fontWeight: "600" },
@@ -2262,7 +2249,8 @@ function createStyles(p: Palette) {
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: p.surfaceMuted,
+    borderWidth: 1.5,
+    borderColor: p.border,
   },
   recurrenceActive: {
     backgroundColor: p.primary,

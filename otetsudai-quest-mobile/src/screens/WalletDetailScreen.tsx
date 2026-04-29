@@ -138,7 +138,7 @@ export default function WalletDetailScreen({
   const invest = wallet?.invest_balance ?? 0;
   const total = spending + saving + invest;
 
-  const filterTabs: { label: string; value: string }[] = [
+  const filterTabs: { label: string; value: string; parts: (string | [string, string])[] }[] = [
     { label: "全部", value: "all", parts: [["全部", "ぜんぶ"]] as [string, string][] },
     { label: "稼ぐ", value: "earn", parts: [["稼", "かせ"], "ぐ"] as (string | [string, string])[] },
     { label: "使う", value: "spend", parts: [["使", "つか"], "う"] as (string | [string, string])[] },
@@ -628,11 +628,11 @@ function createStyles(p: Palette) {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      backgroundColor: p.surfaceMuted,
+      backgroundColor: p.background,
     },
     container: {
       flex: 1,
-      backgroundColor: p.surfaceMuted,
+      backgroundColor: p.background,
     },
 
     // Header
@@ -644,7 +644,7 @@ function createStyles(p: Palette) {
       paddingTop: 8,
       paddingBottom: 10,
       backgroundColor: p.background,
-      borderBottomWidth: 1,
+      borderBottomWidth: 1.5,
       borderBottomColor: p.border,
     },
     backButton: {
@@ -654,7 +654,7 @@ function createStyles(p: Palette) {
       paddingHorizontal: 14,
       paddingVertical: 8,
       borderRadius: 8,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.primary,
       backgroundColor: p.background,
     },
@@ -691,19 +691,13 @@ function createStyles(p: Palette) {
 
     // Total Balance Card
     totalCard: {
-      backgroundColor: p.surface,
       margin: 12,
       marginBottom: 0,
       padding: 20,
       borderRadius: 12,
       alignItems: "center",
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.goldBorder,
-      shadowColor: p.black,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-      elevation: 2,
     },
     totalLabel: {
       fontSize: 14,
@@ -730,11 +724,8 @@ function createStyles(p: Palette) {
       borderRadius: 12,
       padding: 12,
       alignItems: "center",
-      shadowColor: p.black,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      elevation: 2,
+      borderWidth: 1.5,
+      borderColor: p.border,
     },
     pocketIcon: {
       fontSize: 22,
@@ -751,12 +742,12 @@ function createStyles(p: Palette) {
       fontWeight: "bold",
     },
     pocketHint: {
-      fontSize: 10,
+      fontSize: 9,
       color: p.textMuted,
-      marginTop: 2,
+      marginTop: 4,
       textAlign: "center",
     },
-    // 3SVGアイコンの寸法差を 20×20 固定枠で吸収（gridW×H 5×5/6×6/5×6 揃え）
+    // 3SVGアイコンの寸法差を 20×20 固定枠で吸収
     pocketIconBox: {
       width: 20,
       height: 20,
@@ -778,11 +769,6 @@ function createStyles(p: Palette) {
       minHeight: 52,
       alignItems: "center",
       justifyContent: "center",
-      shadowColor: p.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
     },
     spendRequestButtonText: {
       fontSize: rf(13),
@@ -796,11 +782,6 @@ function createStyles(p: Palette) {
       minHeight: 52,
       alignItems: "center",
       justifyContent: "center",
-      shadowColor: p.black,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
     },
     investButtonText: {
       fontSize: rf(13),
@@ -825,6 +806,8 @@ function createStyles(p: Palette) {
       borderRadius: 12,
       padding: 14,
       marginBottom: 8,
+      borderWidth: 1.5,
+      borderColor: p.border,
     },
     requestStatus: {
       fontSize: 14,
@@ -850,23 +833,18 @@ function createStyles(p: Palette) {
 
     // Saving Goals
     goalCard: {
-      backgroundColor: p.surface,
       borderRadius: 12,
       padding: 14,
       marginBottom: 8,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletSaveBorder,
-      shadowColor: p.black,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 4,
-      elevation: 2,
     },
     goalCardAchieved: {
-      backgroundColor: p.greenLight,
       borderRadius: 12,
       padding: 14,
       marginBottom: 8,
+      borderWidth: 1.5,
+      borderColor: p.green,
     },
     goalTitle: {
       fontSize: 15,
@@ -876,8 +854,9 @@ function createStyles(p: Palette) {
     },
     goalProgressBar: {
       height: 10,
-      backgroundColor: p.surfaceMuted,
       borderRadius: 5,
+      borderWidth: 0.5,
+      borderColor: p.border,
       overflow: "hidden",
       marginBottom: 6,
     },
@@ -901,8 +880,7 @@ function createStyles(p: Palette) {
       color: p.walletSave,
     },
     addGoalButton: {
-      backgroundColor: p.walletSaveBg,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletSaveBorder,
       borderRadius: 12,
       paddingVertical: 12,
@@ -918,10 +896,13 @@ function createStyles(p: Palette) {
     // Filter Tabs
     filterRow: {
       flexDirection: "row",
-      backgroundColor: p.surfaceMuted,
       borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: p.border,
       padding: 3,
       marginBottom: 10,
+      justifyContent: "center",
+      gap: 2,
     },
     filterTab: {
       flex: 1,
@@ -947,17 +928,11 @@ function createStyles(p: Palette) {
     historyItem: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: p.surface,
       borderRadius: 10,
       padding: 12,
       marginBottom: 6,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
-      shadowColor: p.black,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.3,
-      shadowRadius: 2,
-      elevation: 1,
     },
     historyType: {
       fontSize: 22,
@@ -995,18 +970,12 @@ function createStyles(p: Palette) {
     bottomSpacer: { height: 40 },
     treeSection: {
       alignItems: "center" as const,
-      backgroundColor: p.surface,
       borderRadius: 16,
       padding: 16,
       marginHorizontal: 12,
       marginTop: 12,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletInvestBorder,
-      shadowColor: p.black,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.06,
-      shadowRadius: 4,
-      elevation: 2,
     },
     treeInfo: {
       alignItems: "center" as const,

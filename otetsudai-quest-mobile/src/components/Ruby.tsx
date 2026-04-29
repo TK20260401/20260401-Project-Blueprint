@@ -1,6 +1,29 @@
 import React from "react";
 import { View, Text, StyleSheet, type TextStyle } from "react-native";
 import { useTheme } from "../theme";
+import { useAccessibility } from "../accessibility";
+
+/**
+ * ルビ表示の状態は `AccessibilityContext` に統合されている。
+ * このフックは後方互換のための薄いファサード。
+ */
+export function useRuby() {
+  const { rubyVisible, setRubyVisible } = useAccessibility();
+  return { rubyVisible, setRubyVisible };
+}
+
+/**
+ * 後方互換の空ラッパー。新規コードは `AccessibilityProvider` を直接使うこと。
+ * 古い App.tsx が `<RubyProvider>` を使い続けていても壊れないように残す。
+ */
+export function RubyProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
+/** @deprecated AccessibilityContext に移行済み。呼び出し不要。 */
+export async function loadSavedRubyVisible(): Promise<boolean> {
+  return true;
+}
 
 type Props = {
   kanji: string;
@@ -20,16 +43,22 @@ type Props = {
  */
 
 /**
- * styleからlineHeightを除去し、fontSizeに近接させる。
+ * styleからlineHeightを除去し、fontSizeに scale を掛け直す。
+ * fontScale（アクセシビリティ）が大きいほど漢字サイズも比例拡大。
  * color が呼び出し元で未指定の場合は defaultColor（palette.textStrong 相当）を
  * フォールバックで入れる。ダーク移行時に呼び出し元の color 漏れで背景に沈む
  * 事故を予防するための防御。
  */
-function tightStyle(style: any, defaultColor: string): TextStyle {
+function tightStyle(style: any, defaultColor: string, scale: number): TextStyle {
   const flat = StyleSheet.flatten(style) as TextStyle | undefined;
   if (!flat) return { color: defaultColor, includeFontPadding: false } as TextStyle;
-  const { lineHeight: _lh, color: c, ...rest } = flat;
-  return { ...rest, color: c ?? defaultColor, includeFontPadding: false } as TextStyle;
+  const { lineHeight: _lh, color: c, fontSize: fs, ...rest } = flat;
+  return {
+    ...rest,
+    color: c ?? defaultColor,
+    includeFontPadding: false,
+    ...(typeof fs === "number" ? { fontSize: fs * scale } : {}),
+  } as TextStyle;
 }
 
 /** ルビと漢字の間隔 — 全サイズ統一（iOS検証済み） */
@@ -52,20 +81,34 @@ function rubyStyle(size: number, color: string): TextStyle {
 /** 単体ルビコンポーネント（既存API互換） */
 export default function Ruby({ kanji, ruby, style, rubySize = 8 }: Props) {
   const { palette } = useTheme();
+  const { rubyVisible, fontScaleValue } = useAccessibility();
   const baseColor = palette.textStrong;
   const rubyColor = palette.rubyColor;
-  const gap = rubyGap(rubySize);
+  const scaledRuby = rubySize * fontScaleValue;
+  const gap = rubyGap(scaledRuby);
   return (
     <View style={layoutStyles.center}>
+      {rubyVisible ? (
+        <Text
+          style={rubyStyle(scaledRuby, rubyColor)}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+          allowFontScaling
+          maxFontSizeMultiplier={1.3}
+        >
+          {ruby}
+        </Text>
+      ) : (
+        <Text style={[rubyStyle(scaledRuby, rubyColor), { opacity: 0 }]} numberOfLines={1}>.</Text>
+      )}
       <Text
-        style={rubyStyle(rubySize, rubyColor)}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.6}
+        style={[tightStyle(style, baseColor, fontScaleValue), { marginTop: gap }]}
+        allowFontScaling
+        maxFontSizeMultiplier={1.3}
       >
-        {ruby}
+        {kanji}
       </Text>
-      <Text style={[tightStyle(style, baseColor), { marginTop: gap }]}>{kanji}</Text>
     </View>
   );
 }
@@ -90,15 +133,18 @@ export function RubyText({
   rubyColor?: string;
 }) {
   const { palette } = useTheme();
-  const tight = tightStyle(style, palette.textStrong);
-  const rs = rubyStyle(rubySize, rubyColor ?? palette.rubyColor);
-  const gap = rubyGap(rubySize);
+  const { rubyVisible, fontScaleValue } = useAccessibility();
+  const scaledRuby = rubySize * fontScaleValue;
+  const tight = tightStyle(style, palette.textStrong, fontScaleValue);
+  const rs = rubyStyle(scaledRuby, rubyColor ?? palette.rubyColor);
+  const hiddenRs = [rs, { opacity: 0 }];
+  const gap = rubyGap(scaledRuby);
   return (
     <View style={noWrap ? layoutStyles.textRowNoWrap : layoutStyles.textRow}>
       {parts.map((part, i) =>
         typeof part === "string" ? (
           <View key={i} style={layoutStyles.center}>
-            <Text style={[rs, { opacity: 0 }]} numberOfLines={1}>
+            <Text style={hiddenRs} numberOfLines={1} allowFontScaling maxFontSizeMultiplier={1.3}>
               .
             </Text>
             <Text
@@ -106,6 +152,8 @@ export function RubyText({
               numberOfLines={noWrap ? 1 : undefined}
               adjustsFontSizeToFit={noWrap}
               minimumFontScale={noWrap ? 0.7 : undefined}
+              allowFontScaling
+              maxFontSizeMultiplier={1.3}
             >
               {part}
             </Text>
@@ -113,18 +161,22 @@ export function RubyText({
         ) : (
           <View key={i} style={layoutStyles.center}>
             <Text
-              style={rs}
+              style={rubyVisible ? rs : hiddenRs}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.6}
+              allowFontScaling
+              maxFontSizeMultiplier={1.3}
             >
-              {part[1]}
+              {rubyVisible ? part[1] : "."}
             </Text>
             <Text
               style={[tight, { marginTop: gap }]}
               numberOfLines={noWrap ? 1 : undefined}
               adjustsFontSizeToFit={noWrap}
               minimumFontScale={noWrap ? 0.7 : undefined}
+              allowFontScaling
+              maxFontSizeMultiplier={1.3}
             >
               {part[0]}
             </Text>
@@ -170,14 +222,14 @@ export function RubyStr({
 
 // 漢字→読みの辞書（お手伝い系の頻出漢字 + UI用語）
 const RUBY_DICT: [string, string][] = [
-  ["全部", "ぜんぶ"], ["自分", "じぶん"], ["今日", "きょう"], ["今度", "こんど"],
+  ["全部盛", "ぜんぶも"], ["全部", "ぜんぶ"], ["自分", "じぶん"], ["今日", "きょう"], ["今度", "こんど"],
   ["今", "いま"], ["一度", "いちど"], ["一部", "いちぶ"], ["一回", "いっかい"],
-  ["毎日", "まいにち"], ["毎週", "まいしゅう"], ["金額", "きんがく"], ["残高", "ざんだか"],
+  ["毎日", "まいにち"], ["毎週", "まいしゅう"], ["金額", "きんがく"], ["残高", "ざんだか"], ["残", "のこ"],
   ["最新", "さいしん"], ["最高", "さいこう"], ["最大", "さいだい"], ["最近", "さいきん"],
   ["最終", "さいしゅう"], ["以上", "いじょう"], ["以下", "いか"], ["名前", "なまえ"],
   ["気持", "きも"], ["目標達成", "もくひょうたっせい"], ["目標", "もくひょう"],
-  ["達成済", "たっせいず"], ["達成", "たっせい"], ["提案", "ていあん"], ["報酬", "ほうしゅう"],
-  ["冒険", "ぼうけん"], ["履歴", "りれき"], ["入力", "にゅうりょく"], ["表示", "ひょうじ"],
+  ["達成済", "たっせいず"], ["達成", "たっせい"], ["提案", "ていあん"], ["報酬", "ほうしゅう"], ["撤退", "てったい"],
+  ["冒険団", "ぼうけんだん"], ["冒険", "ぼうけん"], ["団員", "だんいん"], ["履歴", "りれき"], ["入力", "にゅうりょく"], ["表示", "ひょうじ"],
   ["確認", "かくにん"], ["失敗", "しっぱい"], ["成長", "せいちょう"], ["成功", "せいこう"], ["現金", "げんきん"],
   ["貯金目標", "ちょきんもくひょう"], ["貯金", "ちょきん"], ["貯蓄", "ちょちく"], ["貯", "た"],
   ["投資", "とうし"], ["銘柄", "めいがら"], ["価格", "かかく"], ["値段", "ねだん"],
@@ -230,9 +282,12 @@ const RUBY_DICT: [string, string][] = [
   ["難易度", "なんいど"], ["簡単", "かんたん"], ["普通", "ふつう"], ["難", "むずか"],
   ["繰", "く"], ["返", "かえ"], ["全員", "ぜんいん"], ["割合", "わりあい"],
   ["値下", "ねさ"], ["値上", "ねあ"], ["必須", "ひっす"],
-  ["却下", "きゃっか"], ["期間", "きかん"], ["期限", "きげん"],
-  ["装備", "そうび"], ["特別", "とくべつ"], ["権限", "けんげん"],
-  ["返事", "へんじ"], ["解放", "かいほう"], ["獲得", "かくとく"],
+  ["却下", "きゃっか"], ["許可", "きょか"], ["期間", "きかん"], ["期限", "きげん"],
+  ["装備", "そうび"], ["特別", "とくべつ"], ["権限", "けんげん"], ["購入", "こうにゅう"], ["称号", "しょうごう"],
+  ["図鑑", "ずかん"], ["卵", "たまご"], ["孵", "かえ"], ["幸", "しあわ"], ["匹", "ひき"], ["赤", "あか"],
+  ["返事", "へんじ"], ["解放", "かいほう"], ["獲得", "かくとく"], ["台所", "だいどころ"],
+  ["磨", "みが"], ["覚", "おぼ"], ["保", "たも"], ["詳", "くわ"],
+  ["進化", "しんか"], ["上手", "うま"], ["閉", "と"],
   ["休", "やす"], ["連続", "れんぞく"], ["楽", "たの"], ["今週", "こんしゅう"], ["記録", "きろく"],
   ["東京", "とうきょう"], ["日本", "にほん"], ["有名", "ゆうめい"], ["多", "おお"],
   ["運営", "うんえい"], ["音楽", "おんがく"], ["一番", "いちばん"], ["銀行", "ぎんこう"],

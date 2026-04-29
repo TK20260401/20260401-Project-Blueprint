@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { AutoRubyText } from "./Ruby";
 import Svg, { Rect, Circle, Ellipse, Path, G, Defs, LinearGradient, Stop } from "react-native-svg";
 import { supabase } from "../lib/supabase";
 import { useTheme, type Palette } from "../theme";
@@ -58,7 +59,7 @@ export default function FamilyAdventureMap({
         0
       );
 
-      // 家族ストリーク: 家族の誰かがクエストをクリアした連続日数
+      // 冒険団ストリーク: 冒険団の誰かがクエストをクリアした連続日数
       const { data: streakLogs } = await supabase
         .from("otetsudai_task_logs")
         .select("approved_at")
@@ -114,7 +115,8 @@ export default function FamilyAdventureMap({
       {/* ヘッダー */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 6, zIndex: 1 }}>
         <PixelMapIcon size={22} />
-        <Text style={styles.header}>{familyName}の ぼうけんちず</Text>
+        <AutoRubyText text={familyName} style={styles.header} rubySize={7} />
+        <AutoRubyText text=" 冒険地図" style={styles.header} rubySize={5} noWrap />
       </View>
 
       {/* メンバーカード横並び */}
@@ -133,22 +135,22 @@ export default function FamilyAdventureMap({
                 {kid.name}
               </Text>
               <Text style={styles.memberBalance}>
-                {total.toLocaleString()}円
+                {total.toLocaleString()}コロ
               </Text>
             </View>
           );
         })}
       </View>
 
-      {/* 家族統計 */}
+      {/* 冒険団統計 */}
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{stats.weeklyQuests}</Text>
-          <Text style={styles.statLabel}>今週クエスト</Text>
+          <AutoRubyText text="今週クエスト" style={styles.statLabel} rubySize={4} noWrap />
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>¥{stats.weeklyEarned.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>稼いだ</Text>
+          <AutoRubyText text="稼いだ" style={styles.statLabel} rubySize={4} noWrap />
         </View>
         <View style={styles.statItem}>
           {stats.familyStreak > 0 ? (
@@ -159,11 +161,11 @@ export default function FamilyAdventureMap({
           ) : (
             <Text style={styles.statValue}>—</Text>
           )}
-          <Text style={styles.statLabel}>連続日</Text>
+          <AutoRubyText text="連続日" style={styles.statLabel} rubySize={4} noWrap />
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>¥{familyTotal.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>合計</Text>
+          <AutoRubyText text="合計" style={styles.statLabel} rubySize={4} noWrap />
         </View>
       </View>
 

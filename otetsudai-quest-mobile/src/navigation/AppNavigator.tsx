@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { getSession, clearSession } from "../lib/session";
 import { useTheme } from "../theme";
+import { startAutoLogout } from "../lib/auto-logout";
 import LandingScreen from "../screens/LandingScreen";
 import LoginScreen from "../screens/LoginScreen";
 import ChildDashboardScreen from "../screens/ChildDashboardScreen";
@@ -55,9 +56,6 @@ export default function AppNavigator() {
   const [initialRoute, setInitialRoute] = useState<
     keyof RootStackParamList | null
   >(null);
-  const [initialParams, setInitialParams] = useState<Record<string, string>>(
-    {}
-  );
 
   useEffect(() => {
     checkSession();
@@ -87,7 +85,7 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName={initialRoute}
-        screenOptions={{ headerShown: false }}
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#1a0f2e" } }}
       >
         <Stack.Screen name="Landing" component={LandingWrapper} />
         {/* Onboarding */}
@@ -107,7 +105,6 @@ export default function AppNavigator() {
         <Stack.Screen
           name="ChildDashboard"
           component={ChildDashboardScreen}
-          initialParams={initialParams}
         />
         <Stack.Screen
           name="ParentDashboard"
@@ -287,10 +284,18 @@ function InviteParentWrapper({ navigation }: { navigation: any }) {
     });
   }, [navigation]);
 
+  const goToLogin = useCallback(() => {
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
+  }, [navigation]);
+
   return (
     <InviteParentScreen
       onBack={() => navigation.goBack()}
       onSkip={goToDashboard}
+      onGoToLogin={goToLogin}
     />
   );
 }
@@ -334,12 +339,17 @@ function makeLoginSuccess(navigation: any) {
   return async () => {
     const session = await getSession();
     if (!session) return;
-    if (session.role === "admin") {
+    // 自動ログアウトタイマー開始
+    startAutoLogout(() => {
+      clearSession();
+      navigation.reset({ index: 0, routes: [{ name: "Landing" }] });
+    });
+    if (session.role === "admin" || session.role === "parent") {
       navigation.reset({
         index: 0,
-        routes: [{ name: "Admin" }],
+        routes: [session.role === "admin" ? { name: "Admin" } : { name: "ParentDashboard" }],
       });
-    } else if (session.role === "child") {
+    } else {
       navigation.reset({
         index: 0,
         routes: [
@@ -348,11 +358,6 @@ function makeLoginSuccess(navigation: any) {
             params: { childId: session.userId },
           },
         ],
-      });
-    } else {
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "ParentDashboard" }],
       });
     }
   };
@@ -372,6 +377,7 @@ function ChildLoginWrapper({ navigation }: { navigation: any }) {
       mode="child"
       onLoginSuccess={makeLoginSuccess(navigation)}
       onBack={() => navigation.goBack()}
+      onRecover={() => navigation.navigate("RecoverAccount")}
     />
   );
 }

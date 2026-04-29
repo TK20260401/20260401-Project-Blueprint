@@ -47,6 +47,7 @@ export default function AdminScreen({ onLoginAs, onLogout }: Props) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFamily, setSelectedFamily] = useState<string | null>(null);
+  const [deletingFamily, setDeletingFamily] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -72,7 +73,7 @@ export default function AdminScreen({ onLoginAs, onLogout }: Props) {
     async (user: User) => {
       Alert.alert(
         `${user.name} としてログイン`,
-        `ロール: ${user.role}\n家族ID: ${user.family_id}`,
+        `ロール: ${user.role}\n冒険団ID: ${user.family_id}`,
         [
           { text: "やめる", style: "cancel" },
           {
@@ -120,36 +121,46 @@ export default function AdminScreen({ onLoginAs, onLogout }: Props) {
   );
 
   const handleDeleteFamily = useCallback(
-    (family: Family) => {
-      const memberCount = users.filter((u) => u.family_id === family.id).length;
-      Alert.alert(
-        `${family.name} を削除`,
-        `メンバー ${memberCount} 人と関連データが全て削除されます。`,
-        [
-          { text: "やめる", style: "cancel" },
-          {
-            text: "削除する",
-            style: "destructive",
-            onPress: async () => {
-              const memberIds = users.filter((u) => u.family_id === family.id).map((u) => u.id);
-              for (const id of memberIds) {
-                await supabase.from("otetsudai_wallets").delete().eq("child_id", id);
-                await supabase.from("otetsudai_badges").delete().eq("child_id", id);
-                await supabase.from("otetsudai_task_logs").delete().eq("child_id", id);
-              }
-              await supabase.from("otetsudai_users").delete().eq("family_id", family.id);
-              await supabase.from("otetsudai_family_settings").delete().eq("family_id", family.id);
-              await supabase.from("otetsudai_tasks").delete().eq("family_id", family.id);
-              await supabase.from("otetsudai_families").delete().eq("id", family.id);
-              Alert.alert("削除しました", `${family.name} を削除しました`);
-              setSelectedFamily(null);
-              loadData();
-            },
-          },
-        ]
-      );
+    async (family: Family) => {
+      if (deletingFamily) return; // 削除中は無視
+      setDeletingFamily(family.id);
+      setSelectedFamily(null);
+      try {
+        const { data: freshUsers } = await supabase
+          .from("otetsudai_users")
+          .select("id")
+          .eq("family_id", family.id);
+        const memberIds = (freshUsers || []).map((u: { id: string }) => u.id);
+        if (memberIds.length > 0) {
+          const { data: wallets } = await supabase.from("otetsudai_wallets").select("id").in("child_id", memberIds);
+          const walletIds = (wallets || []).map((w: { id: string }) => w.id);
+          if (walletIds.length > 0) {
+            await supabase.from("otetsudai_transactions").delete().in("wallet_id", walletIds);
+            await supabase.from("otetsudai_spend_requests").delete().in("wallet_id", walletIds);
+            await supabase.from("otetsudai_invest_orders").delete().in("wallet_id", walletIds);
+            await supabase.from("otetsudai_wallets").delete().in("id", walletIds);
+          }
+          await supabase.from("otetsudai_task_logs").delete().in("child_id", memberIds);
+          await supabase.from("otetsudai_badges").delete().in("child_id", memberIds);
+          await supabase.from("otetsudai_saving_goals").delete().in("child_id", memberIds);
+          await supabase.from("otetsudai_shop_purchases").delete().in("child_id", memberIds);
+          await supabase.from("otetsudai_family_messages").delete().in("sender_id", memberIds);
+          await supabase.from("otetsudai_family_messages").delete().in("recipient_id", memberIds);
+        }
+        await supabase.from("otetsudai_family_messages").delete().eq("family_id", family.id);
+        await supabase.from("otetsudai_family_challenges").delete().eq("family_id", family.id);
+        await supabase.from("otetsudai_family_settings").delete().eq("family_id", family.id);
+        await supabase.from("otetsudai_tasks").delete().eq("family_id", family.id);
+        await supabase.from("otetsudai_users").delete().eq("family_id", family.id);
+        const { error } = await supabase.from("otetsudai_families").delete().eq("id", family.id);
+        if (error) throw error;
+      } catch (e: any) {
+        Alert.alert("削除エラー", e.message || "削除に失敗しました");
+      }
+      setDeletingFamily(null);
+      loadData();
     },
-    [users]
+    [deletingFamily]
   );
 
   const handleResetWallet = useCallback(
@@ -206,35 +217,40 @@ export default function AdminScreen({ onLoginAs, onLogout }: Props) {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.sectionTitle}>
-          家族一覧（{families.length}件）
+          冒険団一覧（{families.length}件）
         </Text>
 
         {families.map((fam) => (
           <View key={fam.id}>
-            <TouchableOpacity
-              style={[
-                styles.familyCard,
-                selectedFamily === fam.id && styles.familyCardSelected,
-              ]}
-              onPress={() =>
-                setSelectedFamily(selectedFamily === fam.id ? null : fam.id)
-              }
-            >
-              <View style={styles.familyInfo}>
+            <View style={[
+              styles.familyCard,
+              selectedFamily === fam.id && styles.familyCardSelected,
+            ]}>
+              <TouchableOpacity
+                style={styles.familyInfo}
+                onPress={() =>
+                  setSelectedFamily(selectedFamily === fam.id ? null : fam.id)
+                }
+              >
                 <Text style={styles.familyName}>{fam.name}</Text>
                 <Text style={styles.familyMeta}>
                   {fam.has_parent ? "親あり" : "親なし"} ・{" "}
                   {users.filter((u) => u.family_id === fam.id).length}人 ・{" "}
                   {new Date(fam.created_at).toLocaleDateString("ja-JP")}
                 </Text>
-              </View>
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleDeleteFamily(fam)}
+                disabled={deletingFamily === fam.id}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
-                <PixelCrossIcon size={16} />
+                {deletingFamily === fam.id ? (
+                  <ActivityIndicator size="small" color={palette.red} />
+                ) : (
+                  <PixelCrossIcon size={16} />
+                )}
               </TouchableOpacity>
-            </TouchableOpacity>
+            </View>
 
             {selectedFamily === fam.id && (
               <View style={styles.usersSection}>
@@ -285,7 +301,7 @@ export default function AdminScreen({ onLoginAs, onLogout }: Props) {
         ))}
 
         {families.length === 0 && (
-          <Text style={styles.emptyText}>家族データがありません{"\n"}（RLSで制限されている可能性があります）</Text>
+          <Text style={styles.emptyText}>冒険団データがありません{"\n"}（RLSで制限されている可能性があります）</Text>
         )}
 
         <View style={{ marginTop: 24, gap: 12 }}>
@@ -401,10 +417,10 @@ function createStyles(p: Palette) {
     },
     actionBtnText: { fontSize: 11, fontWeight: "600", color: p.textStrong },
     actionBtnDanger: {
-      borderColor: "#E74C3C",
-      backgroundColor: "rgba(231,76,60,0.1)",
+      borderColor: p.red,
+      backgroundColor: p.redLight,
     },
-    actionBtnDangerText: { color: "#E74C3C" },
+    actionBtnDangerText: { color: p.red },
     emptyText: {
       fontSize: 13,
       color: p.textMuted,
