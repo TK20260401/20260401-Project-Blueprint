@@ -1,10 +1,10 @@
-# tetsu-board 設計ドキュメント v2.1
+# tetsu-board 設計ドキュメント v2.2
 
 ## 0. メタ情報
 
-- **バージョン**: 2.1
+- **バージョン**: 2.2
 - **最終更新**: 2026-05-11
-- **ステータス**: Phase 1〜6 確定 / Phase 7 進行中(待機質問+E系6項目+ワイヤーフレーム2-6すべて確定、残りはモックアップ/API設計/コンポーネント設計) / Phase 7.5 確定(法務・ビジネス・法令整合の8論点)
+- **ステータス**: Phase 1〜6 確定 / Phase 7 進行中(待機質問+E系6項目+WF2-6+API主要部分すべて確定、残りはRLS詳細/モックアップ/コンポーネント設計) / Phase 7.5 確定(法務・ビジネス・法令整合の8論点)
 - **プロジェクト名**: tetsu-board(仮称、後で変更可)
 - **設計用語**: 「認知配慮」「C層配慮」「アクセシビリティ機能」 → **「合理的配慮」** に統一(障害者差別解消法準拠、v1.6)
 - **法的方針**: 鉄道テーマのボードゲームジャンル先行作品にインスパイアされた独自作品。商標・著作権リスクを回避するため、特定先行作品名・キャラクター名(ボンビー等)・カード名(急行・新幹線等)はすべて独自表現に置換済み(v1.7)。Phase 7.5 で法務・ビジネス・法令整合の整理完了(v1.8)
@@ -1714,7 +1714,403 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 
 ---
 
-## 15. 残タスク(Phase 7 以降)
+## 15. API 設計(Phase 7 進行中、v2.2)
+
+### 15.1 API 全体構造: 3層 + Realtime
+
+Phase 6 で確定した「Supabase オールインワン」と整合する API スタイル(Phase 7 v2.2 で確定)。
+
+| Layer | 実装場所 | 用途 | 認可 |
+|---|---|---|---|
+| **Layer 1** | Supabase Client SDK(クライアント直接) | シンプルな CRUD、Realtime 購読 | RLS で宣言的に制御 |
+| **Layer 2** | Next.js Server Action | ゲームロジック、状態遷移、計算 | Server Action 内で auth.uid() 確認 + DB 操作 |
+| **Layer 3** | Edge Function(Vercel Functions) | LLM 呼出、マップ生成、バッチ処理 | Function 内で署名検証 + Service Role |
+
+Realtime は **Layer 1 から直接購読**(Supabase Realtime channel)、書込は **Layer 2 Server Action 経由**(不正防止のため)。
+
+### 15.2 Layer 1: Supabase Client SDK 主要操作
+
+クライアント側 TypeScript で直接呼ぶシンプルな CRUD と Realtime 購読。
+
+```ts
+// 例: 自分のプロファイル取得
+const { data, error } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('user_id', user.id)
+  .single();
+
+// 例: 進行中ゲーム購読
+const channel = supabase
+  .channel(`game_session:${sessionId}`)
+  .on('postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
+      (payload) => updateUI(payload.new))
+  .subscribe();
+```
+
+主要操作カテゴリ(Phase 7-ER 21テーブルに対応):
+
+| カテゴリ | テーブル | 操作 |
+|---|---|---|
+| 認証 | (Supabase Auth) | signup / signin / signout / passwordReset |
+| プロファイル | `profiles` | 自分の取得・更新、ニックネーム任意(15.6 厳格化版) |
+| クラス | `classes`, `class_memberships` | 自分の所属・担当クラス取得 |
+| ゲームセッション履歴 | `game_sessions`, `session_participants` | 自分の参加履歴 |
+| クイズ出題プール | `quizzes`, `quiz_pools` | 教科×単元×難易度でフィルタ取得 |
+| 物件マスタ | `properties`, `property_stations` | 駅別物件マスタの読取 |
+| 自分の所有物件 | `owned_properties` | 自分の所有物件取得 |
+| 自分のカード | `owned_cards` | 自分の保有カード取得(最大3枚、E-22) |
+| 設定 | `accessibility_settings`, `difficulty_states` | 自分の設定取得・更新(Layer 1で可)、難易度状態は読取のみ |
+| 学習進捗 | `quiz_attempts`, `review_lists` | 自分のふくしゅうリスト、正解数推移 |
+| 教師ダッシュボード | (上記の集計ビュー) | 教師ロールが自クラスのみ読取(RLS) |
+| Realtime | `game_sessions` 他 | session_id 単位で購読 |
+
+### 15.3 Layer 2: Server Action 詳細(10個)
+
+ゲームロジックの腰、不正防止のためサーバ側で必ず実行。すべて `app/actions/game.ts` 等に配置。
+
+#### 15.3.1 `gameSession.start(input)`
+
+```ts
+type Input = {
+  classId: string;
+  participantUserIds: string[];          // ホットシート: [user1, user2,...] / 単独: [user1]
+  mode: 'icebreak' | 'leisure';
+  unitFilter?: { subjectIds: string[]; unitIds: string[] };  // 単元連動オプション(E-25 D)
+  mapSeed?: string;                       // シード固定(E-25)
+};
+type Output = { sessionId: string; mapId: string };
+```
+
+処理フロー:
+1. `auth.uid()` がクラスに所属することを確認
+2. Edge Function `generate-map` を呼出(E-25 アルゴリズム適用)
+3. `game_sessions` 行を INSERT(status='in_progress', current_turn=1, current_player_index=0)
+4. `session_participants` を INSERT(参加者全員、初期化済の coin/score)
+5. 物件マスタからこのマップ用の物件をシード → `session_properties`
+6. クイズプールから出題候補をシード → `session_quiz_pool`
+7. 開始イベントを Realtime channel に publish
+
+権限: student/teacher 両方可、teacher の場合は授業開始扱い、student の場合は自由プレイ扱い。
+
+エラー: マップ生成失敗 / RLS 違反 / 参加者がクラスに居ない。
+
+#### 15.3.2 `gameSession.rollDice(input)`
+
+```ts
+type Input = { sessionId: string };
+type Output = {
+  diceValue: 1|2|3|4|5|6;
+  newStationId: string;
+  passedStations: string[];   // 通過駅のID(コイン獲得)
+  arrivedEvent: 'normal' | 'event_station' | 'goal';
+};
+```
+
+処理フロー:
+1. session 取得、`current_player_user_id` が `auth.uid()` と一致するか確認
+2. 災難キャラの影響を計算(目半分/休み等)
+3. サーバ側で乱数生成(`crypto.randomInt(1, 7)`、不正防止)
+4. マップから到着駅を計算(円環+分岐、E-25 アルゴリズム参照)
+5. 分岐に到達した場合は `pending_branch_choice` を立てて呼出元に返す(別 Action で確定)
+6. 通過駅ごとに +1〜2 コイン
+7. `game_sessions.current_station_id` を UPDATE
+8. Realtime に publish
+
+権限: 自分のターンの時のみ可。
+
+エラー: 自分のターンではない / セッション終了済 / 災難キャラで休みターン。
+
+#### 15.3.3 `gameSession.submitAnswer(input)`
+
+```ts
+type Input = {
+  sessionId: string;
+  quizId: string;
+  selectedChoice: 'A'|'B'|'C';
+  elimSelections?: ('A'|'B'|'C')[];     // 消去法で × にした選択肢(操作履歴)
+  hintUsed: boolean;
+  timeUsedSec: number;
+};
+type Output = {
+  correct: boolean;
+  coinDelta: number;
+  newProperty?: { propertyId: string; name: string };
+  hint?: { image: string; text: string };   // 不正解時
+  retryAvailable: boolean;                  // もう一度挑戦カード所持時
+  newDifficultyLevel?: 'easy' | 'normal' | 'hard';  // E-24 判定で変動した場合
+};
+```
+
+処理フロー:
+1. session 状態を取得、自分のターンか確認
+2. クイズの正解を `quizzes` から取得
+3. 正解判定
+4. `quiz_attempts` を INSERT(正誤、消去法操作、ヒント使用、所要時間)
+5. **正解時**:
+   - コイン +N(駅・難易度ベース)
+   - 駅の物件を `owned_properties` に追加 → 独占判定 → ボーナス算定
+   - 不正解履歴があれば `review_lists` から削除
+6. **不正解時**:
+   - ヒント生成(視覚+関連語、Phase 5 確定)
+   - `review_lists` に追加(ふくしゅう対象、7.6 確定)
+7. **動的難易度判定**(E-24):
+   - 直近5問の正解率を算出(`quiz_attempts` 集計)
+   - 4/5 以上 → 上昇、2/5 以下 → 下降、教師の枠内に収める
+   - `difficulty_states` を UPDATE(教科別)
+8. Realtime に publish
+
+権限: 自分のターンの時のみ可、本人の quiz_attempts のみ書込。
+
+エラー: 不正なクイズID / 既に回答済み / セッション終了済。
+
+#### 15.3.4 `gameSession.buyProperty(input)`
+
+```ts
+type Input = { sessionId: string; propertyId: string };
+type Output = {
+  remainingCoin: number;
+  monopolyAchieved: boolean;   // 独占ボーナス成立か
+  bonusCoin: number;           // 独占ボーナス額
+};
+```
+
+処理フロー:
+1. 駅到着+クイズ正解直後のみ実行可(状態遷移で保護)
+2. 物件価格分のコインがあるか確認
+3. `owned_properties` に追加、`session_participants.coin` から減算
+4. 独占判定: 同一駅の全物件を自分が持っているか
+5. 独占成立時、ボーナスコイン加算 + 演出フラグ
+6. Realtime に publish
+
+権限: 自分のターン、駅到着+クイズ正解直後のみ。
+
+エラー: コイン不足 / 既に所有 / 駅と物件が一致しない。
+
+#### 15.3.5 `gameSession.sellProperty(input)`(E-21 確定)
+
+```ts
+type Input = { sessionId: string; propertyId: string };
+type Output = {
+  sellPrice: number;       // 購入価格の50%
+  remainingCoin: number;
+  monopolyLost: boolean;   // 独占ボーナス対象から外れたか
+};
+```
+
+処理フロー:
+1. **自駅売却の制約**: `current_station_id` がこの物件の所属駅と一致することを確認
+2. 確認モーダルは Layer 1(クライアント側)で完結、Layer 2 にはモーダル後の確定リクエスト
+3. 売却額 = 購入価格 × 0.5(E-21 確定)
+4. `owned_properties` から DELETE、`session_participants.coin` に加算
+5. 独占解除判定 → 演出フラグ
+6. Realtime に publish
+
+権限: 自分のターン、自駅にいる時のみ。
+
+エラー: 自駅ではない / 所有していない / セッション終了済。
+
+#### 15.3.6 `gameSession.useCard(input)`
+
+```ts
+type Input = {
+  sessionId: string;
+  cardId: string;
+  cardType: string;                    // 'speed'|'warp'|'shield'|...
+  targetStationId?: string;            // ワープ系で必要
+  targetQuizId?: string;               // ヒント系で必要
+};
+type Output = { effect: object; remainingCards: number };
+```
+
+処理フロー:
+1. カードを所有しているか確認(`owned_cards`)
+2. カード種別ごとに効果を適用:
+   - 🚄 すばやさカード → 次の rollDice で 2d6 になる(`game_sessions.next_dice_count=2`)
+   - 🚅 ひとっとびカード → `current_station_id` を target に書換、移動演出
+   - 🛡️ まもりカード → 次のマイナスイベントを 1回無効化(`pending_shield=true`)
+   - 🔄 ふりなおしカード → `rollDice` を即座にもう一度
+   - ↩️ ひきかえしカード → 1ターン前の `current_station_id` に戻す
+   - ⏪ まきもどしカード → セッションスナップショット復元(`session_snapshots`)
+   - 🎯 しゅうてんカード → 目的地駅にワープ
+   - 💡 ヒントカード → 次のクイズで自動ヒント表示
+   - 🤝 おてつだいカード → AIキャラが回答候補を絞る(LLM呼出)
+   - 🔁 もう一度挑戦カード → 不正解後の再挑戦を可能化
+3. `owned_cards` から DELETE
+4. Realtime に publish
+
+権限: 自分のターン、カード所有時のみ。
+
+エラー: カード未所有 / カード種別不正 / 対象不正(ワープ先など)。
+
+#### 15.3.7 `gameSession.acquireCard(input)`(E-22/E-26 確定)
+
+```ts
+type Input = { sessionId: string; source: 'card_station' | 'quiz_correct' | 'present_event' };
+type Output =
+  | { acquired: true; cardId: string; cardType: string }
+  | { acquired: false; reason: 'limit_reached'; choice: 'discard' | 'skip' };
+```
+
+処理フロー:
+1. **入手抽選**(E-26):
+   - source='card_station' → 100% でランダム1枚
+   - source='quiz_correct' → 15% でランダム1枚
+   - source='present_event' → 50% でランダム1枚(残り 50% は物件)
+2. **上限判定**(E-22): 現在のカード保有数 = 3 なら、選択モーダル要請を返す
+3. 選択モーダル後、再呼出で `choice` を受ける:
+   - choice='discard' → どのカードを捨てるかは別 Action(`discardCard`)で先に処理 → 再 acquireCard
+   - choice='skip' → 入手スキップ
+4. 確定時 `owned_cards` に INSERT
+5. Realtime に publish
+
+権限: 自分のターン、source 妥当性検証。
+
+エラー: source 不正 / セッション終了済。
+
+#### 15.3.8 `gameSession.endTurn(input)`
+
+```ts
+type Input = { sessionId: string };
+type Output = {
+  nextPlayerUserId: string;
+  isSettlement: boolean;      // 12ターン目なら true
+  yearEnded?: number;
+};
+```
+
+処理フロー:
+1. 自分のターンか確認
+2. 通常駅イベント抽選(E-23: 30%):
+   - 物件取得+クイズ後、E-23 ロジックで抽選 → プラス70/マイナス20/中立10 比率(6.1.2)で結果決定
+   - 結果に応じて演出フラグと状態更新
+3. 災難キャラ判定(離れる条件: 6.2.4)
+4. `current_player_index` を次へ、`current_turn` を +1
+5. 12ターン目(年度末)なら `gameSession.settlement()` を内部呼出
+6. 状態遷移図の 7状態機械を駆動(Phase 7-状態遷移図確定)
+7. Realtime に publish
+
+権限: 自分のターン、ターン完了条件を満たしている時のみ。
+
+エラー: ターン完了条件未達 / 自分のターンではない。
+
+#### 15.3.9 `gameSession.settlement(input)`
+
+```ts
+type Input = { sessionId: string };
+type Output = {
+  yearResult: {
+    perParticipant: Array<{ userId: string; coinIncome: number; visitRentTotal: number }>;
+    newCoinBalance: Record<string, number>;
+  };
+  isFinalYear: boolean;
+};
+```
+
+処理フロー:
+1. 全参加者について、所有物件の決算時収益を計算(物件価格 × 1/5、5.2.3)
+2. 訪問賃料の集計(セッション中に蓄積したもの、物件価格 × 1/20)
+3. `session_participants.coin` を UPDATE
+4. 年度結果を `settlement_logs` に保存
+5. アイスブレイクモード(1〜3年)なら最終年度判定
+6. 余暇モード(20〜30年)なら継続
+7. 最終年度なら `gameSession.end()` 内部呼出 → スコア計算(3部門制、5.3)
+8. 演出フラグと Realtime publish
+
+権限: 自動呼出のみ、外部からは呼べない(security definer)。
+
+エラー: 既に決算済 / 計算不整合(整合性チェック)。
+
+#### 15.3.10 `teacher.setDifficultyRange(input)`(E-24 教師の枠設定)
+
+```ts
+type Input = {
+  studentUserId: string;
+  subjectId: string;
+  upperBound: 'easy'|'normal'|'hard';
+  lowerBound: 'easy'|'normal'|'hard';
+};
+type Output = { ok: boolean };
+```
+
+処理フロー:
+1. 自分が teacher ロールかつ student が自クラスに所属するか確認
+2. `difficulty_states.upper_bound`, `lower_bound` を UPDATE(教科別)
+3. 現在の難易度が新しい枠を超えていれば、枠内に補正
+4. 教師ダッシュボードの Realtime channel に publish
+
+権限: teacher ロールのみ、自クラスのみ。
+
+エラー: 権限不足 / 上下境界不整合(上限 < 下限)。
+
+### 15.4 Layer 3: Edge Function 詳細
+
+| Function | トリガ | 入力 | 主な処理 |
+|---|---|---|---|
+| `generate-map` | `gameSession.start` から呼出 | clasId, mode, unitFilter, seed | E-25 アルゴリズム実行、`maps` テーブルに保存、map_id 返却 |
+| `generate-quiz-batch` | 開発時/教師の依頼時 | subject, unit, count | Vercel AI Gateway + Claude Sonnet で問題生成、`quiz_pools` に INSERT |
+| `generate-guide-dialogue` | 開発時バッチ | character_id, contexts | Vercel AI Gateway + Claude Haiku でセリフ生成、Storage に JSON 保存 |
+| `analyze-class-progress` | 教師が「分析」ボタン押下時 | classId, period | クラス全体の習熟度を LLM で要約、ダッシュボード表示 |
+| `export-progress-report` | 教師が「エクスポート」押下時 | studentUserId, period, format | PDF/CSV 生成、Storage に保存後ダウンロード URL 返却 |
+
+#### 15.4.1 LLM 呼出方針(Phase 6 確定の再掲)
+
+- **問題生成 / セリフ生成**: 開発時バッチ(コスト集中、品質コントロール)
+- **実行時 LLM**: 教師ダッシュボードの分析と「おてつだいカード」のみ(低頻度)
+- **Vercel AI Gateway 経由**: モデル切替の柔軟性、コスト計測
+- **キャッシング**: Edge Cache + Supabase Storage で再利用
+
+### 15.5 Realtime チャネル設計
+
+| Channel | 用途 | 購読者 | publish 元 |
+|---|---|---|---|
+| `game_session:{sessionId}` | ゲーム状態全プレイヤー間同期 | 参加者全員 | Server Action |
+| `class:{classId}` | 教師ダッシュボードのリアルタイム反映 | 教師 | gameSession.* 完了時 |
+| `notifications:{userId}` | お知らせ(将来) | 本人 | システム通知 |
+
+#### 15.5.1 ホットシート方式と Realtime の関係
+
+ホットシート方式(Phase 1 確定、1台端末を順番に操作)は、Realtime は実質不要だが、教師ダッシュボードがリアルタイム監視するためには `class:{classId}` 購読は必須。
+
+オンラインマルチプレイ(Phase 6 確定)では `game_session:{sessionId}` を全員が購読し、Server Action の publish で同期。
+
+### 15.6 認証 + RLS ポリシー(概要)
+
+詳細は別途 RLS ポリシー設計書で(Phase 7-RLS、本セクションは概要のみ)。
+
+| ロール | 認証手段 | 主要権限 |
+|---|---|---|
+| `student` | Supabase Auth (任意ログイン or 学校発行ID) | 自分のデータのみ、自クラスのゲームセッション参加 |
+| `teacher` | Supabase Auth (学校発行アカウント) | 自クラスの全児童データ読取、教師ダッシュボード、難易度枠設定 |
+| `admin` | Supabase Auth (運営者) | 全データ管理、課金関連 |
+
+RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシーは次フェーズで明文化。
+
+### 15.7 エラーハンドリング方針
+
+- **Layer 1(Supabase Client)**: SDK の error オブジェクトをそのままクライアントで処理(`{ data, error } = await supabase...`)
+- **Layer 2(Server Action)**: `try/catch` + 構造化エラー型を返却。次の3カテゴリで分類:
+  - `ValidationError`(入力不正、ユーザに表示)
+  - `AuthorizationError`(権限不足、ログイン誘導)
+  - `BusinessLogicError`(コイン不足等、ユーザに表示)
+  - `SystemError`(DB障害等、エラー画面)
+- **Layer 3(Edge Function)**: 同上 + Sentry/Vercel Logs に送信、ユーザには「処理に失敗しました」の汎用メッセージ
+- **クライアント側 UX**: C層配慮として、エラーメッセージは絵文字+ルビ付き+「もう一度やってみる」ボタンで再試行誘導
+
+### 15.8 残課題(API設計の続き)
+
+| # | 残課題 | 着手時期 |
+|---|---|---|
+| 1 | RLS ポリシー詳細(21テーブル × 3ロール) | 次回 |
+| 2 | エラー応答型の TypeScript 型定義 | コンポーネント設計時 |
+| 3 | レート制限(LLM呼出、Server Action) | リリース前 |
+| 4 | API バージョニング戦略 | 将来 |
+| 5 | OpenAPI/swagger ドキュメント生成 | 将来(C案検討時) |
+
+---
+
+## 16. 残タスク(Phase 7 以降)
 
 | Phase | テーマ | 主な決定事項 | 状態 |
 |---|---|---|---|
@@ -1725,16 +2121,16 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 | ~~Phase 5~~ | ~~クイズシステム詳細~~ | ~~出題ロジック / 動的調整 / 消去法UI / ヒント / 学習接続 / 教育ダッシュボード必須化~~ | ✅ 完了 |
 | ~~Phase 6~~ | ~~技術スタック決定~~ | ~~Next.js+Vercel+PWA / Supabase / Realtime / PixiJS / AI Gateway+Claude / Shadcn+Tremor / マッピング作業方針~~ | ✅ 完了 |
 | **Phase 7** | **設計図化** | ER図 / 状態遷移図 / 画面遷移図 / API設計 / コンポーネント設計 / ゲーム設計の抜け穴E系6項目 | 進行中(主構造+E系6項目完了、ワイヤーフレーム2-6・モックアップ・API設計・コンポーネント設計が残り) |
-| ~~Phase 7.5~~ | ~~法務・ビジネス・法令整合~~ | ~~法務リスク回避 / 課金モデル / サポート体制 / 競合分析 / 配布チャネル / 児童データ同意 / COPPA-GDPR-K余白 / 規約・PP骨子 / 学校教育法・障害者差別解消法整合~~ | ✅ 完了(セクション16参照) |
+| ~~Phase 7.5~~ | ~~法務・ビジネス・法令整合~~ | ~~法務リスク回避 / 課金モデル / サポート体制 / 競合分析 / 配布チャネル / 児童データ同意 / COPPA-GDPR-K余白 / 規約・PP骨子 / 学校教育法・障害者差別解消法整合~~ | ✅ 完了(セクション17参照) |
 | **Phase 8** | **教師用パッケージ仕様** | 授業設計案テンプレート / ルーブリック設計 / 振り返りシート / 学習指導要領詳細マッピング | |
 
 ---
 
-## 16. Phase 7.5 確定: 法務・ビジネス・法令整合
+## 17. Phase 7.5 確定: 法務・ビジネス・法令整合
 
 第三次審査で発覚した35項目のうち、A系(法務)とB系(ビジネス)、および学校教育法・障害者差別解消法との整合検証を Phase 7.5 として整理した。
 
-### 16.1 法務リスク回避(v1.7 で先行確定)
+### 17.1 法務リスク回避(v1.7 で先行確定)
 
 商標法・著作権法・不正競争防止法のリスク評価を実施。詳細は `legal-analysis.md` 参照。
 
@@ -1746,7 +2142,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 
 特定先行作品名・キャラクター名・カード名を独自表現に置換済み(v1.7)。CPU対戦キャラは花テーマで再命名(サクラ / ヒマワリ / モミジ / ユキ)。リリース前の弁理士相談で最終確認予定。
 
-### 16.2 課金モデル(B-8 確定)
+### 17.2 課金モデル(B-8 確定)
 
 **3層構造のフリーミアム + B2B**(具体価格はパイロット後決定):
 
@@ -1770,7 +2166,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 
 → パイロットテスト(Phase 9)後に実測ベースで決定。
 
-### 16.3 ユーザーサポート体制とバグ報告窓口(B-9, B-10 確定)
+### 17.3 ユーザーサポート体制とバグ報告窓口(B-9, B-10 確定)
 
 #### 個人ユーザー向け(Free / プレミアム)
 
@@ -1806,7 +2202,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 - 営業時間: 平日10〜18時、土日祝休
 - 一次対応はテンプレ + 自動応答、二次は手動
 
-### 16.4 競合分析と独自ポジション(B-11 確定)
+### 17.4 競合分析と独自ポジション(B-11 確定)
 
 #### 国内の競合
 
@@ -1836,7 +2232,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 4. **イニシアチブはユーザ原則**: 教師による枠設定 + 児童主導という独自設計
 5. **法務クリア独自IP**: 桃鉄教育版に対して家庭・自治体導入両面で展開可能
 
-### 16.5 マーケティング・配布チャネル(B-12 確定)
+### 17.5 マーケティング・配布チャネル(B-12 確定)
 
 第1弾(C層)では B2C を強化軸、放課後等デイサービスを B2B2C の中間チャネルとして重視。
 
@@ -1878,7 +2274,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 - 「障害があっても楽しめる」表現は当事者団体の助言を仰ぐ
 - 効果測定の根拠を持たない誇大広告(「成績が必ず上がる」等)は避ける
 
-### 16.6 児童データ同意フロー(A-4 確定)
+### 17.6 児童データ同意フロー(A-4 確定)
 
 #### 利用シナリオ別の同意取得設計
 
@@ -1915,7 +2311,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 - Supabase RLS で「自分のデータ = 自分のセッション」を保証
 - 学校データは学校アカウント単位で完全分離(クロスサイト不可)
 
-### 16.7 COPPA / GDPR-K 判断(A-7 確定)
+### 17.7 COPPA / GDPR-K 判断(A-7 確定)
 
 #### 適用判断
 
@@ -1936,7 +2332,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 
 → 第1弾は日本国内法のみ準拠。国際展開は将来対応(余白として識別子を設計)。
 
-### 16.8 利用規約・プライバシーポリシー骨子(A-1, A-2 確定)
+### 17.8 利用規約・プライバシーポリシー骨子(A-1, A-2 確定)
 
 3系統で作成(個人 / 教育機関 / 放課後等デイ)。
 
@@ -1959,7 +2355,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 
 | # | 項目 | 概要 |
 |---|---|---|
-| 1 | 取得情報 | 16.6 で確定した最小限主義準拠 |
+| 1 | 取得情報 | 17.6 で確定した最小限主義準拠 |
 | 2 | 利用目的 | ゲーム提供・学習進捗管理・サポート |
 | 3 | 第三者提供 | 原則なし、法令例外のみ |
 | 4 | 委託先 | Supabase(AWS東京)、Vercel、決済プロバイダ |
@@ -1994,7 +2390,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 - 児童福祉法準拠の明示
 - 児童相談所・福祉行政から要求がある場合の対応
 
-### 16.9 学校教育法・障害者差別解消法の整合検証(A-5, A-6 確定)
+### 17.9 学校教育法・障害者差別解消法の整合検証(A-5, A-6 確定)
 
 #### 学校教育法・学習指導要領との整合
 
@@ -2045,7 +2441,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 | 特別支援学校学習指導要領 | ◎ 全面実装 | ✅ |
 | 障害者差別解消法 | ◎ 合理的配慮が根幹 | ✅ |
 
-### 16.10 Phase 7.5 残課題と専門家確認論点
+### 17.10 Phase 7.5 残課題と専門家確認論点
 
 | # | 残課題 | 確認時期 | 確認先 |
 |---|---|---|---|
@@ -2060,7 +2456,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 
 ---
 
-## 17. 用語集
+## 18. 用語集
 
 | 用語 | 意味 |
 |---|---|
@@ -2076,7 +2472,7 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 
 ---
 
-## 18. 改訂履歴
+## 19. 改訂履歴
 
 | バージョン | 日付 | 内容 |
 |---|---|---|
@@ -2088,7 +2484,8 @@ WF1〜6 を一覧化。各 WF は ASCII モックアップで状態を網羅。
 | 1.5 | 2026-05-08 | Phase 6 確定。技術スタック(Next.js+PWA / Supabase / PixiJS / AI Gateway+Claude / Shadcn+Tremor)追加 |
 | 1.6 | 2026-05-08 | 用語統一: 「認知配慮」「C層配慮」「アクセシビリティ機能」→「合理的配慮」(障害者差別解消法準拠) |
 | 1.7 | 2026-05-08 | Phase 7.5 開始。法務リスク回避のため特定先行作品名・キャラ名・カード名を独自表現に全面置換。CPU対戦キャラを花テーマで再命名(サクラ/ヒマワリ/モミジ/ユキ) |
-| 1.8 | 2026-05-11 | Phase 7.5 確定。法務リスク回避(v1.7)に加え、課金モデル(フリーミアム+B2B)、サポート体制、競合分析(国内外)と独自ポジション5軸、配布チャネル(B2C強化+放課後等デイ重視のStage 0-4)、児童データ同意フロー(3シナリオ・個人情報項目厳格化)、COPPA/GDPR-K余白設計、規約・PP骨子(個人/教育機関/放デイ3系統)、学校教育法・障害者差別解消法の整合検証を整理(セクション16新設)。残課題8項目を専門家確認待ちに |
+| 1.8 | 2026-05-11 | Phase 7.5 確定。法務リスク回避(v1.7)に加え、課金モデル(フリーミアム+B2B)、サポート体制、競合分析(国内外)と独自ポジション5軸、配布チャネル(B2C強化+放課後等デイ重視のStage 0-4)、児童データ同意フロー(3シナリオ・個人情報項目厳格化)、COPPA/GDPR-K余白設計、規約・PP骨子(個人/教育機関/放デイ3系統)、学校教育法・障害者差別解消法の整合検証を整理(セクション17新設)。残課題8項目を専門家確認待ちに |
 | 1.9 | 2026-05-11 | Phase 7 続行。Q4-1-7(漢字+ルビ変換方針)を A案「常用漢字+ルビ、例外あり」+UIボタンでルビON/OFF切替に確定。Q4-1-8(架空駅名)を「漢字+ルビ+ルビON/OFF連動」に確定し、20駅マスタを漢字+ルビ表記に再構成(蜜柑畑駅/苺の谷駅/鮪港駅等)。セクション8の節番号誤り(5.x→8.x)を修正、データ層の方針を全テキストデータに拡張明記 |
 | 2.0 | 2026-05-11 | Phase 7 ゲーム設計の抜け穴E系6項目すべて確定。E-21物件売却(自駅50%売却)、E-22カード上限(3枚)、E-23通常駅イベント発生確率(30%)、E-24動的難易度アルゴリズム(移動平均型・直近5問・3段階・教科別独立)、E-25マップ自動生成(テンプレ+制約付きランダム+単元連動オプション+シード固定)、E-26カード入手確率(駅100%/クイズ15%/プレゼント物件50カード50)。残りはワイヤーフレーム2-6/モックアップ/API設計/コンポーネント設計 |
 | 2.1 | 2026-05-11 | Phase 7 ワイヤーフレーム集を新設(セクション14)。WF1ゲーム画面 / WF2クイズ画面(4状態) / WF3児童ホーム / WF4キャラ選択 / WF5教師ダッシュボード(3画面) / WF6アクセシビリティ設定 をASCIIモックアップで網羅。既存セクション14残タスク→15、15 Phase 7.5→16、16用語集→17、17改訂履歴→18にスライド。残りはモックアップ/API設計/コンポーネント設計 |
+| 2.2 | 2026-05-11 | Phase 7 API設計を新設(セクション15)。スタイルAを採用(Supabase Client SDK中心+Server Action/Edge Function補助)。Layer 1主要操作、Layer 2 Server Action 10個(start/rollDice/submitAnswer/buyProperty/sellProperty/useCard/acquireCard/endTurn/settlement/setDifficultyRange)を詳細化、Layer 3 Edge Function 5個、Realtime チャネル、エラーハンドリング方針を明文化。セクション番号スライド: 15残タスク→16、16 Phase 7.5→17、17用語集→18、18改訂履歴→19。残課題はRLSポリシー詳細(15.8) |
