@@ -1,10 +1,10 @@
-# tetsu-board 設計ドキュメント v2.2
+# tetsu-board 設計ドキュメント v2.3
 
 ## 0. メタ情報
 
-- **バージョン**: 2.2
+- **バージョン**: 2.3
 - **最終更新**: 2026-05-11
-- **ステータス**: Phase 1〜6 確定 / Phase 7 進行中(待機質問+E系6項目+WF2-6+API主要部分すべて確定、残りはRLS詳細/モックアップ/コンポーネント設計) / Phase 7.5 確定(法務・ビジネス・法令整合の8論点)
+- **ステータス**: Phase 1〜6 確定 / Phase 7 進行中(待機質問+E系6項目+WF2-6+API主要部分+コンポーネント主要部分すべて確定、残りはRLS詳細/モックアップ) / Phase 7.5 確定(法務・ビジネス・法令整合の8論点)
 - **プロジェクト名**: tetsu-board(仮称、後で変更可)
 - **設計用語**: 「認知配慮」「C層配慮」「アクセシビリティ機能」 → **「合理的配慮」** に統一(障害者差別解消法準拠、v1.6)
 - **法的方針**: 鉄道テーマのボードゲームジャンル先行作品にインスパイアされた独自作品。商標・著作権リスクを回避するため、特定先行作品名・キャラクター名(ボンビー等)・カード名(急行・新幹線等)はすべて独自表現に置換済み(v1.7)。Phase 7.5 で法務・ビジネス・法令整合の整理完了(v1.8)
@@ -2110,7 +2110,481 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 
 ---
 
-## 16. 残タスク(Phase 7 以降)
+## 16. コンポーネント設計(Phase 7 進行中、v2.3)
+
+WF集(セクション14)とAPI設計(セクション15)を入力に、Next.js App Router + Shadcn/UI + Tremor + PixiJS の階層構造を整理。
+
+### 16.1 全体方針
+
+#### 16.1.1 ディレクトリ構成(Next.js App Router)
+
+```
+app/
+  ├─ (auth)/                     ← 認証関連ルートグループ
+  │   ├─ login/page.tsx
+  │   ├─ signup/page.tsx
+  │   └─ layout.tsx              ← 認証画面用シンプルレイアウト
+  ├─ (student)/                  ← 児童・生徒ルートグループ
+  │   ├─ home/page.tsx           ← WF3 児童ホーム
+  │   ├─ game/[sessionId]/page.tsx ← WF1 ゲーム画面、WF2 クイズ画面
+  │   ├─ character-select/page.tsx ← WF4 キャラ選択
+  │   ├─ review/page.tsx         ← ふくしゅうリスト
+  │   ├─ settings/page.tsx       ← WF6 アクセシビリティ設定
+  │   └─ layout.tsx              ← 児童向けレイアウト(ガイドキャラ常設)
+  ├─ (teacher)/                  ← 教師ルートグループ
+  │   ├─ dashboard/page.tsx      ← WF5 クラス一覧
+  │   ├─ dashboard/student/[id]/page.tsx ← WF5 個別児童詳細
+  │   ├─ dashboard/map-generator/page.tsx ← WF5 単元連動マップ生成
+  │   ├─ dashboard/settings/page.tsx ← 教師向けクラス一括設定
+  │   └─ layout.tsx              ← 教師向けレイアウト
+  ├─ (admin)/                    ← 運営者ルートグループ
+  │   └─ ...
+  ├─ api/                        ← Next.js API Routes(認証コールバック等の限定用途)
+  ├─ actions/                    ← Server Actions(15.3 で詳細化)
+  │   ├─ game.ts                 ← gameSession.* 10個
+  │   ├─ teacher.ts              ← teacher.setDifficultyRange 他
+  │   └─ shared.ts
+  └─ layout.tsx                  ← ルートレイアウト(Theme/I18n/ErrorBoundary)
+
+components/
+  ├─ primitives/                 ← Shadcn/UI の素 + tetsu-board 独自プリミティブ
+  ├─ composites/                 ← プリミティブを組合せた汎用UI
+  ├─ features/                   ← ドメイン特化(game/, quiz/, teacher/, settings/)
+  ├─ layouts/                    ← レイアウト系
+  └─ game-engine/                ← PixiJS統合層
+
+lib/
+  ├─ supabase/                   ← Supabase Client / Server
+  ├─ store/                      ← Zustand stores
+  ├─ hooks/                      ← カスタムフック
+  ├─ ruby/                       ← 漢字+ルビ変換ロジック(8.x)
+  ├─ accessibility/              ← 合理的配慮設定の適用ロジック
+  └─ utils/
+
+public/
+  ├─ data/                       ← stations.json, properties.json 等(11.8)
+  ├─ pixel-art/                  ← ピクセルアート素材
+  └─ sounds/                     ← BGM, 効果音
+```
+
+ルートグループ `(student)` `(teacher)` でレイアウトと権限を分離。
+
+#### 16.1.2 コンポーネント分類(5層)
+
+| 層 | 役割 | 例 | 配置 |
+|---|---|---|---|
+| **Primitives** | Shadcn/UI 由来の素 + 独自基礎部品 | `Button`, `Card`, `Modal`, `RubyText` | `components/primitives/` |
+| **Composites** | プリミティブを組合せた汎用UI | `ConfirmDialog`, `ToggleRow`, `IconLabel` | `components/composites/` |
+| **Features** | ドメイン特化コンポーネント(ビジネスロジック含む) | `QuizCard`, `GameHUD`, `StudentDetailPanel` | `components/features/<domain>/` |
+| **Layouts** | レイアウト・骨組み | `StudentShell`, `TeacherShell`, `AuthShell` | `components/layouts/` |
+| **Pages** | App Router の `page.tsx`(URL ルートに対応) | `(student)/home/page.tsx` | `app/<route>/page.tsx` |
+
+依存方向は **上 → 下 のみ**(Pages → Layouts → Features → Composites → Primitives)。逆方向参照は禁止。
+
+### 16.2 共通コンポーネント(Primitives + Composites)
+
+合理的配慮原則(セクション9)とアクセシビリティ設定(8.x, 14.6)を実装する核心部品。
+
+#### 16.2.1 `<RubyText />`(必須・全UI貫通)
+
+```tsx
+type Props = {
+  kanji: string;
+  hiragana: string;
+  ruby?: Array<[string, string]>;   // [[漢字, よみ], ...]
+  size?: 'sm'|'md'|'lg'|'xl';
+};
+// 設定store(accessibilityStore.rubyOn) を購読し、ON/OFF を自動切替
+// ON: HTML5 <ruby> タグでルビ表示
+// OFF: hiragana のみ表示(8.3 表示比較に従う)
+```
+
+すべてのテキスト表示はこのコンポーネント経由(Q4-1-7/Q4-1-8 確定、8.4)。
+
+#### 16.2.2 `<GuideCharacter />`(ガイド役・みけ)
+
+```tsx
+type Props = {
+  context: 'home'|'game'|'quiz'|'settlement'|'error'|...;
+  variant?: 'speak'|'idle'|'cheer';
+};
+// Storage から事前生成セリフを取得、context に応じたものをランダム選択
+// 動的パラメータ(プレイヤー名・物件名等)を差替(6.4.4)
+```
+
+#### 16.2.3 `<AccessibilityToggle />`
+
+ルビ ON/OFF を即座に切替できる小さなボタン。ホーム画面・ゲーム画面・クイズ画面の右上に常設。
+
+#### 16.2.4 `<CoinIcon /> <PropertyIcon /> <CardIcon />`
+
+抽象→具体原則(9.1)を実装。数値ではなく **絵そのもので量を可視化**。
+
+```tsx
+// 例: コイン10枚を絵で表示
+<CoinIcon count={10} />  // → 🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙 (5×2グリッド)
+```
+
+#### 16.2.5 `<ChoiceButton />`(消去法UI対応)
+
+```tsx
+type Props = {
+  label: { kanji: string; hiragana: string; ruby?: ... };
+  image: string;          // 絵
+  state: 'normal'|'eliminated'|'selected';
+  onShortTap: () => void; // 消去法(×を付ける)
+  onLongTap: () => void;  // 回答確定
+};
+```
+
+7.4.2 消去法UIの実装。短タップで×、長タップで確定(または「これだ」ボタン併用)。
+
+#### 16.2.6 `<EmotionalDifficultyToggle />`(E-24, 14.6)
+
+```tsx
+// 「もっと頑張りたい / ゆっくりやりたい」感情ベースUI
+// 内部で gameSession.requestDifficultyChange Server Action を呼出
+// 数値・段階名は見せない(8.2)
+```
+
+#### 16.2.7 `<PercentDisplay />`(%表現切替、9.x)
+
+```tsx
+type Props = { value: number; total: number };
+// 設定store(accessibilityStore.percentMode) で表示形式を切替
+// 'percent': "72%"
+// 'ratio':   "10こで7こ"
+```
+
+### 16.3 画面別コンポーネント分解
+
+各 WF に対応するコンポーネント階層。
+
+#### 16.3.1 WF1 ゲーム画面 (`(student)/game/[sessionId]/page.tsx`)
+
+```
+<GameScreenPage>
+  └─ <GameLayout>                              ← StudentShell + ゲーム専用ヘッダ
+      ├─ <GuideCharacterBubble />              ← 「きみのターン!」吹き出し(16.2.2)
+      ├─ <DestinationHUD />                    ← 目的地・残マス・年度末まで(14.1)
+      ├─ <GameBoardCanvas />                   ← PixiJS マップ表示(16.5)
+      ├─ <PlayerRankingStrip />                ← 順位+資産横並び
+      ├─ <CardHand maxSize={3} />              ← カード3枚(E-22)
+      │   └─ <CardItem />×3
+      ├─ <GameControlBar>
+      │   ├─ <DiceButton />                    ← gameSession.rollDice 呼出
+      │   └─ <SettingsIconButton />            ← 設定モーダルへ
+      └─ <RealtimeSync sessionId={...} />      ← Supabase Realtime 購読(透明)
+```
+
+主要 hook:
+- `useGameSession(sessionId)` — gameSession テーブルから読取 + Realtime購読
+- `useMyTurn()` — 自分のターンかどうかの派生状態
+
+#### 16.3.2 WF2 クイズ画面 (オーバーレイ表示、ゲーム画面と同 URL)
+
+```
+<QuizOverlay>                                  ← <Modal> のフルスクリーン版
+  ├─ <QuizQuestion question={...} />           ← Q. + RubyText
+  ├─ <ChoiceGrid choices={3}>
+  │   └─ <ChoiceButton />×3                    ← 16.2.5
+  ├─ <TimerStrip variant="user-selected" />    ← E-24 制限時間ユーザ選択
+  ├─ <CardAssistRow>                           ← カード使用UI(あり時のみ)
+  │   ├─ <HintCardButton />
+  │   └─ <HelpCardButton />
+  └─ <ConfirmAnswerBar>
+      ├─ <ButtonPrimary label="これだ!" />
+      └─ <ButtonSecondary label="もどす" />
+
+<QuizResultOverlay>                            ← 回答後の演出
+  ├─ <CorrectCelebration />  or  <WrongConsole />
+  ├─ <RewardDisplay coin={...} property={...} /> ← 抽象→具体(16.2.4)
+  ├─ <HintBox image={...} text={...} />        ← 不正解時(WF2 状態4)
+  └─ <RetryOrNextBar />                        ← もう一度挑戦カードあり時
+```
+
+主要 hook:
+- `useQuizSubmit()` — gameSession.submitAnswer Server Action 呼出 + 結果ハンドリング
+
+#### 16.3.3 WF3 児童ホーム (`(student)/home/page.tsx`)
+
+```
+<HomePage>
+  └─ <StudentShell>
+      ├─ <GreetingHero name={...} /> + <GuideCharacterBubble />
+      ├─ <TodaysProgressCard>                  ← 「きょうの きみ」、肯定表現のみ
+      │   ├─ <StatRow icon="⭐" label="クイズせいかい" value={...} />
+      │   ├─ <StatRow icon="🪙" ...> 
+      │   ├─ <StatRow icon="🏠" ...>
+      │   └─ <BadgeRow />                      ← 「きみが いちばんの ぶもん」
+      ├─ <PlayModeSelector>
+      │   ├─ <ModeCard mode="icebreak" />
+      │   └─ <ModeCard mode="leisure" />
+      ├─ <LearningEntryGrid>                   ← ふくしゅう/まなび/せってい
+      │   ├─ <EntryCard icon="📚" to="/review" />
+      │   ├─ <EntryCard icon="📖" to="/learn" />
+      │   └─ <EntryCard icon="⚙" to="/settings" />
+      └─ <AccessibilityToggle />               ← 右上常設(16.2.3)
+```
+
+#### 16.3.4 WF4 キャラ選択 (`(student)/character-select/page.tsx`)
+
+```
+<CharacterSelectPage>
+  └─ <StudentShell variant="modal-like">
+      ├─ <PageHeader title="いっしょに あそぶ なかまを えらぼう" />
+      ├─ <CharacterGrid layout="2x2">          ← 4キャラ(春夏秋冬)
+      │   └─ <CharacterCard>×4
+      │       ├─ <CharacterPortrait />         ← ピクセルアート
+      │       ├─ <PersonalityTags />
+      │       ├─ <SubjectAffinity />           ← 得意教科+絵文字
+      │       ├─ <DifficultyStars />           ← ★表記(数値を見せない)
+      │       └─ <SelectButton />
+      ├─ <SelectedTeamStrip selected={[...]} />
+      └─ <ConfirmButton onClick={startSession} />
+```
+
+選択結果 → `gameSession.start(input)` Server Action(15.3.1)。
+
+#### 16.3.5 WF5 教師ダッシュボード (`(teacher)/dashboard/*`)
+
+3画面を別ルートに分割。
+
+```
+<DashboardPage>                                 ← クラス一覧 (14.5.1)
+  └─ <TeacherShell>
+      ├─ <ClassSwitcher />
+      ├─ <PeriodPicker />
+      ├─ <ClassSummaryCard>                    ← クラス全体: 正解率 / 難易度分布
+      │   └─ <TremorMetric />×3
+      ├─ <StudentTable>                        ← 個別児童・生徒一覧
+      │   ├─ Headers
+      │   └─ <StudentRow>×N
+      │       ├─ name, 正解率, 難易度
+      │       ├─ <WeakUnitTag />
+      │       └─ <OpenDetailButton to="/dashboard/student/[id]" />
+      └─ <ActionBar>
+          ├─ <MasteryMapButton />              ← Tremor heatmap へ
+          ├─ <DifficultyRangeButton />
+          └─ <MapGeneratorButton to="/dashboard/map-generator" />
+
+<StudentDetailPage>                             ← 個別児童詳細 (14.5.2)
+  └─ <TeacherShell>
+      ├─ <StudentHeader name={...} />
+      ├─ <SubjectAccuracyGrid>                 ← 教科別 直近5問の正解状況
+      │   └─ <SubjectAccuracyCard subject={...} dots={[⬤⬤⬤⬤⭕]} />×N
+      ├─ <ReviewListPanel />
+      ├─ <DifficultyRangeForm onSave={teacher.setDifficultyRange} />  ← 15.3.10
+      ├─ <PlayHistoryChart />                  ← Tremor LineChart
+      └─ <ExportButton onClick={exportReport} />  ← Edge Function 呼出
+
+<MapGeneratorPage>                              ← 単元連動マップ生成 (14.5.3)
+  └─ <TeacherShell>
+      ├─ <UnitSelector>                        ← 第一次産業/工業/サービス/横断
+      ├─ <MapOptionsForm>                      ← 駅数/分岐数/シード
+      ├─ <MapPreviewCanvas />                  ← PixiJS プレビュー
+      └─ <ActionButtons>
+          ├─ <StartWithMapButton onClick={...} />  ← gameSession.start with mapSeed
+          └─ <SaveSeedButton />
+```
+
+#### 16.3.6 WF6 アクセシビリティ設定 (`(student)/settings/page.tsx`)
+
+```
+<SettingsPage>
+  └─ <StudentShell>
+      ├─ <SettingsGroup title="もじ">          ← 14.6 セクション順
+      │   ├─ <ToggleRow setting="rubyOn" />
+      │   ├─ <RangeRow setting="fontSize" labels={['小','中','大']} />
+      │   └─ <RadioRow setting="lineHeight" options={['ゼロ','ふつう','ひろめ']} />
+      ├─ <SettingsGroup title="おと">
+      │   ├─ <RadioRow setting="bgmVolume" />
+      │   ├─ <RadioRow setting="sfxVolume" />
+      │   ├─ <RadioRow setting="characterVoiceVolume" />
+      │   └─ <ToggleRow setting="ttsFirstReadOnly" />
+      ├─ <SettingsGroup title="えがら">
+      │   ├─ <RangeRow setting="visualSize" />
+      │   ├─ <RadioRow setting="contrast" />
+      │   └─ <ToggleRow setting="darkMode" />
+      ├─ <SettingsGroup title="じかん">
+      │   └─ <RadioRow setting="quizTimeLimit" options={['なし','ゆっくり','ふつう']} />
+      ├─ <SettingsGroup title="なんいど">
+      │   └─ <EmotionalDifficultyToggle />     ← 16.2.6
+      ├─ <SettingsGroup title="%の見せかた">
+      │   └─ <RadioRow setting="percentMode" options={['パーセント','割合']} />
+      └─ <FooterActions>
+          ├─ <ResetButton />                   ← もどす
+          └─ <BackToHomeButton />
+```
+
+設定変更は **オプティミスティック更新** + Supabase 直接保存(Layer 1)。
+
+### 16.4 状態管理戦略
+
+#### 16.4.1 4つのストアを Zustand で分離
+
+| Store | スコープ | 永続化 |
+|---|---|---|
+| `userStore` | 認証情報、ロール、自分のプロファイル | Supabase Auth 同期 |
+| `accessibilityStore` | アクセシビリティ設定(ルビ・サイズ・音・%表現等) | Supabase + localStorage |
+| `gameStore` | 進行中ゲームのローカル状態(楽観的更新) | session 中のみ |
+| `uiStore` | モーダル開閉・トースト等の一時UI状態 | なし |
+
+#### 16.4.2 Realtime 同期パターン
+
+```tsx
+// useGameSession.ts
+function useGameSession(sessionId: string) {
+  // 1. 初期取得: Supabase Client
+  const { data: session } = useSWR(`session-${sessionId}`, fetchSession);
+  
+  // 2. Realtime 購読: postgres_changes チャネル
+  useEffect(() => {
+    const channel = supabase
+      .channel(`game_session:${sessionId}`)
+      .on('postgres_changes', { ... }, (payload) => {
+        gameStore.merge(payload.new);
+      })
+      .subscribe();
+    return () => channel.unsubscribe();
+  }, [sessionId]);
+  
+  // 3. ローカル楽観的更新: Server Action 呼出時
+  return { session: gameStore.session, ...actions };
+}
+```
+
+#### 16.4.3 Server Action 呼出パターン
+
+```tsx
+// クライアントコンポーネント
+'use client';
+async function handleDiceClick() {
+  uiStore.setLoading(true);
+  try {
+    const result = await gameSessionActions.rollDice({ sessionId });
+    gameStore.applyDiceResult(result);
+  } catch (e) {
+    if (e instanceof BusinessLogicError) {
+      uiStore.showToast(e.message);
+    } else if (e instanceof AuthorizationError) {
+      router.push('/login');
+    } else {
+      uiStore.showErrorModal();
+    }
+  } finally {
+    uiStore.setLoading(false);
+  }
+}
+```
+
+15.7 エラーハンドリング方針と整合。
+
+### 16.5 PixiJS 統合方針
+
+#### 16.5.1 統合の責務分担
+
+| 担当 | 役割 |
+|---|---|
+| React (Shadcn/UI) | UI のフレーム、HUD、モーダル、ボタン、テキスト |
+| PixiJS Canvas | マップ描画、駒の移動、サイコロアニメ、背景演出 |
+| 連携 | React 側は state を保持、PixiJS には props 経由で同期 |
+
+#### 16.5.2 `<GameBoardCanvas />` の実装パターン
+
+```tsx
+'use client';
+import { Application } from 'pixi.js';
+import { useRef, useEffect } from 'react';
+
+function GameBoardCanvas({ map, players, currentStationId }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const appRef = useRef<Application>();
+  
+  // Pixi Application を一度だけ初期化
+  useEffect(() => {
+    const app = new Application({ resizeTo: ref.current });
+    appRef.current = app;
+    ref.current!.appendChild(app.view as HTMLCanvasElement);
+    return () => app.destroy(true);
+  }, []);
+  
+  // map/players の変更を Pixi に反映
+  useEffect(() => {
+    drawMap(appRef.current!, map);
+  }, [map]);
+  
+  useEffect(() => {
+    animatePlayerMove(appRef.current!, currentStationId);
+  }, [currentStationId]);
+  
+  return <div ref={ref} className="w-full h-full" />;
+}
+```
+
+#### 16.5.3 ピクセルアート素材管理
+
+- `public/pixel-art/` 配下に駅・物件・キャラ・カードのスプライト
+- 開発時 LLM 生成→人手レビュー(11.8 と同じ流れ)
+- スプライトシートで配信(初回ロード最適化)
+
+### 16.6 デザインシステム
+
+#### 16.6.1 ベース
+
+| ライブラリ | 役割 |
+|---|---|
+| Shadcn/UI | Primitives + 一部 Composites(コピペ式で完全カスタマイズ) |
+| Tremor | 教師ダッシュボードのチャート・KPIカード |
+| Tailwind CSS | スタイリング |
+| PixiJS | ゲーム描画(16.5) |
+
+#### 16.6.2 カラーパレット(レトロドット絵テイスト、6.5)
+
+| 用途 | カラー(暫定) |
+|---|---|
+| 基本背景 | クリーム系(#FFF8E7) |
+| アクセント1 | 鉄道テーマ赤(#D32F2F) |
+| アクセント2 | 線路グリーン(#388E3C) |
+| 中間 | 砂時計ベージュ(#D4A574) |
+| 注意 | カイロソフト的なオレンジ(#FF9800) |
+| 文字 | 濃茶(#3E2723) |
+| ダークモード | 暖色を保ったまま反転 |
+
+詳細パレットはモックアップ時に確定(進路3)。
+
+#### 16.6.3 タイポグラフィ(全UI貫通)
+
+- 漢字+ルビ表記(8.x)
+- 行間ゼロ原則(9.2)
+- 視覚優先・絵+文字(7.4.1)
+- 「Noto Sans JP」+ ルビ用フォントマッピング
+
+### 16.7 テスト戦略(F-27 残課題への先取り)
+
+| 層 | 手法 | 例 |
+|---|---|---|
+| Primitives | Vitest + React Testing Library 単体 | `<RubyText/>` のON/OFF切替 |
+| Composites | 同上 + Storybook(視覚回帰) | `<ChoiceButton/>` の消去法操作 |
+| Features | 結合テスト(Supabase ローカル) | `useGameSession` の Realtime 同期 |
+| Server Action | Vitest + Supabase テスト用クライアント | `gameSession.submitAnswer` の動的難易度判定 |
+| E2E | Playwright | ゲーム1ターン通し、決算、教師ダッシュボード閲覧 |
+
+詳細は F-27 (Phase 8 で詳細化) で確定。
+
+### 16.8 残課題
+
+| # | 残課題 | 着手時期 |
+|---|---|---|
+| 1 | RLS ポリシー詳細(21テーブル×3ロール) | API設計の継続(15.8 と共通) |
+| 2 | カラーパレット最終確定(モックアップ時) | 進路3 モックアップ |
+| 3 | ピクセルアート素材設計と発注 | 進路3 と並行 |
+| 4 | テスト戦略の詳細化(F-27) | Phase 8 |
+| 5 | パフォーマンス目標(F-28、Core Web Vitals 等) | リリース前 |
+
+---
+
+## 17. 残タスク(Phase 7 以降)
 
 | Phase | テーマ | 主な決定事項 | 状態 |
 |---|---|---|---|
@@ -2121,16 +2595,16 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 | ~~Phase 5~~ | ~~クイズシステム詳細~~ | ~~出題ロジック / 動的調整 / 消去法UI / ヒント / 学習接続 / 教育ダッシュボード必須化~~ | ✅ 完了 |
 | ~~Phase 6~~ | ~~技術スタック決定~~ | ~~Next.js+Vercel+PWA / Supabase / Realtime / PixiJS / AI Gateway+Claude / Shadcn+Tremor / マッピング作業方針~~ | ✅ 完了 |
 | **Phase 7** | **設計図化** | ER図 / 状態遷移図 / 画面遷移図 / API設計 / コンポーネント設計 / ゲーム設計の抜け穴E系6項目 | 進行中(主構造+E系6項目完了、ワイヤーフレーム2-6・モックアップ・API設計・コンポーネント設計が残り) |
-| ~~Phase 7.5~~ | ~~法務・ビジネス・法令整合~~ | ~~法務リスク回避 / 課金モデル / サポート体制 / 競合分析 / 配布チャネル / 児童データ同意 / COPPA-GDPR-K余白 / 規約・PP骨子 / 学校教育法・障害者差別解消法整合~~ | ✅ 完了(セクション17参照) |
+| ~~Phase 7.5~~ | ~~法務・ビジネス・法令整合~~ | ~~法務リスク回避 / 課金モデル / サポート体制 / 競合分析 / 配布チャネル / 児童データ同意 / COPPA-GDPR-K余白 / 規約・PP骨子 / 学校教育法・障害者差別解消法整合~~ | ✅ 完了(セクション18参照) |
 | **Phase 8** | **教師用パッケージ仕様** | 授業設計案テンプレート / ルーブリック設計 / 振り返りシート / 学習指導要領詳細マッピング | |
 
 ---
 
-## 17. Phase 7.5 確定: 法務・ビジネス・法令整合
+## 18. Phase 7.5 確定: 法務・ビジネス・法令整合
 
 第三次審査で発覚した35項目のうち、A系(法務)とB系(ビジネス)、および学校教育法・障害者差別解消法との整合検証を Phase 7.5 として整理した。
 
-### 17.1 法務リスク回避(v1.7 で先行確定)
+### 18.1 法務リスク回避(v1.7 で先行確定)
 
 商標法・著作権法・不正競争防止法のリスク評価を実施。詳細は `legal-analysis.md` 参照。
 
@@ -2142,7 +2616,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 
 特定先行作品名・キャラクター名・カード名を独自表現に置換済み(v1.7)。CPU対戦キャラは花テーマで再命名(サクラ / ヒマワリ / モミジ / ユキ)。リリース前の弁理士相談で最終確認予定。
 
-### 17.2 課金モデル(B-8 確定)
+### 18.2 課金モデル(B-8 確定)
 
 **3層構造のフリーミアム + B2B**(具体価格はパイロット後決定):
 
@@ -2166,7 +2640,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 
 → パイロットテスト(Phase 9)後に実測ベースで決定。
 
-### 17.3 ユーザーサポート体制とバグ報告窓口(B-9, B-10 確定)
+### 18.3 ユーザーサポート体制とバグ報告窓口(B-9, B-10 確定)
 
 #### 個人ユーザー向け(Free / プレミアム)
 
@@ -2202,7 +2676,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 - 営業時間: 平日10〜18時、土日祝休
 - 一次対応はテンプレ + 自動応答、二次は手動
 
-### 17.4 競合分析と独自ポジション(B-11 確定)
+### 18.4 競合分析と独自ポジション(B-11 確定)
 
 #### 国内の競合
 
@@ -2232,7 +2706,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 4. **イニシアチブはユーザ原則**: 教師による枠設定 + 児童主導という独自設計
 5. **法務クリア独自IP**: 桃鉄教育版に対して家庭・自治体導入両面で展開可能
 
-### 17.5 マーケティング・配布チャネル(B-12 確定)
+### 18.5 マーケティング・配布チャネル(B-12 確定)
 
 第1弾(C層)では B2C を強化軸、放課後等デイサービスを B2B2C の中間チャネルとして重視。
 
@@ -2274,7 +2748,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 - 「障害があっても楽しめる」表現は当事者団体の助言を仰ぐ
 - 効果測定の根拠を持たない誇大広告(「成績が必ず上がる」等)は避ける
 
-### 17.6 児童データ同意フロー(A-4 確定)
+### 18.6 児童データ同意フロー(A-4 確定)
 
 #### 利用シナリオ別の同意取得設計
 
@@ -2311,7 +2785,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 - Supabase RLS で「自分のデータ = 自分のセッション」を保証
 - 学校データは学校アカウント単位で完全分離(クロスサイト不可)
 
-### 17.7 COPPA / GDPR-K 判断(A-7 確定)
+### 18.7 COPPA / GDPR-K 判断(A-7 確定)
 
 #### 適用判断
 
@@ -2332,7 +2806,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 
 → 第1弾は日本国内法のみ準拠。国際展開は将来対応(余白として識別子を設計)。
 
-### 17.8 利用規約・プライバシーポリシー骨子(A-1, A-2 確定)
+### 18.8 利用規約・プライバシーポリシー骨子(A-1, A-2 確定)
 
 3系統で作成(個人 / 教育機関 / 放課後等デイ)。
 
@@ -2355,7 +2829,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 
 | # | 項目 | 概要 |
 |---|---|---|
-| 1 | 取得情報 | 17.6 で確定した最小限主義準拠 |
+| 1 | 取得情報 | 18.6 で確定した最小限主義準拠 |
 | 2 | 利用目的 | ゲーム提供・学習進捗管理・サポート |
 | 3 | 第三者提供 | 原則なし、法令例外のみ |
 | 4 | 委託先 | Supabase(AWS東京)、Vercel、決済プロバイダ |
@@ -2390,7 +2864,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 - 児童福祉法準拠の明示
 - 児童相談所・福祉行政から要求がある場合の対応
 
-### 17.9 学校教育法・障害者差別解消法の整合検証(A-5, A-6 確定)
+### 18.9 学校教育法・障害者差別解消法の整合検証(A-5, A-6 確定)
 
 #### 学校教育法・学習指導要領との整合
 
@@ -2441,7 +2915,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 | 特別支援学校学習指導要領 | ◎ 全面実装 | ✅ |
 | 障害者差別解消法 | ◎ 合理的配慮が根幹 | ✅ |
 
-### 17.10 Phase 7.5 残課題と専門家確認論点
+### 18.10 Phase 7.5 残課題と専門家確認論点
 
 | # | 残課題 | 確認時期 | 確認先 |
 |---|---|---|---|
@@ -2456,7 +2930,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 
 ---
 
-## 18. 用語集
+## 19. 用語集
 
 | 用語 | 意味 |
 |---|---|
@@ -2472,7 +2946,7 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 
 ---
 
-## 19. 改訂履歴
+## 20. 改訂履歴
 
 | バージョン | 日付 | 内容 |
 |---|---|---|
@@ -2484,8 +2958,9 @@ RLS は 21テーブル全てに設定済(Phase 7-ER 確定)。詳細ポリシー
 | 1.5 | 2026-05-08 | Phase 6 確定。技術スタック(Next.js+PWA / Supabase / PixiJS / AI Gateway+Claude / Shadcn+Tremor)追加 |
 | 1.6 | 2026-05-08 | 用語統一: 「認知配慮」「C層配慮」「アクセシビリティ機能」→「合理的配慮」(障害者差別解消法準拠) |
 | 1.7 | 2026-05-08 | Phase 7.5 開始。法務リスク回避のため特定先行作品名・キャラ名・カード名を独自表現に全面置換。CPU対戦キャラを花テーマで再命名(サクラ/ヒマワリ/モミジ/ユキ) |
-| 1.8 | 2026-05-11 | Phase 7.5 確定。法務リスク回避(v1.7)に加え、課金モデル(フリーミアム+B2B)、サポート体制、競合分析(国内外)と独自ポジション5軸、配布チャネル(B2C強化+放課後等デイ重視のStage 0-4)、児童データ同意フロー(3シナリオ・個人情報項目厳格化)、COPPA/GDPR-K余白設計、規約・PP骨子(個人/教育機関/放デイ3系統)、学校教育法・障害者差別解消法の整合検証を整理(セクション17新設)。残課題8項目を専門家確認待ちに |
+| 1.8 | 2026-05-11 | Phase 7.5 確定。法務リスク回避(v1.7)に加え、課金モデル(フリーミアム+B2B)、サポート体制、競合分析(国内外)と独自ポジション5軸、配布チャネル(B2C強化+放課後等デイ重視のStage 0-4)、児童データ同意フロー(3シナリオ・個人情報項目厳格化)、COPPA/GDPR-K余白設計、規約・PP骨子(個人/教育機関/放デイ3系統)、学校教育法・障害者差別解消法の整合検証を整理(セクション18新設)。残課題8項目を専門家確認待ちに |
 | 1.9 | 2026-05-11 | Phase 7 続行。Q4-1-7(漢字+ルビ変換方針)を A案「常用漢字+ルビ、例外あり」+UIボタンでルビON/OFF切替に確定。Q4-1-8(架空駅名)を「漢字+ルビ+ルビON/OFF連動」に確定し、20駅マスタを漢字+ルビ表記に再構成(蜜柑畑駅/苺の谷駅/鮪港駅等)。セクション8の節番号誤り(5.x→8.x)を修正、データ層の方針を全テキストデータに拡張明記 |
 | 2.0 | 2026-05-11 | Phase 7 ゲーム設計の抜け穴E系6項目すべて確定。E-21物件売却(自駅50%売却)、E-22カード上限(3枚)、E-23通常駅イベント発生確率(30%)、E-24動的難易度アルゴリズム(移動平均型・直近5問・3段階・教科別独立)、E-25マップ自動生成(テンプレ+制約付きランダム+単元連動オプション+シード固定)、E-26カード入手確率(駅100%/クイズ15%/プレゼント物件50カード50)。残りはワイヤーフレーム2-6/モックアップ/API設計/コンポーネント設計 |
 | 2.1 | 2026-05-11 | Phase 7 ワイヤーフレーム集を新設(セクション14)。WF1ゲーム画面 / WF2クイズ画面(4状態) / WF3児童ホーム / WF4キャラ選択 / WF5教師ダッシュボード(3画面) / WF6アクセシビリティ設定 をASCIIモックアップで網羅。既存セクション14残タスク→15、15 Phase 7.5→16、16用語集→17、17改訂履歴→18にスライド。残りはモックアップ/API設計/コンポーネント設計 |
 | 2.2 | 2026-05-11 | Phase 7 API設計を新設(セクション15)。スタイルAを採用(Supabase Client SDK中心+Server Action/Edge Function補助)。Layer 1主要操作、Layer 2 Server Action 10個(start/rollDice/submitAnswer/buyProperty/sellProperty/useCard/acquireCard/endTurn/settlement/setDifficultyRange)を詳細化、Layer 3 Edge Function 5個、Realtime チャネル、エラーハンドリング方針を明文化。セクション番号スライド: 15残タスク→16、16 Phase 7.5→17、17用語集→18、18改訂履歴→19。残課題はRLSポリシー詳細(15.8) |
+| 2.3 | 2026-05-11 | Phase 7 コンポーネント設計を新設(セクション16)。Next.js App Routerディレクトリ構成、5層分類(Primitives/Composites/Features/Layouts/Pages)、共通コンポーネント7種(RubyText/GuideCharacter/AccessibilityToggle/CoinIcon/ChoiceButton/EmotionalDifficultyToggle/PercentDisplay)、WF1-6画面別コンポーネント分解、Zustand 4ストア+Realtime同期パターン、PixiJS統合方針、デザインシステム(カラーパレット仮+タイポグラフィ)、テスト戦略(5層×手法)を整理。セクション番号スライド: 16残タスク→17、17 Phase 7.5→18、18用語集→19、19改訂履歴→20。残課題はRLSポリシー詳細(15.8)/モックアップ |
