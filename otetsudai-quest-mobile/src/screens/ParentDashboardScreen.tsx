@@ -195,13 +195,14 @@ export default function ParentDashboardScreen({
     setPriceRequests(allTasks.filter((t: Task) => t.proposal_status === "pending" && t.proposed_reward && t.is_active));
     setQuestProposals(allTasks.filter((t: Task) => !t.is_active && t.proposal_status === "pending" && t.created_by !== session?.userId));
 
-    // 最近の承認済みログ（子ども返信確認用）
+    // 最近の承認済みログ（子ども返信確認用） — 子供が dismiss したものは親側も非表示
     if (childIds.length > 0) {
       const { data: approvedData } = await supabase
         .from("otetsudai_task_logs")
         .select("*, task:otetsudai_tasks(title, reward_amount), child:child_id(name)")
         .in("child_id", childIds)
         .eq("status", "approved")
+        .is("child_dismissed_at", null)
         .order("approved_at", { ascending: false })
         .limit(10);
       setRecentApproved(approvedData || []);
@@ -263,6 +264,8 @@ export default function ParentDashboardScreen({
           .from("otetsudai_family_messages")
           .select("*, sender:otetsudai_users!sender_id(*), recipient:otetsudai_users!recipient_id(*)")
           .eq("family_id", fid)
+          // 受信者(主に子供)が dismiss したものは親側も非表示
+          .is("dismissed_by_recipient_at", null)
           .order("created_at", { ascending: false })
           .limit(20),
       ]);
@@ -1295,7 +1298,7 @@ export default function ParentDashboardScreen({
                           { borderColor: palette.walletSpendBorder },
                         ]}
                       >
-                        <Text style={styles.walletLabel}>使う</Text>
+                        <Text style={styles.walletLabel}>取引</Text>
                         <Text
                           style={[
                             styles.walletAmount,
@@ -1311,7 +1314,7 @@ export default function ParentDashboardScreen({
                           { borderColor: palette.walletSaveBorder },
                         ]}
                       >
-                        <Text style={styles.walletLabel}>貯める</Text>
+                        <Text style={styles.walletLabel}>金庫</Text>
                         <Text
                           style={[
                             styles.walletAmount,
@@ -1327,7 +1330,7 @@ export default function ParentDashboardScreen({
                           { borderColor: palette.walletInvestBorder },
                         ]}
                       >
-                        <Text style={styles.walletLabel}>増やす</Text>
+                        <Text style={styles.walletLabel}>錬成</Text>
                         <Text
                           style={[
                             styles.walletAmount,
@@ -1341,9 +1344,9 @@ export default function ParentDashboardScreen({
                   )}
                   {w && (
                     <Text style={styles.ratioText}>
-                      割合: 使う{" "}
+                      割合: 取引{" "}
                       {100 - (w.save_ratio ?? 0) - (w.invest_ratio ?? 0)}% /
-                      貯める {w.save_ratio ?? 0}% / 増やす{" "}
+                      金庫 {w.save_ratio ?? 0}% / 錬成{" "}
                       {w.invest_ratio ?? 0}%
                     </Text>
                   )}
@@ -1365,7 +1368,7 @@ export default function ParentDashboardScreen({
             paddingHorizontal: 14,
             paddingVertical: 8,
             borderRadius: 8,
-            borderWidth: 1,
+            borderWidth: 1.5,
             borderColor: palette.border,
             marginTop: 16,
           }}
@@ -1963,7 +1966,7 @@ function createStyles(p: Palette) {
   specialToggle: {
     padding: 12,
     borderRadius: 10,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderStyle: "dashed" as const,
     alignItems: "center" as const,
@@ -2050,7 +2053,7 @@ function createStyles(p: Palette) {
   walletRow: { flexDirection: "row", gap: 8 },
   walletItem: {
     flex: 1,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderRadius: 10,
     padding: 10,
     alignItems: "center",
@@ -2281,7 +2284,7 @@ function createStyles(p: Palette) {
     paddingVertical: 14,
     alignItems: "center" as const,
     marginTop: 10,
-    borderWidth: 2,
+    borderWidth: 1.5,
     minHeight: 52,
     justifyContent: "center" as const,
   },

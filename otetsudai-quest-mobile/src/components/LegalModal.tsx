@@ -102,9 +102,9 @@ export default function LegalModal({
           <TouchableOpacity
             onPress={onClose}
             style={styles.backBtn}
-            accessibilityLabel="TOPへ戻る"
+            accessibilityLabel="TOPへもどる"
           >
-            <Text style={styles.backBtnText}>← TOPへ戻る</Text>
+            <Text style={styles.backBtnText}>← TOPへもどる</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -153,7 +153,7 @@ function createStyles(p: Palette) {
       marginBottom: 20,
     },
     callout: {
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.primary,
       backgroundColor: p.surface,
       padding: 14,
@@ -203,13 +203,13 @@ function createStyles(p: Palette) {
       paddingVertical: 14,
       paddingHorizontal: 20,
       borderRadius: 12,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.primary,
       backgroundColor: p.surface,
       alignItems: "center",
     },
     backBtnText: {
-      fontSize: 15,
+      fontSize: 11,
       fontWeight: "700",
       color: p.primary,
     },

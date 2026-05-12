@@ -19,9 +19,15 @@ import {
   type PurchaseRecord,
 } from "../lib/shop";
 import RpgButton from "./RpgButton";
+import CoinKunChat from "./CoinKunChat";
 import { PixelShopIcon } from "./PixelIcons";
+<<<<<<< Updated upstream
 import { AutoRubyText } from "./Ruby";
 import { useTheme, type Palette } from "../theme";
+=======
+import { AutoRubyText, RubyText } from "./Ruby";
+import { useTheme, type Palette, linkStyles } from "../theme";
+>>>>>>> Stashed changes
 
 type Props = {
   visible: boolean;
@@ -118,6 +124,7 @@ export default function ShopModal({
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
         </View>
+<<<<<<< Updated upstream
         <AutoRubyText
           text={`「使う」のお金: ${spendingBalance.toLocaleString()}コロ`}
           style={styles.subtitle}
@@ -128,6 +135,37 @@ export default function ShopModal({
           style={styles.shopHint}
           rubySize={5}
         />
+=======
+        {/* WalletDetail.pocketHint と同じパターン:
+            親 View で中央寄せ + Text style はテキスト系のみ
+            (paddingHorizontal を Text に流すと各 segment に padding が入って巨大隙間が出る) */}
+        <View style={styles.subtitleWrap}>
+          <RubyText
+            parts={["「", ["取引", "とりひき"], `」のコロ: ${spendingBalance.toLocaleString()}コロ`]}
+            style={styles.subtitle}
+            rubySize={6}
+            noWrap
+          />
+        </View>
+        <View style={styles.shopHintWrap}>
+          <RubyText
+            parts={[
+              ["買", "か"],
+              "って",
+              ["装備", "そうび"],
+              "すると、",
+              ["名前", "なまえ"],
+              "の",
+              ["横", "よこ"],
+              "に",
+              ["称号", "しょうごう"],
+              "がつくよ",
+            ]}
+            style={styles.shopHint}
+            rubySize={5}
+          />
+        </View>
+>>>>>>> Stashed changes
 
         {toast && (
           <View
@@ -184,14 +222,14 @@ export default function ShopModal({
                   >
                     <Text style={styles.itemEmoji}>{item.emoji}</Text>
                     <View style={styles.itemInfo}>
-                      <Text style={[styles.itemLabel, { color: rc.text }]} numberOfLines={1}>
-                        {item.label}
-                      </Text>
-                      <Text style={styles.itemDesc} numberOfLines={1}>
-                        {item.description}
-                      </Text>
+                      <AutoRubyText style={[styles.itemLabel, { color: rc.text }]} text={item.label} rubySize={5} noWrap />
+                      <AutoRubyText style={styles.itemDesc} text={item.description} rubySize={4} noWrap />
                       <Text style={[styles.itemMeta, { color: rc.text }]}>
+<<<<<<< Updated upstream
                         {item.rarity.toUpperCase()} ・ {item.price}コロ
+=======
+                        {item.rarity.toUpperCase()}{"\n"}{item.price}コロ
+>>>>>>> Stashed changes
                       </Text>
                     </View>
                     <View style={styles.itemAction}>
@@ -213,7 +251,11 @@ export default function ShopModal({
                           onPress={() => handleBuy(item.id, item.price)}
                           disabled={busy === item.id || !canAfford || !walletId}
                         >
+<<<<<<< Updated upstream
                           {busy === item.id ? "..." : canAfford ? "買う" : "コロ不足"}
+=======
+                          {busy === item.id ? "..." : canAfford ? <RubyText parts={[["買", "か"], "う"]} rubySize={5} noWrap /> : <RubyText parts={["コロ", ["不足", "ふそく"]]} rubySize={5} noWrap />}
+>>>>>>> Stashed changes
                         </RpgButton>
                       )}
                     </View>
@@ -230,6 +272,7 @@ export default function ShopModal({
           </View>
         </ScrollView>
       </View>
+      <CoinKunChat role="child" />
     </Modal>
   );
 }
@@ -267,20 +310,35 @@ function createStyles(p: Palette) {
       fontSize: 16,
       color: p.textStrong,
     },
-    subtitle: {
-      fontSize: 12,
-      color: p.textMuted,
-      textAlign: "center",
+    subtitleWrap: {
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingTop: 8,
       paddingBottom: 2,
     },
+    subtitle: {
+      fontSize: 12,
+      color: p.textMuted,
+    },
+    shopHintWrap: {
+      alignItems: "center",
+      paddingHorizontal: 16,
+<<<<<<< Updated upstream
+      paddingTop: 8,
+      paddingBottom: 2,
+=======
+      paddingBottom: 8,
+>>>>>>> Stashed changes
+    },
     shopHint: {
       fontSize: 10,
       color: p.textMuted,
+<<<<<<< Updated upstream
       textAlign: "center",
       paddingHorizontal: 16,
       paddingBottom: 8,
+=======
+>>>>>>> Stashed changes
     },
     toast: {
       marginHorizontal: 12,
@@ -288,7 +346,7 @@ function createStyles(p: Palette) {
       paddingVertical: 8,
       paddingHorizontal: 12,
       borderRadius: 8,
-      borderWidth: 1,
+      borderWidth: 1.5,
     },
     toastOk: {
       backgroundColor: p.greenLight,
@@ -308,9 +366,8 @@ function createStyles(p: Palette) {
       marginBottom: 4,
     },
     unequipText: {
+      ...linkStyles(p).linkTextMuted,
       fontSize: 11,
-      color: p.textMuted,
-      textDecorationLine: "underline",
     },
     itemRow: {
       flexDirection: "row",

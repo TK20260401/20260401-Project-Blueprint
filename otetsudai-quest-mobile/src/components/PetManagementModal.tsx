@@ -25,8 +25,14 @@ import PetSvg from "./PetSvg";
 import RpgButton from "./RpgButton";
 import { PixelPawIcon, PixelStarIcon } from "./PixelIcons";
 import RpgCard from "./RpgCard";
+<<<<<<< Updated upstream
 import { AutoRubyText } from "./Ruby";
 import PetEncyclopediaModal from "./PetEncyclopediaModal";
+=======
+import { AutoRubyText, RubyText } from "./Ruby";
+import PetEncyclopediaModal from "./PetEncyclopediaModal";
+import CoinKunChat from "./CoinKunChat";
+>>>>>>> Stashed changes
 import { useTheme, type Palette } from "../theme";
 
 type Props = {
@@ -91,19 +97,38 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
           <TouchableOpacity
             onPress={onClose}
             style={styles.closeBtn}
+<<<<<<< Updated upstream
             accessibilityLabel="ペットずかんを閉じる"
+=======
+            accessibilityLabel="ペットずかんをとじる"
+>>>>>>> Stashed changes
             accessibilityRole="button"
           >
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
         </View>
 
+<<<<<<< Updated upstream
         <AutoRubyText
           text="アクティブにできるのは1匹だけ！"
           style={styles.subtitle}
           rubySize={6}
           noWrap
         />
+=======
+        {/* paddingVertical を outer に移動。
+            subtitle に paddingVertical:8 があると tightStyle で除去されず
+            inner Text に流入し、ルビ Text 上下に 8px の空白ができて
+            漢字-ルビ距離が遠く見える (ShopModal paddingHorizontal:16 と同パターン)。 */}
+        <View style={styles.subtitleWrap}>
+          <RubyText
+            parts={["アクティブにできるのは", ["1匹", "ひき"], "だけです"]}
+            style={styles.subtitle}
+            rubySize={6}
+            noWrap
+          />
+        </View>
+>>>>>>> Stashed changes
 
         <TouchableOpacity
           onPress={() => setEncyclopediaOpen(true)}
@@ -197,6 +222,7 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                           />
                         </TouchableOpacity>
                       )}
+<<<<<<< Updated upstream
                       <Text style={styles.petType}>
                         {info.nameJa} ・{" "}
                         {pet.growth_stage === "egg"
@@ -207,6 +233,21 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                               ? "子ども"
                               : "大人"}
                       </Text>
+=======
+                      <AutoRubyText
+                        text={`${info.nameJa} ・ ${
+                          pet.growth_stage === "egg"
+                            ? "卵"
+                            : pet.growth_stage === "baby"
+                              ? "赤ちゃん"
+                              : pet.growth_stage === "child"
+                                ? "子ども"
+                                : "大人"
+                        }`}
+                        style={styles.petType}
+                        rubySize={4}
+                      />
+>>>>>>> Stashed changes
                       <View style={styles.progressTrack}>
                         <View
                           style={[
@@ -219,11 +260,23 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
                           ]}
                         />
                       </View>
+<<<<<<< Updated upstream
                       <Text style={styles.progressLabel}>
                         {pet.growth_stage === "egg"
                           ? `あと ${Math.max(0, HATCH_QUESTS_REQUIRED - pet.quests_since_acquired)} クエストで孵る`
                           : `幸せ ${happiness}％ ・ ごはん ${pet.fed_count}回`}
                       </Text>
+=======
+                      <AutoRubyText
+                        text={
+                          pet.growth_stage === "egg"
+                            ? `あと ${Math.max(0, HATCH_QUESTS_REQUIRED - pet.quests_since_acquired)} クエストで孵る`
+                            : `幸せ ${happiness}％ ・ ごはん ${pet.fed_count}回`
+                        }
+                        style={styles.progressLabel}
+                        rubySize={4}
+                      />
+>>>>>>> Stashed changes
                     </View>
                   </View>
                   <View style={{ marginTop: 8 }}>
@@ -263,6 +316,10 @@ export default function PetManagementModal({ visible, onClose, childId, onChange
         onClose={() => setEncyclopediaOpen(false)}
         childId={childId}
       />
+<<<<<<< Updated upstream
+=======
+      <CoinKunChat role="child" />
+>>>>>>> Stashed changes
     </Modal>
   );
 }
@@ -300,12 +357,31 @@ function createStyles(p: Palette) {
       fontSize: 16,
       color: p.textStrong,
     },
+    subtitleWrap: {
+      alignItems: "center",
+      paddingVertical: 8,
+    },
     subtitle: {
       fontSize: 12,
       color: p.textMuted,
-      textAlign: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+    },
+    encyclopediaBtn: {
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      gap: 6,
+      marginHorizontal: 12,
+      marginBottom: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 12,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: p.accent,
+    },
+    encyclopediaBtnText: {
+      fontSize: 13,
+      color: p.accent,
+      fontWeight: "800" as const,
     },
     encyclopediaBtn: {
       flexDirection: "row" as const,

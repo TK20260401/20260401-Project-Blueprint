@@ -16,7 +16,7 @@ import {
 import * as Clipboard from "expo-clipboard";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import QRCode from "react-native-qrcode-svg";
-import { useTheme, type Palette } from "../theme";
+import { useTheme, type Palette, linkStyles } from "../theme";
 import { rf } from "../lib/responsive";
 import RpgButton from "../components/RpgButton";
 import { RubyText } from "../components/Ruby";
@@ -474,7 +474,7 @@ function createStyles(p: Palette) {
     wordChip: {
       backgroundColor: p.white,
       borderRadius: 10,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.borderStrong,
       paddingHorizontal: 16,
       paddingVertical: 8,
@@ -493,10 +493,8 @@ function createStyles(p: Palette) {
       justifyContent: "center",
     },
     copyButtonText: {
+      ...linkStyles(p).linkText,
       fontSize: rf(13),
-      color: p.primary,
-      fontWeight: "600",
-      textDecorationLine: "underline",
     },
     // QR
     qrCard: {
@@ -516,7 +514,7 @@ function createStyles(p: Palette) {
       backgroundColor: "#FFFFFF",
       padding: 12,
       borderRadius: 12,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
     },
     // シェア
@@ -562,7 +560,7 @@ function createStyles(p: Palette) {
     previewInput: {
       backgroundColor: p.white,
       borderRadius: 12,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       padding: 14,
       marginBottom: 14,
@@ -582,7 +580,7 @@ function createStyles(p: Palette) {
       paddingVertical: 10,
       borderRadius: 10,
       backgroundColor: p.surfaceMuted,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       minHeight: 44,
     },
@@ -604,9 +602,8 @@ function createStyles(p: Palette) {
       justifyContent: "center",
     },
     skipText: {
-      fontSize: rf(13),
-      color: p.textMuted,
-      textDecorationLine: "underline",
+      ...linkStyles(p).linkTextMuted,
+      fontSize: 11,
     },
   });
 }

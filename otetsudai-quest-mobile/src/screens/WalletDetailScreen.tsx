@@ -20,6 +20,7 @@ import SavingGoalMilestone from "../components/SavingGoalMilestone";
 import type { Wallet, Transaction, SpendRequest, SavingGoal } from "../lib/types";
 import MoneyTree, { getStage } from "../components/MoneyTree";
 import { PixelChestOpenIcon, PixelCoinIcon, PixelCartIcon, PixelPiggyIcon, PixelChartIcon, PixelTreeIcon, PixelConfettiIcon, PixelHourglassIcon, PixelCheckIcon, PixelCrossIcon, PixelScrollIcon, PixelHouseIcon } from "../components/PixelIcons";
+import CoinKunChat from "../components/CoinKunChat";
 
 export default function WalletDetailScreen({
   route,
@@ -140,10 +141,10 @@ export default function WalletDetailScreen({
 
   const filterTabs: { label: string; value: string; parts: (string | [string, string])[] }[] = [
     { label: "全部", value: "all", parts: [["全部", "ぜんぶ"]] as [string, string][] },
-    { label: "稼ぐ", value: "earn", parts: [["稼", "かせ"], "ぐ"] as (string | [string, string])[] },
-    { label: "使う", value: "spend", parts: [["使", "つか"], "う"] as (string | [string, string])[] },
-    { label: "貯める", value: "save", parts: [["貯", "た"], "める"] as (string | [string, string])[] },
-    { label: "増やす", value: "invest", parts: [["増", "ふ"], "やす"] as (string | [string, string])[] },
+    { label: "冒険", value: "earn", parts: [["冒険", "ぼうけん"]] as (string | [string, string])[] },
+    { label: "取引", value: "spend", parts: [["取引", "とりひき"]] as (string | [string, string])[] },
+    { label: "金庫", value: "save", parts: [["金庫", "きんこ"]] as (string | [string, string])[] },
+    { label: "錬成", value: "invest", parts: [["錬成", "れんせい"]] as (string | [string, string])[] },
   ];
 
   function TxTypeIcon({ type }: { type: string }) {
@@ -159,16 +160,39 @@ export default function WalletDetailScreen({
   function txTypeName(type: string): string {
     switch (type) {
       case "earn":
-        return "かせいだ";
+        return "クエスト報酬";
       case "spend":
-        return "つかった";
+        return "取引";
       case "save":
-        return "ためた";
+        return "金庫";
       case "invest":
-        return "ふやした";
+        return "錬成";
       default:
         return type;
     }
+  }
+
+  /**
+   * 冒険ログの description を 2 行に分割
+   * - 1 行目: 名詞 (タイトルの最初の半角スペース前)
+   * - 2 行目: 承認 + 動詞 (末尾「承認」を 2 行目先頭に移動)
+   * 例: "泡モンスター 討伐作戦 承認" → { line1: "泡モンスター", line2: "承認 討伐作戦" }
+   */
+  function splitDescription(desc: string): { line1: string; line2: string } {
+    const trimmed = desc.trim();
+    const hasApproval = trimmed.endsWith(" 承認");
+    const main = hasApproval ? trimmed.slice(0, -3).trim() : trimmed;
+    const spaceIdx = main.indexOf(" ");
+    if (spaceIdx === -1) {
+      // 単一トークン: 1 行目のみ
+      return { line1: main, line2: hasApproval ? "承認" : "" };
+    }
+    const noun = main.slice(0, spaceIdx);
+    const verb = main.slice(spaceIdx + 1).trim();
+    return {
+      line1: noun,
+      line2: hasApproval ? `承認 ${verb}` : verb,
+    };
   }
 
   function txAmountColor(type: string): string {
@@ -188,8 +212,9 @@ export default function WalletDetailScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* Header — 金庫=中央(絶対配置)、もどる=左、505コロ=右 */}
       <View style={styles.header}>
+<<<<<<< Updated upstream
         <TouchableOpacity
           onPress={() => navigation.navigate("ChildDashboard", { childId })}
           style={styles.backButton}
@@ -218,8 +243,33 @@ export default function WalletDetailScreen({
           >
             {total.toLocaleString()}円
           </Text>
+=======
+        <View style={styles.headerCenter} pointerEvents="none">
+          <View style={{ width: 28, height: 28, alignItems: "center", justifyContent: "center" }}>
+            <PixelCoinIcon size={28} />
+          </View>
+          <RubyText style={styles.headerTitle} parts={[["金", "きん"], ["庫", "こ"]]} rubySize={9} />
+>>>>>>> Stashed changes
         </View>
-        <View style={styles.headerSpacer} />
+        <TouchableOpacity
+          onPress={() => navigation.navigate("ChildDashboard", { childId })}
+          style={styles.backButton}
+          accessibilityLabel="おうちに もどる"
+        >
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+            <PixelHouseIcon size={12} />
+            <Text style={styles.backText}>もどる</Text>
+          </View>
+        </TouchableOpacity>
+        <View style={{ flex: 1 }} />
+        <Text
+          style={styles.headerTotalAmount}
+          adjustsFontSizeToFit
+          numberOfLines={1}
+          accessibilityLabel={`ぜんぶで ${total.toLocaleString()}コロ`}
+        >
+          {total.toLocaleString()}コロ
+        </Text>
       </View>
 
       <ScrollView
@@ -243,7 +293,7 @@ export default function WalletDetailScreen({
                 backgroundColor: palette.walletSpendBg,
               },
             ]}
-            accessibilityLabel={`つかう ${spending}円`}
+            accessibilityLabel={`取引 ${spending}コロ`}
             onPress={() => navigation.navigate("SpendRequest", {
               childId,
               walletId,
@@ -253,16 +303,28 @@ export default function WalletDetailScreen({
             <View style={styles.pocketIconBox}><PixelCartIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
+<<<<<<< Updated upstream
               parts={[["取", "とり"], ["引", "ひき"]]}
+=======
+              parts={[["取引", "とりひき"]]}
+>>>>>>> Stashed changes
               rubySize={7}
-              rubyColor="rgba(255,255,255,0.6)"
             />
             <Text
               style={[styles.pocketAmount, { color: palette.walletSpend }]}
             >
               {spending.toLocaleString()}
             </Text>
+<<<<<<< Updated upstream
             <Text style={styles.pocketHint}>しょうにんと とりひき</Text>
+=======
+            <RubyText
+              style={styles.pocketHint}
+              parts={[["商人", "しょうにん"], "と", ["取引", "とりひき"]]}
+              rubySize={6}
+              noWrap
+            />
+>>>>>>> Stashed changes
           </TouchableOpacity>
 
           {/* ためる → 貯金目標セクション */}
@@ -274,22 +336,34 @@ export default function WalletDetailScreen({
                 backgroundColor: palette.walletSaveBg,
               },
             ]}
-            accessibilityLabel={`ためる ${saving}円`}
+            accessibilityLabel={`金庫 ${saving}コロ`}
             onPress={() => setShowGoalModal(true)}
           >
             <View style={styles.pocketIconBox}><PixelPiggyIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
+<<<<<<< Updated upstream
               parts={[["金", "きん"], ["庫", "こ"]]}
+=======
+              parts={[["金庫", "きんこ"]]}
+>>>>>>> Stashed changes
               rubySize={7}
-              rubyColor="rgba(255,255,255,0.6)"
             />
             <Text
               style={[styles.pocketAmount, { color: palette.walletSave }]}
             >
               {saving.toLocaleString()}
             </Text>
+<<<<<<< Updated upstream
             <Text style={styles.pocketHint}>たからを しまう</Text>
+=======
+            <RubyText
+              style={styles.pocketHint}
+              parts={[["宝", "たから"], "をしまう"]}
+              rubySize={6}
+              noWrap
+            />
+>>>>>>> Stashed changes
           </TouchableOpacity>
 
           {/* ふやす → Invest */}
@@ -301,7 +375,7 @@ export default function WalletDetailScreen({
                 backgroundColor: palette.walletInvestBg,
               },
             ]}
-            accessibilityLabel={`ふやす ${invest}円`}
+            accessibilityLabel={`錬成 ${invest}コロ`}
             onPress={() => navigation.navigate("Invest", {
               childId,
               investBalance: wallet?.invest_balance ?? 0,
@@ -310,16 +384,28 @@ export default function WalletDetailScreen({
             <View style={styles.pocketIconBox}><PixelChartIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
+<<<<<<< Updated upstream
               parts={[["錬", "れん"], ["成", "せい"]]}
+=======
+              parts={[["錬成", "れんせい"]]}
+>>>>>>> Stashed changes
               rubySize={7}
-              rubyColor="rgba(255,255,255,0.6)"
             />
             <Text
               style={[styles.pocketAmount, { color: palette.walletInvest }]}
             >
               {invest.toLocaleString()}
             </Text>
+<<<<<<< Updated upstream
             <Text style={styles.pocketHint}>お金を そだてる</Text>
+=======
+            <RubyText
+              style={styles.pocketHint}
+              parts={["コロを", ["育", "そだ"], "てる"]}
+              rubySize={6}
+              noWrap
+            />
+>>>>>>> Stashed changes
           </TouchableOpacity>
         </View>
 
@@ -329,11 +415,11 @@ export default function WalletDetailScreen({
           <View style={styles.treeInfo}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <PixelTreeIcon size={18} />
-              <RubyText parts={[["増", "ふ"], "やすの", ["木", "き"], `: ${getStage(invest).label}`]} style={styles.treeLabel} rubySize={6} />
+              <RubyText parts={[["錬成", "れんせい"], "の", ["木", "き"], `: ${getStage(invest).label}`]} style={styles.treeLabel} rubySize={6} />
             </View>
             {getStage(invest).next && (
               <AutoRubyText
-                text={`次の成長まで あと ${(getStage(invest).next! - invest).toLocaleString()}円`}
+                text={`次の成長まであと${(getStage(invest).next! - invest).toLocaleString()}コロ`}
                 style={styles.treeProgress}
                 rubySize={5}
               />
@@ -358,12 +444,12 @@ export default function WalletDetailScreen({
                 spendingBalance: wallet?.spending_balance ?? 0,
               })
             }
-            accessibilityLabel="つかうリクエストを おくる"
+            accessibilityLabel="取引リクエストを送る"
             activeOpacity={0.8}
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <PixelCartIcon size={18} />
-              <RubyText parts={[["使", "つか"], "いたい！"]} style={styles.spendRequestButtonText} rubySize={5} noWrap rubyColor="rgba(255,255,255,0.6)" />
+              <RubyText parts={[["取引", "とりひき"], "！"]} style={styles.spendRequestButtonText} rubySize={5} noWrap rubyColor="rgba(255,255,255,0.6)" />
             </View>
           </TouchableOpacity>
           <TouchableOpacity
@@ -380,7 +466,7 @@ export default function WalletDetailScreen({
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <PixelChartIcon size={18} />
-              <RubyText parts={[["増", "ふ"], "やす！"]} style={styles.investButtonText} rubySize={5} noWrap rubyColor="rgba(255,255,255,0.6)" />
+              <RubyText parts={[["錬成", "れんせい"], "！"]} style={styles.investButtonText} rubySize={5} noWrap rubyColor="rgba(255,255,255,0.6)" />
             </View>
           </TouchableOpacity>
         </View>
@@ -390,7 +476,7 @@ export default function WalletDetailScreen({
           <View style={styles.section}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <PixelCartIcon size={18} />
-              <AutoRubyText text="つかうリクエスト" style={styles.sectionTitle} rubySize={7} />
+              <AutoRubyText text="取引リクエスト" style={styles.sectionTitle} rubySize={7} />
             </View>
             {recentSpendRequests.map((req) => {
               if (req.status === "pending") {
@@ -404,11 +490,11 @@ export default function WalletDetailScreen({
                   >
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                       <PixelHourglassIcon size={16} />
-                      <Text style={styles.requestStatus}>しんせいちゅう</Text>
+                      <AutoRubyText text="申請中" style={styles.requestStatus} rubySize={5} />
                     </View>
-                    <Text style={styles.requestPurpose}>{req.purpose}</Text>
+                    <AutoRubyText text={req.purpose} style={styles.requestPurpose} rubySize={5} />
                     <Text style={styles.requestAmount}>
-                      {req.amount.toLocaleString()}円
+                      {req.amount.toLocaleString()}コロ
                     </Text>
                   </View>
                 );
@@ -427,11 +513,11 @@ export default function WalletDetailScreen({
                   >
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                       <PixelCheckIcon size={16} />
-                      <Text style={styles.requestStatus}>しょうにんずみ おかねをまってね</Text>
+                      <AutoRubyText text="承認済 お金を待ってね" style={styles.requestStatus} rubySize={5} />
                     </View>
-                    <Text style={styles.requestPurpose}>{req.purpose}</Text>
+                    <AutoRubyText text={req.purpose} style={styles.requestPurpose} rubySize={5} />
                     <Text style={styles.requestAmount}>
-                      {req.amount.toLocaleString()}円
+                      {req.amount.toLocaleString()}コロ
                     </Text>
                   </View>
                 );
@@ -447,15 +533,13 @@ export default function WalletDetailScreen({
                   >
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                       <PixelCrossIcon size={16} />
-                      <Text style={styles.requestStatus}>きょかされませんでした</Text>
+                      <AutoRubyText text="許可されませんでした" style={styles.requestStatus} rubySize={5} />
                     </View>
                     {req.reject_reason && (
-                      <Text style={styles.requestReason}>
-                        りゆう: {req.reject_reason}
-                      </Text>
+                      <AutoRubyText text={`理由: ${req.reject_reason}`} style={styles.requestReason} rubySize={5} />
                     )}
                     <Text style={styles.requestAmount}>
-                      {req.amount.toLocaleString()}円
+                      {req.amount.toLocaleString()}コロ
                     </Text>
                   </View>
                 );
@@ -465,11 +549,11 @@ export default function WalletDetailScreen({
           </View>
         )}
 
-        {/* ── 5. Savings Goals Section ── */}
+        {/* ── 5. Savings Goals Section (= お宝マップ) ── */}
         <View style={styles.section}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <PixelPiggyIcon size={18} />
-            <RubyText parts={[["貯金", "ちょきん"], ["目標", "もくひょう"]]} style={styles.sectionTitle} rubySize={7} />
+            <AutoRubyText text="お宝マップ" style={styles.sectionTitle} rubySize={6} />
           </View>
 
           {/* Unachieved goals */}
@@ -483,7 +567,7 @@ export default function WalletDetailScreen({
                 : 0;
             return (
               <View key={goal.id} style={styles.goalCard}>
-                <Text style={styles.goalTitle}>{goal.title}</Text>
+                <AutoRubyText text={goal.title} style={styles.goalTitle} rubySize={5} />
                 {pct >= 100 ? (
                   <SavingGoalMilestone
                     show={pct >= 100}
@@ -502,7 +586,7 @@ export default function WalletDetailScreen({
                     </View>
                     <View style={styles.goalAmountRow}>
                       <Text style={styles.goalAmountText}>
-                        {saving.toLocaleString()} / {goal.target_amount.toLocaleString()} 円
+                        {saving.toLocaleString()} / {goal.target_amount.toLocaleString()} コロ
                       </Text>
                       <Text style={styles.goalPctText}>{pct}%</Text>
                     </View>
@@ -517,25 +601,27 @@ export default function WalletDetailScreen({
             <View key={goal.id} style={styles.goalCardAchieved}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                 <PixelCheckIcon size={16} />
-                <Text style={styles.goalTitle}>{goal.title}</Text>
+                <AutoRubyText text={goal.title} style={styles.goalTitle} rubySize={5} />
               </View>
-              <Text style={styles.goalAmountText}>
-                {goal.target_amount.toLocaleString()} 円 達成！
-              </Text>
+              <AutoRubyText
+                text={`${goal.target_amount.toLocaleString()} コロ 達成！`}
+                style={styles.goalAmountText}
+                rubySize={4}
+              />
             </View>
           ))}
 
           {savingGoals.length === 0 && (
-            <AutoRubyText text="まだ貯金目標がないよ" style={[styles.emptyHint, { textAlign: "left" }]} rubySize={7} />
+            <AutoRubyText text="まだお宝マップがないよ" style={[styles.emptyHint, { textAlign: "left" }]} rubySize={7} />
           )}
 
           <TouchableOpacity
             style={styles.addGoalButton}
             onPress={() => setShowGoalModal(true)}
-            accessibilityLabel="ちょきん目標をつくる"
+            accessibilityLabel="お宝マップを作る"
           >
             <AutoRubyText
-              text="＋ 目標をつくる"
+              text="＋ お宝マップを作る"
               style={styles.addGoalText}
               rubySize={7}
             />
@@ -546,7 +632,7 @@ export default function WalletDetailScreen({
         <View style={styles.section}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
             <PixelScrollIcon size={18} />
-            <AutoRubyText text="履歴" style={styles.sectionTitle} rubySize={7} />
+            <AutoRubyText text="冒険ログ" style={styles.sectionTitle} rubySize={7} />
           </View>
 
           {/* Filter tabs */}
@@ -576,30 +662,34 @@ export default function WalletDetailScreen({
 
           {/* Transaction list */}
           {filteredTransactions.length > 0 ? (
-            filteredTransactions.map((tx) => (
-              <View key={tx.id} style={styles.historyItem}>
-                <View style={styles.historyType}><TxTypeIcon type={tx.type} /></View>
-                <View style={styles.historyInfo}>
-                  <Text style={styles.historyDesc}>
-                    {tx.description || txTypeName(tx.type)}
-                  </Text>
-                  <Text style={styles.historyDate}>
-                    {new Date(tx.created_at).toLocaleDateString("ja-JP")}
+            filteredTransactions.map((tx) => {
+              const { line1, line2 } = splitDescription(tx.description || txTypeName(tx.type));
+              return (
+                <View key={tx.id} style={styles.historyItem}>
+                  <View style={styles.historyType}><TxTypeIcon type={tx.type} /></View>
+                  <View style={styles.historyInfo}>
+                    <AutoRubyText text={line1} style={styles.historyDesc} rubySize={4} noWrap />
+                    {line2 ? (
+                      <AutoRubyText text={line2} style={styles.historyDescSub} rubySize={4} noWrap />
+                    ) : null}
+                    <Text style={styles.historyDate}>
+                      {new Date(tx.created_at).toLocaleDateString("ja-JP")}
+                    </Text>
+                  </View>
+                  <Text
+                    style={[
+                      styles.historyAmount,
+                      { color: txAmountColor(tx.type) },
+                    ]}
+                  >
+                    {tx.type === "earn" ? "+" : "-"}
+                    {tx.amount.toLocaleString()}
                   </Text>
                 </View>
-                <Text
-                  style={[
-                    styles.historyAmount,
-                    { color: txAmountColor(tx.type) },
-                  ]}
-                >
-                  {tx.type === "earn" ? "+" : "-"}
-                  {tx.amount.toLocaleString()}
-                </Text>
-              </View>
-            ))
+              );
+            })
           ) : (
-            <Text style={styles.emptyHint}>まだ履歴がないよ</Text>
+            <AutoRubyText text="まだ履歴がないよ" style={styles.emptyHint} rubySize={5} />
           )}
         </View>
 
@@ -616,6 +706,7 @@ export default function WalletDetailScreen({
           loadData();
         }}
       />
+      <CoinKunChat role="child" />
     </SafeAreaView>
   );
 }
@@ -637,8 +728,8 @@ function createStyles(p: Palette) {
 
     // Header
     header: {
+      position: "relative" as const,
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
       paddingHorizontal: 12,
       paddingTop: 8,
@@ -646,19 +737,30 @@ function createStyles(p: Palette) {
       backgroundColor: p.background,
       borderBottomWidth: 1.5,
       borderBottomColor: p.border,
+      minHeight: 56,
+      gap: 8,
     },
     backButton: {
       flexDirection: "row",
       alignItems: "center",
+<<<<<<< Updated upstream
       gap: 6,
       paddingHorizontal: 14,
       paddingVertical: 8,
       borderRadius: 8,
       borderWidth: 1.5,
+=======
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: 5,
+      borderWidth: 1,
+>>>>>>> Stashed changes
       borderColor: p.primary,
       backgroundColor: p.background,
     },
     backText: {
+<<<<<<< Updated upstream
       fontSize: 14,
       fontWeight: "bold",
       color: p.textMuted,
@@ -670,11 +772,18 @@ function createStyles(p: Palette) {
       opacity: 0.7,
       marginTop: -1,
     },
+=======
+      fontSize: 11,
+      fontWeight: "bold",
+      color: p.textMuted,
+    },
+>>>>>>> Stashed changes
     headerTitleGroup: {
       flexDirection: "row",
       alignItems: "center",
       gap: 10,
       flexShrink: 1,
+<<<<<<< Updated upstream
     },
     headerTotalAmount: {
       fontSize: rf(22),
@@ -683,7 +792,30 @@ function createStyles(p: Palette) {
     },
     headerTitle: {
       fontSize: rf(18),
+=======
+      flex: 1,
+      justifyContent: "center",
+    },
+    headerCenter: {
+      position: "absolute" as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      flexDirection: "row" as const,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      gap: 8,
+    },
+    headerTotalAmount: {
+      fontSize: 12,
+>>>>>>> Stashed changes
       fontWeight: "bold",
+      color: p.accent,
+    },
+    headerTitle: {
+      fontSize: rf(28),
+      fontWeight: "900",
       color: p.primaryDark,
       textAlign: "center",
     },
@@ -734,8 +866,10 @@ function createStyles(p: Palette) {
     pocketLabel: {
       fontSize: 12,
       color: p.textMuted,
+      // ルビが上の SVG アイコンに被らないように余白を確保 (ルビは漢字の上に
+      // 約 6-8px 出っ張るため、marginTop も含めて 8 + 14 ≒ 22 程度必要)
+      marginTop: 22,
       marginBottom: 2,
-      lineHeight: 20,
     },
     pocketAmount: {
       fontSize: 16,
@@ -744,7 +878,12 @@ function createStyles(p: Palette) {
     pocketHint: {
       fontSize: 9,
       color: p.textMuted,
+<<<<<<< Updated upstream
       marginTop: 4,
+=======
+      // 上のラベル/数字とルビが被らないように余白増
+      marginTop: 10,
+>>>>>>> Stashed changes
       textAlign: "center",
     },
     // 3SVGアイコンの寸法差を 20×20 固定枠で吸収
@@ -944,8 +1083,14 @@ function createStyles(p: Palette) {
       flex: 1,
     },
     historyDesc: {
-      fontSize: 14,
+      fontSize: 13,
+      fontWeight: "bold" as const,
       color: p.textStrong,
+    },
+    historyDescSub: {
+      fontSize: 11,
+      color: p.textBase,
+      marginTop: 1,
     },
     historyDate: {
       fontSize: 11,
@@ -966,7 +1111,7 @@ function createStyles(p: Palette) {
     },
     loadingEmoji: { fontSize: 48, marginBottom: 12 },
     loadingText: { color: p.textMuted, marginTop: 12, fontSize: 14 },
-    headerSpacer: { width: 80 },
+    headerSpacer: { width: 56 },
     bottomSpacer: { height: 40 },
     treeSection: {
       alignItems: "center" as const,

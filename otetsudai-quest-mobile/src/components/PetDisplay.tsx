@@ -277,7 +277,11 @@ function createStyles(palette: Palette) {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 12,
+<<<<<<< Updated upstream
       borderWidth: 1,
+=======
+      borderWidth: 1.5,
+>>>>>>> Stashed changes
       borderColor: palette.primary,
       backgroundColor: palette.primaryLight,
     },
@@ -312,10 +316,14 @@ function createStyles(palette: Palette) {
       fontWeight: "bold",
       color: palette.accent,
       marginTop: 2,
+      textDecorationLine: "underline",
+      textDecorationColor: palette.accent,
     },
     petType: {
       fontSize: 8,
       color: palette.textMuted,
+      textDecorationLine: "underline",
+      textDecorationColor: palette.textMuted,
     },
   });
 }

@@ -281,7 +281,7 @@ export default function LoginPage() {
           <CardHeader className="text-center">
             <div className="mb-2 flex justify-center"><PixelHeroSvg type="warrior" size={48} /></div>
             <CardTitle className="text-2xl font-bold text-primary drop-shadow-[0_2px_8px_rgba(255,166,35,0.4)]">
-              ジョブサガ
+              おこづかいクエスト
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               クエストをクリアしてコインを<R k="稼" r="かせ" />ごう！
@@ -345,7 +345,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <div className="text-5xl mb-2">⚔️</div>
           <CardTitle className="text-2xl font-bold text-primary drop-shadow-[0_2px_8px_rgba(255,166,35,0.4)]">
-            ジョブサガ
+            おこづかいクエスト
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             クエストをクリアしてコインを<R k="稼" r="かせ" />ごう！

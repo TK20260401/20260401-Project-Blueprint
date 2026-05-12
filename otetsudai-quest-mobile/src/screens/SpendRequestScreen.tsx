@@ -17,6 +17,7 @@ import { AutoRubyText, RubyText } from "../components/Ruby";
 import { useAppAlert } from "../components/AppAlert";
 import { PixelCoinIcon, PixelHouseIcon } from "../components/PixelIcons";
 import ShakeView from "../components/ShakeView";
+import CoinKunChat from "../components/CoinKunChat";
 
 const NUM_KEYS = [
   { label: "1", value: "1", a11y: "いち" },
@@ -104,7 +105,11 @@ export default function SpendRequestScreen({
 
           <View style={styles.confirmCard}>
             <AutoRubyText
+<<<<<<< Updated upstream
               text="使う金額"
+=======
+              text="取引金額"
+>>>>>>> Stashed changes
               style={styles.confirmLabel}
               rubySize={7}
             />
@@ -134,7 +139,11 @@ export default function SpendRequestScreen({
               accessibilityLabel="もどる"
             >
               <AutoRubyText
+<<<<<<< Updated upstream
                 text="← 戻る"
+=======
+                text="もどる"
+>>>>>>> Stashed changes
                 style={styles.confirmBackBtnText}
                 rubySize={7}
               />
@@ -155,6 +164,7 @@ export default function SpendRequestScreen({
             </TouchableOpacity>
           </View>
         </View>
+        <CoinKunChat role="child" />
       </SafeAreaView>
     );
   }
@@ -176,12 +186,20 @@ export default function SpendRequestScreen({
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <PixelHouseIcon size={12} />
+<<<<<<< Updated upstream
               <AutoRubyText text="← 戻る" style={styles.backText} rubySize={5} noWrap />
+=======
+              <Text style={styles.backText}>もどる</Text>
+>>>>>>> Stashed changes
             </View>
           </TouchableOpacity>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center", marginTop: -4 }}>
             <View style={{ marginTop: 12 }}><PixelCoinIcon size={18} /></View>
+<<<<<<< Updated upstream
             <RubyText parts={["オーダー！"]} style={styles.title} rubySize={6} noWrap />
+=======
+            <RubyText parts={[["取引", "とりひき"]]} style={styles.title} rubySize={6} noWrap />
+>>>>>>> Stashed changes
           </View>
         </View>
 
@@ -198,7 +216,11 @@ export default function SpendRequestScreen({
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
               <PixelCoinIcon size={20} />
               <AutoRubyText
+<<<<<<< Updated upstream
                 text={`手持ちコイン: ${spendingBalance.toLocaleString()}コロ`}
+=======
+                text={`手持ちコロ: ${spendingBalance.toLocaleString()}コロ`}
+>>>>>>> Stashed changes
                 style={styles.balanceText}
                 rubySize={7}
               />
@@ -268,6 +290,7 @@ export default function SpendRequestScreen({
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+      <CoinKunChat role="child" />
     </SafeAreaView>
   );
 }
@@ -302,24 +325,41 @@ function createStyles(p: Palette) {
       borderBottomColor: p.border,
     },
     title: {
+<<<<<<< Updated upstream
       fontSize: rf(18),
       fontWeight: "bold",
+=======
+      fontSize: rf(28),
+      fontWeight: "900",
+>>>>>>> Stashed changes
       color: p.textStrong,
       textAlign: "center",
     },
     backButton: {
       flexDirection: "row",
       alignItems: "center",
+<<<<<<< Updated upstream
       gap: 4,
       paddingHorizontal: 10,
       paddingVertical: 10,
       borderRadius: 8,
       borderWidth: 2,
+=======
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: 5,
+      borderWidth: 1,
+>>>>>>> Stashed changes
       borderColor: p.primary,
       backgroundColor: p.background,
     },
     backText: {
+<<<<<<< Updated upstream
       fontSize: 8,
+=======
+      fontSize: 11,
+>>>>>>> Stashed changes
       fontWeight: "bold",
       color: p.textMuted,
     },
@@ -331,7 +371,7 @@ function createStyles(p: Palette) {
       padding: 14,
       alignItems: "center",
       marginBottom: 20,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.walletSpendBorder,
     },
     balanceText: {
@@ -408,7 +448,7 @@ function createStyles(p: Palette) {
       padding: 14,
       fontSize: rf(16),
       color: p.textBase,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
     },
 
@@ -479,7 +519,7 @@ function createStyles(p: Palette) {
       alignItems: "center",
       justifyContent: "center",
       minHeight: 52,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
     },
     confirmBackBtnText: {

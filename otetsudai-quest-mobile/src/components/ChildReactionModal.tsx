@@ -13,7 +13,11 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { useAppAlert } from "./AppAlert";
+<<<<<<< Updated upstream
 import { useTheme, type Palette } from "../theme";
+=======
+import { useTheme, type Palette, linkStyles } from "../theme";
+>>>>>>> Stashed changes
 import { rf } from "../lib/responsive";
 import { CHILD_STAMPS } from "../lib/child-stamps";
 import { getStampById } from "../lib/stamps";
@@ -21,6 +25,7 @@ import { useKeyboardHeight } from "../lib/useKeyboardHeight";
 import { PixelLetterIcon, PixelTargetIcon, PixelCoinIcon } from "./PixelIcons";
 import { AutoRubyText } from "./Ruby";
 import StampSvg from "./StampSvg";
+import CoinKunChat from "./CoinKunChat";
 
 type UnreadLog = {
   id: string;
@@ -119,7 +124,11 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
 
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <PixelLetterIcon size={22} />
+<<<<<<< Updated upstream
             <AutoRubyText text="親からのメッセージ" style={styles.header} rubySize={6} noWrap />
+=======
+            <AutoRubyText text="冒険団長からのメッセージ" style={styles.header} rubySize={6} noWrap />
+>>>>>>> Stashed changes
           </View>
 
           {/* 親メッセージ表示 */}
@@ -195,7 +204,11 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
             style={styles.textInput}
             value={message}
             onChangeText={setMessage}
+<<<<<<< Updated upstream
             placeholder="親に一言！（入力しなくてもOK）"
+=======
+            placeholder="団長に一言！（入力しなくてもOK）"
+>>>>>>> Stashed changes
             placeholderTextColor={palette.textPlaceholder}
             multiline
             maxLength={100}
@@ -209,7 +222,11 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
             style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
             onPress={handleSend}
             disabled={!canSend || sending}
+<<<<<<< Updated upstream
             accessibilityLabel={sending ? "送信中" : "親にメッセージを送る"}
+=======
+            accessibilityLabel={sending ? "送信中" : "団長にメッセージを送る"}
+>>>>>>> Stashed changes
             accessibilityRole="button"
           >
             {sending ? (
@@ -238,6 +255,7 @@ export default function ChildReactionModal({ logs, onAllDone, onSkip }: Props) {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+      <CoinKunChat role="child" />
     </Modal>
   );
 }
@@ -391,9 +409,8 @@ function createStyles(p: Palette) {
       alignItems: "center",
     },
     skipText: {
+      ...linkStyles(p).linkTextMuted,
       fontSize: 13,
-      color: p.textMuted,
-      textDecorationLine: "underline",
     },
   });
 }

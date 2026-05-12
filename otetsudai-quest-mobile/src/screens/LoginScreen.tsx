@@ -15,7 +15,7 @@ import { supabase } from "../lib/supabase";
 import type { Family, User } from "../lib/types";
 import { verifyPin, loginAsUser, signIn, signUp } from "../services/auth";
 import { setSession } from "../lib/session";
-import { useTheme, type Palette } from "../theme";
+import { useTheme, type Palette, linkStyles } from "../theme";
 import { rf } from "../lib/responsive";
 import { AutoRubyText, RubyText } from "../components/Ruby";
 import { useAppAlert } from "../components/AppAlert";
@@ -575,7 +575,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
                 onPress={() => { setIsSignUp(!isSignUp); setError(""); setAdminEmail(""); setAdminPassword(""); }}
               >
                 <Text style={styles.switchAuthText}>
-                  {isSignUp ? "ログインに戻る" : "アカウント作成"}
+                  {isSignUp ? "ログインにもどる" : "アカウント作成"}
                 </Text>
               </TouchableOpacity>
 
@@ -614,7 +614,11 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
                 <>
                   {/* 冒険団メンバー管理画面 */}
                   <TouchableOpacity style={styles.backButton} onPress={() => { setManagingFamily(null); setFamilyMembers([]); }}>
+<<<<<<< Updated upstream
                     <PixelDoorIcon size={14} /><Text style={styles.backText}>冒険団一覧に戻る</Text>
+=======
+                    <PixelDoorIcon size={12} /><Text style={styles.backText}>もどる</Text>
+>>>>>>> Stashed changes
                   </TouchableOpacity>
                   <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 8, marginBottom: 12 }}>
                     <PixelHouseIcon size={18} />
@@ -637,7 +641,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
                                   flex: 1,
                                   paddingVertical: 8,
                                   borderRadius: 10,
-                                  borderWidth: 2,
+                                  borderWidth: 1.5,
                                   borderColor: editIcon === g.key ? palette.primary : palette.border,
                                   backgroundColor: editIcon === g.key ? palette.primaryLight : palette.surfaceMuted,
                                   alignItems: "center",
@@ -707,7 +711,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
                               <PixelFamilyIcon size={18} />
                             )}
                             <Text style={styles.familyName}>
-                              {m.name}（{m.role === "child" ? "子供" : "親"}）
+                              {m.name}（{m.role === "child" ? "子供" : "団長"}）
                             </Text>
                           </View>
                           <PixelPencilIcon size={14} />
@@ -737,7 +741,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
                             paddingVertical: 10,
                             paddingHorizontal: 4,
                             borderRadius: 12,
-                            borderWidth: 2,
+                            borderWidth: 1.5,
                             borderColor: newChildIcon === g.key ? palette.primary : palette.border,
                             backgroundColor: newChildIcon === g.key ? palette.primaryLight : palette.surfaceMuted,
                             alignItems: "center",
@@ -860,7 +864,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
                                 paddingVertical: 10,
                                 alignItems: "center",
                                 justifyContent: "center",
-                                borderWidth: 1,
+                                borderWidth: 1.5,
                                 borderColor: palette.border,
                               }}
                               onPress={() => openFamilyMembers(f)}
@@ -967,11 +971,16 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+<<<<<<< Updated upstream
                 <PixelDoorIcon size={14} />
                 <View style={{ alignItems: "center" }}>
                   <Text style={styles.backText}>もどる</Text>
                   <Text style={styles.backHint}>(まえへ)</Text>
                 </View>
+=======
+                <PixelDoorIcon size={12} />
+                <Text style={styles.backText}>もどる</Text>
+>>>>>>> Stashed changes
               </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={[["冒険団", "ぼうけんだん"], "を", ["選", "えら"], "んでね"]} rubySize={6} />
@@ -993,11 +1002,16 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+<<<<<<< Updated upstream
                 <PixelDoorIcon size={14} />
                 <View style={{ alignItems: "center" }}>
                   <Text style={styles.backText}>{selectedFamily?.name}</Text>
                   <Text style={styles.backHint}>(まえへ)</Text>
                 </View>
+=======
+                <PixelDoorIcon size={12} />
+                <Text style={styles.backText}>{selectedFamily?.name}</Text>
+>>>>>>> Stashed changes
               </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={[["冒険者", "ぼうけんしゃ"], "を", ["選", "えら"], "びます"]} rubySize={6} />
@@ -1029,11 +1043,16 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+<<<<<<< Updated upstream
                 <PixelDoorIcon size={14} />
                 <View style={{ alignItems: "center" }}>
                   <Text style={styles.backText}>{selectedUser?.name}</Text>
                   <Text style={styles.backHint}>(まえへ)</Text>
                 </View>
+=======
+                <PixelDoorIcon size={12} />
+                <Text style={styles.backText}>{selectedUser?.name}</Text>
+>>>>>>> Stashed changes
               </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={["PINを", ["入", "い"], "れてね 🔑"]} rubySize={6} />
@@ -1131,7 +1150,7 @@ function createStyles(p: Palette) {
       backgroundColor: p.surface,
       borderRadius: 16,
       padding: 24,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: `${p.primary}55`,
       shadowColor: p.black,
       shadowOffset: { width: 0, height: 2 },
@@ -1176,7 +1195,7 @@ function createStyles(p: Palette) {
       marginBottom: 12,
     },
     selectButton: {
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.accentDark,
       borderRadius: 12,
       padding: 16,
@@ -1199,7 +1218,7 @@ function createStyles(p: Palette) {
       flexShrink: 0,
     },
     pinInput: {
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.border,
       borderRadius: 12,
       padding: 16,
@@ -1210,7 +1229,7 @@ function createStyles(p: Palette) {
       color: p.textStrong,
     },
     input: {
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       borderRadius: 12,
       padding: 14,
@@ -1254,16 +1273,16 @@ function createStyles(p: Palette) {
       alignSelf: "flex-start",
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 8,
-      borderWidth: 2,
+      gap: 3,
+      paddingHorizontal: 7,
+      paddingVertical: 3,
+      borderRadius: 5,
+      borderWidth: 1,
       borderColor: p.primary,
       backgroundColor: p.background,
     } as const,
     backText: {
-      fontSize: 14,
+      fontSize: 11,
       fontWeight: "bold",
       color: p.textMuted,
     },
@@ -1275,7 +1294,7 @@ function createStyles(p: Palette) {
       marginTop: -1,
     },
     modeButton: {
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderRadius: 16,
       padding: 20,
       alignItems: "center",
@@ -1290,9 +1309,8 @@ function createStyles(p: Palette) {
       paddingVertical: 8,
     },
     switchAuthText: {
+      ...linkStyles(p).linkText,
       fontSize: 13,
-      color: p.primary,
-      textDecorationLine: "underline",
     },
     adminLink: {
       marginTop: 20,
@@ -1306,7 +1324,7 @@ function createStyles(p: Palette) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       borderRadius: 12,
       padding: 14,
@@ -1332,9 +1350,14 @@ function createStyles(p: Palette) {
       paddingVertical: 8,
     },
     recoverText: {
+<<<<<<< Updated upstream
       fontSize: 13,
       color: p.primary,
       textDecorationLine: "underline",
+=======
+      ...linkStyles(p).linkText,
+      fontSize: 13,
+>>>>>>> Stashed changes
     },
     legalRow: {
       flexDirection: "row",

@@ -56,16 +56,22 @@ export default function GameStatusHeader({
 
       <View style={styles.row}>
         {onBack ? (
+<<<<<<< Updated upstream
           <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityLabel="戻る">
             <PixelHouseIcon size={12} />
             <Text style={styles.backText}>戻る</Text>
+=======
+          <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityLabel="もどる">
+            <PixelHouseIcon size={12} />
+            <Text style={styles.backText}>もどる</Text>
+>>>>>>> Stashed changes
           </TouchableOpacity>
         ) : null}
 
         {/* ミニキャラ + Lvバッジ */}
         <View style={styles.characterWrap}>
           <View style={styles.characterBg}>
-            <CharacterSvg level={level} mood="active" size={40} />
+            <CharacterSvg level={level} mood="active" size={40} animated />
           </View>
           <View style={styles.lvBadge}>
             <Text style={styles.lvText}>Lv.{level}</Text>
@@ -137,7 +143,7 @@ function createStyles(palette: Palette) {
     root: {
       marginBottom: 12,
       borderRadius: 16,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: `${palette.primary}99`,
       overflow: "hidden",
     },
@@ -175,12 +181,17 @@ function createStyles(palette: Palette) {
       borderColor: palette.primary,
     },
     backText: {
+<<<<<<< Updated upstream
       fontSize: 8,
+=======
+      fontSize: 11,
+>>>>>>> Stashed changes
       fontWeight: "bold",
       color: palette.textMuted,
     },
     characterWrap: {
-      position: "relative",
+      alignItems: "center",
+      gap: 2,
     },
     characterBg: {
       width: 48,
@@ -192,11 +203,14 @@ function createStyles(palette: Palette) {
       justifyContent: "center",
     },
     lvBadge: {
+<<<<<<< Updated upstream
       position: "absolute",
       bottom: -4,
       right: -4,
+=======
+>>>>>>> Stashed changes
       borderRadius: 6,
-      paddingHorizontal: 4,
+      paddingHorizontal: 6,
       paddingVertical: 1,
       borderWidth: 1.5,
       borderColor: palette.primary,

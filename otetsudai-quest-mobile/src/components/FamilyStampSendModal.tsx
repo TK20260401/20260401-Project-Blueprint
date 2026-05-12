@@ -21,6 +21,7 @@ import type { User } from "../lib/types";
 import { PixelLetterIcon } from "./PixelIcons";
 import StampSvg from "./StampSvg";
 import * as Haptics from "expo-haptics";
+import CoinKunChat from "./CoinKunChat";
 
 type Props = {
   visible: boolean;
@@ -253,6 +254,7 @@ export default function FamilyStampSendModal({
           </View>
         </KeyboardAvoidingView>
       </View>
+      <CoinKunChat role="child" />
     </Modal>
   );
 }
@@ -316,7 +318,7 @@ function createStyles(p: Palette) {
       borderRadius: 14,
       paddingVertical: 10,
       paddingHorizontal: 14,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.border,
       minWidth: 72,
       minHeight: 48,
@@ -348,7 +350,7 @@ function createStyles(p: Palette) {
       backgroundColor: p.surfaceMuted,
       borderRadius: 12,
       padding: 8,
-      borderWidth: 2,
+      borderWidth: 1.5,
       borderColor: p.border,
       width: "23%",
       minHeight: 48,
@@ -377,7 +379,7 @@ function createStyles(p: Palette) {
       fontWeight: "bold",
     },
     textInput: {
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: p.border,
       borderRadius: 12,
       padding: 14,

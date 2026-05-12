@@ -16,7 +16,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { getSession, clearSession } from "../lib/session";
+<<<<<<< Updated upstream
 import { useTheme, type Palette } from "../theme";
+=======
+import { useTheme, type Palette, linkStyles } from "../theme";
+>>>>>>> Stashed changes
 import { palettes, type PaletteName } from "../theme/palettes";
 import { rf } from "../lib/responsive";
 import { getTaskIcon } from "../lib/task-icons";
@@ -62,6 +66,11 @@ import { useReducedMotion } from "../lib/useReducedMotion";
 import { PixelSwordIcon, PixelScrollIcon, PixelChestOpenIcon, PixelShieldIcon, PixelStarIcon, PixelCrossedSwordsIcon, PixelPotionIcon, PixelFlameIcon, PixelLetterIcon, PixelCoinIcon, PixelCartIcon, PixelPiggyIcon, PixelChartIcon, PixelDoorIcon, PixelBarChartIcon, PixelHourglassIcon, PixelCheckIcon, PixelCrossIcon, PixelMapIcon, PixelLightbulbIcon, PixelBookIcon, PixelTargetIcon, PixelChatIcon, PixelRefreshIcon, PixelConfettiIcon, PixelShopIcon, PixelPencilIcon } from "../components/PixelIcons";
 import StampSvg from "../components/StampSvg";
 import WalletTransferModal, { type PotType } from "../components/WalletTransferModal";
+<<<<<<< Updated upstream
+=======
+import PresetQuestModal from "../components/PresetQuestModal";
+import type { PresetQuest } from "../data/presetQuests";
+>>>>>>> Stashed changes
 import QuestCardFrame from "../components/QuestCardFrame";
 import TaskIconSvg from "../components/TaskIconSvg";
 import RpgStatusBar from "../components/RpgStatusBar";
@@ -128,6 +137,8 @@ export default function ChildDashboardScreen({
   const [recentSpendRequests, setRecentSpendRequests] = useState<SpendRequest[]>([]);
   // バッジ獲得演出
   const [unlockedBadge, setUnlockedBadge] = useState<{ emoji: string; label: string; description: string } | null>(null);
+  // プリセットクエスト選択
+  const [presetPickerVisible, setPresetPickerVisible] = useState(false);
   // じぶんクエスト提案
   const [proposalVisible, setProposalVisible] = useState(false);
   const [proposalTitle, setProposalTitle] = useState("");
@@ -181,7 +192,7 @@ export default function ChildDashboardScreen({
       setProposalTitle("");
       setProposalReason("");
       setProposalReward("");
-      alert("送信しました！", "親がクエストを確認するよ！");
+      alert("送信しました！", "冒険団長がクエストを確認するよ！");
       loadData();
     } catch {
       alert("エラー", "送信に失敗しました");
@@ -214,13 +225,14 @@ export default function ChildDashboardScreen({
       supabase
         .from("otetsudai_transactions")
         .select("*")
+        .is("dismissed_at", null)
         .order("created_at", { ascending: false })
         .limit(20),
       supabase
         .from("otetsudai_badges")
         .select("*")
         .eq("child_id", childId),
-      // Recent approvals with stamp/message（未返信のみ表示）
+      // Recent approvals with stamp/message（未返信かつ未 dismiss のみ表示）
       supabase
         .from("otetsudai_task_logs")
         .select("id, approval_stamp, approval_message, child_reaction_at, child_reaction_stamp, child_reaction_message, task:otetsudai_tasks(title)")
@@ -228,6 +240,7 @@ export default function ChildDashboardScreen({
         .eq("status", "approved")
         .not("approval_stamp", "is", null)
         .is("child_reaction_at", null)
+        .is("child_dismissed_at", null)
         .order("approved_at", { ascending: false })
         .limit(5),
       // つかうリクエスト状況
@@ -381,13 +394,14 @@ export default function ChildDashboardScreen({
     }));
     setUnreadLogs(unread);
 
-    // 返信済みメッセージ履歴
+    // 返信済みメッセージ履歴（child_dismissed_at が NULL のもののみ表示）
     const { data: replied } = await supabase
       .from("otetsudai_task_logs")
       .select("id, approval_stamp, approval_message, child_reaction_stamp, child_reaction_message, child_reaction_at, task:otetsudai_tasks(title, reward_amount)")
       .eq("child_id", childId)
       .eq("status", "approved")
       .not("child_reaction_at", "is", null)
+      .is("child_dismissed_at", null)
       .order("child_reaction_at", { ascending: false })
       .limit(10);
     setRepliedMessages(replied || []);
@@ -411,6 +425,9 @@ export default function ChildDashboardScreen({
         .from("otetsudai_family_messages")
         .select("*, sender:otetsudai_users!sender_id(*), recipient:otetsudai_users!recipient_id(*)")
         .eq("family_id", session.familyId)
+        // 受信者が当該子供 かつ dismissed されたものは除外
+        // 自分発信のもの、他者→他者のもの、受信側で未dismissのものは表示
+        .or(`recipient_id.neq.${childId},dismissed_by_recipient_at.is.null`)
         .order("created_at", { ascending: false })
         .limit(20),
     ]);
@@ -507,18 +524,71 @@ export default function ChildDashboardScreen({
     setTimeout(() => setRefreshDoneAt(null), 1500);
   }
 
+<<<<<<< Updated upstream
   // 3pot 間の振替（銀行/証券の入出金モデル）
   async function handleTransfer(from: PotType, to: PotType, amount: number) {
     if (!wallet) throw new Error("ウォレットが ありません");
     if (from === to) throw new Error("おなじ ところには ふりかえできません");
     if (amount <= 0) throw new Error("0円より おおきく");
+=======
+  // 団長とのやりとり（task_log 返信済）をタップでクリア — 楽観的UI更新後にDB更新
+  async function dismissRepliedMessage(logId: string) {
+    setRepliedMessages((prev) => prev.filter((m: any) => m.id !== logId));
+    const { error } = await supabase
+      .from("otetsudai_task_logs")
+      .update({ child_dismissed_at: new Date().toISOString() })
+      .eq("id", logId);
+    if (error) loadData();
+  }
+
+  // 承認通知（task_log 未返信）をタップでクリア
+  async function dismissStampNotif(logId: string) {
+    setStampNotifs((prev) => prev.filter((s) => s.id !== logId));
+    const { error } = await supabase
+      .from("otetsudai_task_logs")
+      .update({ child_dismissed_at: new Date().toISOString() })
+      .eq("id", logId);
+    if (error) loadData();
+  }
+
+  // 冒険ログ取引行をタップでクリア
+  async function dismissTransaction(txId: string) {
+    setTransactions((prev) => prev.filter((t: any) => t.id !== txId));
+    const { error } = await supabase
+      .from("otetsudai_transactions")
+      .update({ dismissed_at: new Date().toISOString() })
+      .eq("id", txId);
+    if (error) loadData();
+  }
+
+  // パーティチャットメッセージをタップでクリア — 受信側のみ
+  async function dismissFamilyMessage(messageId: string) {
+    setFamilyMessages((prev) => prev.filter((m) => m.id !== messageId));
+    const { error } = await supabase
+      .from("otetsudai_family_messages")
+      .update({ dismissed_by_recipient_at: new Date().toISOString() })
+      .eq("id", messageId)
+      .eq("recipient_id", childId);
+    if (error) loadData();
+  }
+
+  // 3pot 間の振替（銀行/証券の入出金モデル）
+  async function handleTransfer(from: PotType, to: PotType, amount: number) {
+    if (!wallet) throw new Error("ウォレットが ありません");
+    if (from === to) throw new Error("同じところには移せません");
+    if (amount <= 0) throw new Error("0コロより おおきく");
+>>>>>>> Stashed changes
 
     const balanceMap = {
       spending: wallet.spending_balance,
       saving: wallet.saving_balance,
       invest: wallet.invest_balance,
     };
+<<<<<<< Updated upstream
     if (amount > balanceMap[from]) throw new Error(`${balanceMap[from].toLocaleString()}円までだよ`);
+=======
+    if (amount > balanceMap[from]) throw new Error(`${balanceMap[from].toLocaleString()}コロまでだよ`);
+>>>>>>> Stashed changes
 
     const next = { ...balanceMap, [from]: balanceMap[from] - amount, [to]: balanceMap[to] + amount };
     const { error: walletErr } = await supabase
@@ -531,13 +601,21 @@ export default function ChildDashboardScreen({
       .eq("id", wallet.id);
     if (walletErr) throw walletErr;
 
+<<<<<<< Updated upstream
     const labelMap = { spending: "つかう", saving: "ためる", invest: "ふやす" } as const;
+=======
+    const labelMap = { spending: "取引", saving: "金庫", invest: "錬成" } as const;
+>>>>>>> Stashed changes
     const txTypeMap = { spending: "spend", saving: "save", invest: "invest" } as const;
     await supabase.from("otetsudai_transactions").insert({
       wallet_id: wallet.id,
       type: txTypeMap[to],
       amount,
+<<<<<<< Updated upstream
       description: `${labelMap[from]} → ${labelMap[to]} ふりかえ`,
+=======
+      description: `${labelMap[from]} → ${labelMap[to]} 移す`,
+>>>>>>> Stashed changes
     });
 
     await loadData();
@@ -776,10 +854,14 @@ export default function ChildDashboardScreen({
             parts={[["冒", "ぼう"], ["険", "けん"]]}
             rubySize={7}
             noWrap
-            rubyColor="rgba(255,255,200,0.7)"
+            rubyColor="#fff"
           />
           <Text style={styles.quickNavSub} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>クエストへ</Text>
+<<<<<<< Updated upstream
           <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>クエストに ちょうせん</Text>
+=======
+          <RubyText style={styles.quickNavHint} parts={["クエストに", ["挑戦", "ちょうせん"]]} rubySize={4} noWrap rubyColor="rgba(255,255,255,0.85)" />
+>>>>>>> Stashed changes
         </TouchableOpacity>
 
         {/* つかう */}
@@ -791,7 +873,7 @@ export default function ChildDashboardScreen({
             if (!wallet) return;
             navigation.navigate("SpendRequest", { childId, walletId: wallet.id, spendingBalance: wallet.spending_balance });
           }}
-          accessibilityLabel="つかう画面へ"
+          accessibilityLabel="取引画面へ"
           accessibilityRole="button"
         >
           <View style={styles.quickNavIconBox}><PixelCartIcon size={24} /></View>
@@ -800,12 +882,18 @@ export default function ChildDashboardScreen({
             parts={[["取", "とり"], ["引", "ひき"]]}
             rubySize={7}
             noWrap
-            rubyColor="rgba(255,255,200,0.7)"
+            rubyColor="#fff"
           />
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+<<<<<<< Updated upstream
             {(wallet?.spending_balance ?? 0).toLocaleString()}円
           </Text>
           <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>しょうにんと とりひき</Text>
+=======
+            {(wallet?.spending_balance ?? 0).toLocaleString()}コロ
+          </Text>
+          <RubyText style={styles.quickNavHint} parts={[["商人", "しょうにん"], "と", ["取引", "とりひき"]]} rubySize={4} noWrap rubyColor="rgba(255,255,255,0.85)" />
+>>>>>>> Stashed changes
         </TouchableOpacity>
 
         {/* 金庫 */}
@@ -817,7 +905,7 @@ export default function ChildDashboardScreen({
             if (!wallet) return;
             navigation.navigate("WalletDetail", { childId, walletId: wallet.id });
           }}
-          accessibilityLabel="ためる画面へ"
+          accessibilityLabel="金庫画面へ"
           accessibilityRole="button"
         >
           <View style={styles.quickNavIconBox}><PixelPiggyIcon size={24} /></View>
@@ -826,12 +914,18 @@ export default function ChildDashboardScreen({
             parts={[["金", "きん"], ["庫", "こ"]]}
             rubySize={7}
             noWrap
-            rubyColor="rgba(255,255,200,0.7)"
+            rubyColor="#fff"
           />
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+<<<<<<< Updated upstream
             {(wallet?.saving_balance ?? 0).toLocaleString()}円
           </Text>
           <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>たからを しまう</Text>
+=======
+            {(wallet?.saving_balance ?? 0).toLocaleString()}コロ
+          </Text>
+          <RubyText style={styles.quickNavHint} parts={[["宝", "たから"], "をしまう"]} rubySize={4} noWrap rubyColor="rgba(255,255,255,0.85)" />
+>>>>>>> Stashed changes
         </TouchableOpacity>
 
         {/* 錬成 */}
@@ -843,7 +937,7 @@ export default function ChildDashboardScreen({
             if (!wallet) return;
             navigation.navigate("Invest", { childId, walletId: wallet.id, investBalance: wallet.invest_balance });
           }}
-          accessibilityLabel="ふやす画面へ"
+          accessibilityLabel="錬成画面へ"
           accessibilityRole="button"
         >
           <View style={styles.quickNavIconBox}><PixelChartIcon size={24} /></View>
@@ -852,12 +946,18 @@ export default function ChildDashboardScreen({
             parts={[["錬", "れん"], ["成", "せい"]]}
             rubySize={7}
             noWrap
-            rubyColor="rgba(255,255,200,0.7)"
+            rubyColor="#fff"
           />
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+<<<<<<< Updated upstream
             {(wallet?.invest_balance ?? 0).toLocaleString()}円
           </Text>
           <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>お金を そだてる</Text>
+=======
+            {(wallet?.invest_balance ?? 0).toLocaleString()}コロ
+          </Text>
+          <RubyText style={styles.quickNavHint} parts={["コロを", ["育", "そだ"], "てる"]} rubySize={4} noWrap rubyColor="rgba(255,255,255,0.85)" />
+>>>>>>> Stashed changes
         </TouchableOpacity>
       </View>
 
@@ -883,7 +983,11 @@ export default function ChildDashboardScreen({
             <RubyText
               style={styles.refreshBtnLabel}
               parts={refreshing
+<<<<<<< Updated upstream
                 ? [["点検", "てんけん"], "ちゅう..."]
+=======
+                ? [["点検中", "てんけんちゅう"], "..."]
+>>>>>>> Stashed changes
                 : refreshDoneAt
                 ? [["点検", "てんけん"], "しました ✨"]
                 : [["点検", "てんけん"]]}
@@ -891,12 +995,23 @@ export default function ChildDashboardScreen({
               noWrap
             />
             {!refreshing && !refreshDoneAt && (
+<<<<<<< Updated upstream
               <RubyText
                 style={styles.refreshBtnHint}
                 parts={["（", ["最新", "さいしん"], "の", ["持", "も"], "ちものに する）"]}
                 rubySize={5}
                 noWrap
               />
+=======
+              <View style={styles.refreshBtnHintWrap}>
+                <RubyText
+                  style={styles.refreshBtnHint}
+                  parts={["（", ["最新の", "さいしん"], " ", ["持", "も"], "ち", ["物", "もの"], "にする）"]}
+                  rubySize={5}
+                  noWrap
+                />
+              </View>
+>>>>>>> Stashed changes
             )}
           </View>
         </TouchableOpacity>
@@ -906,14 +1021,26 @@ export default function ChildDashboardScreen({
           onPress={() => setTransferVisible(true)}
           disabled={!wallet}
           activeOpacity={0.7}
+<<<<<<< Updated upstream
           accessibilityLabel="おかねを うつす"
           accessibilityRole="button"
           accessibilityHint="つかう・ためる・ふやすの あいだで おかねを うつします"
+=======
+          accessibilityLabel="コロを移す"
+          accessibilityRole="button"
+          accessibilityHint="取引・金庫・錬成の間でコロを移します"
+>>>>>>> Stashed changes
         >
           <PixelCoinIcon size={18} />
           <View style={{ flex: 1 }}>
             <RubyText style={styles.refreshBtnLabel} parts={[["移", "うつ"], "す"]} rubySize={6} noWrap />
+<<<<<<< Updated upstream
             <RubyText style={styles.refreshBtnHint} parts={["（おかねを ", ["移動", "いどう"], "する）"]} rubySize={5} noWrap />
+=======
+            <View style={styles.refreshBtnHintWrap}>
+              <RubyText style={styles.refreshBtnHint} parts={["（コロを", ["移動", "いどう"], "する）"]} rubySize={5} noWrap />
+            </View>
+>>>>>>> Stashed changes
           </View>
         </TouchableOpacity>
       </View>
@@ -969,6 +1096,7 @@ export default function ChildDashboardScreen({
               }}
               onManage={() => setPetManageVisible(true)}
             />
+<<<<<<< Updated upstream
             <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
               <TouchableOpacity onPress={() => setShopVisible(true)} style={styles.shopBtn}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
@@ -981,6 +1109,22 @@ export default function ChildDashboardScreen({
                   <PixelStarIcon size={14} />
                   <RubyText style={styles.shopBtnText} parts={[["図鑑", "ずかん"]]} rubySize={4} noWrap />
                 </View>
+=======
+            <View style={{ flexDirection: "column", gap: 6, marginTop: 4 }}>
+              <TouchableOpacity onPress={() => setPetEncyclopediaVisible(true)} style={styles.shopBtn}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <PixelStarIcon size={14} />
+                  <RubyText style={styles.shopBtnText} parts={[["図鑑", "ずかん"]]} rubySize={5} noWrap />
+                </View>
+                <RubyText style={styles.shopBtnHint} parts={["ペットを", ["調", "しら"], "べる"]} rubySize={4} noWrap />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShopVisible(true)} style={styles.shopBtn}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <PixelShopIcon size={14} />
+                  <RubyText style={styles.shopBtnText} parts={["ショップ"]} rubySize={5} noWrap />
+                </View>
+                <RubyText style={styles.shopBtnHint} parts={[["称号", "しょうごう"], "を", ["授", "さず"], "かる"]} rubySize={4} noWrap />
+>>>>>>> Stashed changes
               </TouchableOpacity>
             </View>
           </View>
@@ -1022,7 +1166,7 @@ export default function ChildDashboardScreen({
             />
             {levelInfo.next ? (
               <View style={{ marginTop: 4 }}>
-                <AutoRubyText text={`次のレベルまであと${levelInfo.remaining.toLocaleString()}円`} style={styles.levelNext} rubySize={5} noWrap />
+                <AutoRubyText text={`次のレベルまであと${levelInfo.remaining.toLocaleString()}コロ`} style={styles.levelNext} rubySize={5} noWrap />
               </View>
             ) : (
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 4 }}><AutoRubyText text="最高レベル 達成！" style={[styles.levelNext, { color: palette.accent, fontWeight: "bold" }]} rubySize={6} /><PixelConfettiIcon size={16} /></View>
@@ -1033,11 +1177,18 @@ export default function ChildDashboardScreen({
         {/* Stamp Notifications */}
         {stampNotifs.length > 0 && (
           <RpgCard tier="gold" style={{ marginHorizontal: 12, marginTop: 12 }}>
-            <RubyText style={styles.sectionTitle} parts={[["親", "おや"], "からのメッセージ"]} />
+            <RubyText style={styles.sectionTitle} parts={[["冒険団長", "ぼうけんだんちょう"], "からのメッセージ"]} />
             {stampNotifs.map((s) => {
               const stampDef = s.stamp ? getStampById(s.stamp) : null;
               return (
-                <View key={s.id} style={styles.stampNotif}>
+                <TouchableOpacity
+                  key={s.id}
+                  style={styles.stampNotif}
+                  activeOpacity={0.6}
+                  onPress={() => dismissStampNotif(s.id)}
+                  accessibilityLabel="承認通知を閉じる"
+                  accessibilityHint="タップでこの通知を非表示にします"
+                >
                   {stampDef && (
                     <View style={styles.stampNotifSvgWrap}>
                       <StampSvg id={stampDef.id} size={32} />
@@ -1055,8 +1206,9 @@ export default function ChildDashboardScreen({
                         「{s.message}」
                       </Text>
                     )}
+                    <Text style={styles.dismissHint}>タップで閉じる</Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             })}
           </RpgCard>
@@ -1077,7 +1229,7 @@ export default function ChildDashboardScreen({
                 <Text style={styles.weeklyStatValue}>
                   ¥{weeklySummary.earned.toLocaleString()}
                 </Text>
-                <AutoRubyText text="稼いだ" style={styles.weeklyStatLabel} rubySize={5} />
+                <AutoRubyText text="クエスト報酬" style={styles.weeklyStatLabel} rubySize={5} />
               </View>
               {weeklySummary.streak > 0 && (
                 <View style={styles.colCenter}>
@@ -1102,7 +1254,11 @@ export default function ChildDashboardScreen({
 
         {/* ファミリースタンプリレー */}
         <View style={{ marginHorizontal: 12, marginBottom: 12 }}>
+<<<<<<< Updated upstream
           <FamilyMessageCard messages={familyMessages} currentUserId={childId} />
+=======
+          <FamilyMessageCard messages={familyMessages} currentUserId={childId} onDismiss={dismissFamilyMessage} />
+>>>>>>> Stashed changes
           <AnimatedButton
             onPress={() => setStampSendVisible(true)}
             style={styles.stampRelayBtn}
@@ -1130,7 +1286,7 @@ export default function ChildDashboardScreen({
                 </View>
                 <View style={styles.flex1}>
                   <Text style={styles.spendStatusText} numberOfLines={1}>
-                    {req.purpose} — {req.amount}円
+                    {req.purpose} — {req.amount}コロ
                   </Text>
                   <Text style={styles.spendStatusLabel}>
                     {req.status === "pending"
@@ -1163,9 +1319,12 @@ export default function ChildDashboardScreen({
         </TouchableOpacity>
 
         {/* 画面タイトル — 子供名＋現在画面を明示 */}
-        <View
-          style={styles.screenTitleBar}
-          accessibilityRole="header"
+        <TouchableOpacity
+          style={[styles.screenTitleBar, tab === "quests" && styles.screenTitleBarQuest]}
+          accessibilityRole={tab === "quests" ? "button" : "header"}
+          accessibilityLabel={tab === "quests" ? "クエスト一覧を開く" : undefined}
+          activeOpacity={tab === "quests" ? 0.7 : 1}
+          onPress={tab === "quests" ? () => setPresetPickerVisible(true) : undefined}
           onLayout={(e) => { questSectionY.current = e.nativeEvent.layout.y; }}
         >
           <View style={styles.screenTitleAccent} />
@@ -1201,7 +1360,7 @@ export default function ChildDashboardScreen({
               />
             )}
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Tabs */}
         <View style={styles.tabRow} accessibilityRole="tabbar">
@@ -1279,7 +1438,7 @@ export default function ChildDashboardScreen({
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                               <PixelCoinIcon size={14} />
                               <AutoRubyText
-                                text={`${task.reward_amount}円`}
+                                text={`${task.reward_amount}コロ`}
                                 style={styles.specialQuestReward}
                                 rubySize={6}
                               />
@@ -1343,7 +1502,7 @@ export default function ChildDashboardScreen({
                             <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
                               <PixelCoinIcon size={14} />
                               <AutoRubyText
-                                text={`${task.reward_amount}円`}
+                                text={`${task.reward_amount}コロ`}
                                 style={styles.questReward}
                                 rubySize={6}
                               />
@@ -1388,6 +1547,12 @@ export default function ChildDashboardScreen({
                               <PixelCoinIcon size={12} />
                               <Text style={styles.priceUpText}>↑</Text>
                             </View>
+                            <RubyText
+                              style={styles.priceUpHint}
+                              parts={["お", ["願", "ねが"], "い"]}
+                              rubySize={4}
+                              noWrap
+                            />
                           </AnimatedButton>
                         )}
                       </View>
@@ -1400,7 +1565,11 @@ export default function ChildDashboardScreen({
               <View style={styles.emptyCard}>
                 <PixelMapIcon size={40} />
                 <AutoRubyText text="クエストが まだないよ" style={[styles.emptyText, { paddingVertical: 0, fontWeight: "bold" }]} rubySize={7} />
+<<<<<<< Updated upstream
                 <AutoRubyText text="親に たのんで クエストを つくってもらおう！" style={styles.emptyHint} rubySize={6} />
+=======
+                <AutoRubyText text="冒険団長に頼んでクエストを作ってもらおう！" style={styles.emptyHint} rubySize={6} />
+>>>>>>> Stashed changes
               </View>
             )}
 
@@ -1429,7 +1598,7 @@ export default function ChildDashboardScreen({
             {/* 返信済みメッセージ履歴 */}
             {repliedMessages.length > 0 && (
               <View style={styles.repliedSection}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelChatIcon size={18} /><RubyText style={styles.repliedTitle} parts={[["親", "おや"], "との やりとり"]} /></View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelChatIcon size={18} /><RubyText style={styles.repliedTitle} parts={[["団長", "だんちょう"], "とのやりとり"]} /></View>
                 {repliedMessages.map((log: any) => {
                   const cStamp = log.child_reaction_stamp
                     ? getChildStampById(log.child_reaction_stamp)
@@ -1438,11 +1607,18 @@ export default function ChildDashboardScreen({
                     ? getStampById(log.approval_stamp)
                     : null;
                   return (
-                    <View key={log.id} style={styles.repliedCard}>
+                    <TouchableOpacity
+                      key={log.id}
+                      style={styles.repliedCard}
+                      activeOpacity={0.6}
+                      onPress={() => dismissRepliedMessage(log.id)}
+                      accessibilityLabel="やりとりを閉じる"
+                      accessibilityHint="タップでこのやりとりを非表示にします"
+                    >
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelTargetIcon size={14} /><AutoRubyText text={log.task?.title ?? ""} style={styles.repliedTaskName} rubySize={5} noWrap /></View>
                       {pStamp && (
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
-                          <Text style={styles.repliedParent}>おや: </Text>
+                          <Text style={styles.repliedParent}>団長: </Text>
                           <StampSvg id={pStamp.id} size={20} />
                           <Text style={styles.repliedParent}>
                             {pStamp.label}
@@ -1451,14 +1627,15 @@ export default function ChildDashboardScreen({
                         </View>
                       )}
                       <View style={{ flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 }}>
-                        <Text style={styles.repliedChild}>じぶん: </Text>
+                        <Text style={styles.repliedChild}>自分: </Text>
                         {cStamp && <StampSvg id={cStamp.id} size={20} />}
                         <Text style={styles.repliedChild}>
                           {cStamp ? cStamp.label : ""}
                           {log.child_reaction_message ? ` 「${log.child_reaction_message}」` : ""}
                         </Text>
                       </View>
-                    </View>
+                      <Text style={styles.dismissHint}>タップで閉じる</Text>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
@@ -1471,15 +1648,50 @@ export default function ChildDashboardScreen({
                 <AutoRubyText text="クエストをクリアすると ここに きろくされるよ！" style={[styles.emptyText, { paddingVertical: 4, fontSize: 12 }]} rubySize={6} />
               </View>
             ) : transactions.length === 0 ? null : (
-              transactions.map((tx) => (
-                <View key={tx.id} style={styles.historyItem}>
+              transactions.map((tx) => {
+                const desc = tx.description || tx.type;
+                const trimmed = desc.trim();
+                const hasApproval = trimmed.endsWith(" 承認");
+                const main = hasApproval ? trimmed.slice(0, -3).trim() : trimmed;
+                const spaceIdx = main.indexOf(" ");
+                let line1 = main;
+                let line2 = hasApproval ? "承認" : "";
+                if (spaceIdx !== -1) {
+                  line1 = main.slice(0, spaceIdx);
+                  const verb = main.slice(spaceIdx + 1).trim();
+                  line2 = hasApproval ? `承認 ${verb}` : verb;
+                }
+                return (
+                <TouchableOpacity
+                  key={tx.id}
+                  style={styles.historyItem}
+                  activeOpacity={0.6}
+                  onPress={() => dismissTransaction(tx.id)}
+                  accessibilityLabel="取引行を閉じる"
+                  accessibilityHint="タップでこの行を非表示にします"
+                >
                   <View style={styles.historyType}>
                     {tx.type === "earn" ? <PixelCoinIcon size={20} /> : tx.type === "spend" ? <PixelCartIcon size={20} /> : tx.type === "save" ? <PixelPiggyIcon size={20} /> : <PixelChartIcon size={20} />}
                   </View>
                   <View style={styles.historyInfo}>
-                    <Text style={styles.historyDesc}>
-                      {tx.description || tx.type}
+                    <Text
+                      style={styles.historyDesc}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.7}
+                    >
+                      {line1}
                     </Text>
+                    {line2 ? (
+                      <Text
+                        style={styles.historyDescSub}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.7}
+                      >
+                        {line2}
+                      </Text>
+                    ) : null}
                     <Text style={styles.historyDate}>
                       {new Date(tx.created_at).toLocaleDateString("ja-JP")}
                     </Text>
@@ -1496,8 +1708,9 @@ export default function ChildDashboardScreen({
                     {tx.type === "earn" ? "+" : "-"}
                     {tx.amount}
                   </Text>
-                </View>
-              ))
+                </TouchableOpacity>
+                );
+              })
             )}
           </View>
         )}
@@ -1648,11 +1861,11 @@ export default function ChildDashboardScreen({
           <View style={styles.nudgeCard}>
             <Text style={styles.nudgeEmoji}>{"\u{1F31F}"}</Text>
             <Text style={styles.nudgeTitle}>
-              おうちの ひとを よんでみない？
+              冒険団長を呼んでみない？
             </Text>
             <Text style={styles.nudgeDesc}>
-              おうちの ひとが さんかすると{"\n"}
-              「ふやす」が つかえるようになるよ！
+              冒険団長が参加すると{"\n"}
+              「錬成」が使えるようになるよ！
             </Text>
             <RpgButton
               tier="gold"
@@ -1703,6 +1916,24 @@ export default function ChildDashboardScreen({
       {/* コインくん AIチャット */}
       <CoinKunChat role="child" />
 
+      {/* プリセットクエスト選択モーダル */}
+      <PresetQuestModal
+        visible={presetPickerVisible}
+        onClose={() => setPresetPickerVisible(false)}
+        onSelect={(quest: PresetQuest) => {
+          setProposalTitle(quest.mainTitle);
+          setProposalReason(quest.defaultReason);
+          setProposalReward(String(quest.suggestedReward));
+          setProposalVisible(true);
+        }}
+        onSelectCustom={() => {
+          setProposalTitle("");
+          setProposalReason("");
+          setProposalReward("");
+          setProposalVisible(true);
+        }}
+      />
+
       {/* じぶんクエスト提案モーダル */}
       <Modal visible={proposalVisible} transparent animationType="slide" onRequestClose={() => {
         setProposalVisible(false);
@@ -1719,7 +1950,11 @@ export default function ChildDashboardScreen({
             showsVerticalScrollIndicator
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelLightbulbIcon size={20} /><RubyText style={styles.proposalModalTitle} parts={[["自分", "じぶん"], "でクエストを ", ["作", "つく"], "る"]} rubySize={6} /></View>
+<<<<<<< Updated upstream
             <RubyText style={[styles.proposalModalSub, { marginBottom: 0 }]} parts={[["親", "おや"], "に"]} rubySize={5} />
+=======
+            <RubyText style={[styles.proposalModalSub, { marginBottom: 0 }]} parts={[["団長", "だんちょう"], "に"]} rubySize={5} />
+>>>>>>> Stashed changes
             <RubyText style={styles.proposalModalSub} parts={[["新", "あたら"], "しいクエストを", ["出", "だ"], "そう！"]} rubySize={5} />
 
             <RubyText
@@ -1757,7 +1992,11 @@ export default function ChildDashboardScreen({
 
             <RubyText
               style={styles.proposalLabel}
+<<<<<<< Updated upstream
               parts={[["報酬", "ほうしゅう"], "リクエスト（", "円", "）"]}
+=======
+              parts={[["報酬", "ほうしゅう"], "リクエスト（コロ）"]}
+>>>>>>> Stashed changes
               rubySize={5}
               noWrap
             />
@@ -1910,7 +2149,7 @@ function createStyles(p: Palette) {
     backgroundColor: p.surfaceMuted,
     borderRadius: 5,
     overflow: "hidden" as const,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
   },
   progressFill: {
@@ -1933,7 +2172,11 @@ function createStyles(p: Palette) {
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.border,
   },
   walletTitleRow: {
@@ -1959,7 +2202,7 @@ function createStyles(p: Palette) {
   },
   walletItem: {
     flex: 1,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderRadius: 10,
     padding: 10,
     alignItems: "center",
@@ -2026,11 +2269,20 @@ function createStyles(p: Palette) {
     fontWeight: "700" as const,
     color: p.textBase,
   },
+<<<<<<< Updated upstream
   refreshBtnHint: {
     fontSize: 6,
     color: p.textMuted,
     marginTop: 2,
     lineHeight: 9,
+=======
+  refreshBtnHintWrap: {
+    marginTop: 2,
+  },
+  refreshBtnHint: {
+    fontSize: 6,
+    color: p.textMuted,
+>>>>>>> Stashed changes
   },
   quickNavBtn: {
     flexBasis: "23%" as any,
@@ -2040,7 +2292,7 @@ function createStyles(p: Palette) {
     paddingVertical: 10,
     paddingHorizontal: 4,
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "rgba(255,255,255,0.3)",
     minHeight: 100,
   },
@@ -2125,7 +2377,7 @@ function createStyles(p: Palette) {
     borderRadius: 12,
     marginHorizontal: 12,
     marginTop: 12,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: p.walletInvestBorder,
   },
   investMainCtaText: {
@@ -2167,7 +2419,11 @@ function createStyles(p: Palette) {
     borderRadius: 10,
     padding: 10,
     gap: 8,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.border,
   },
   spendStatusIcon: { width: 24, alignItems: "center" as const, justifyContent: "center" as const },
@@ -2188,7 +2444,7 @@ function createStyles(p: Palette) {
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   // Badges
   // Stamp notifications
@@ -2197,7 +2453,7 @@ function createStyles(p: Palette) {
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.accent,
   },
   stampNotif: {
@@ -2206,7 +2462,11 @@ function createStyles(p: Palette) {
     borderRadius: 10,
     padding: 10,
     marginBottom: 6,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.border,
   },
   stampNotifEmoji: { fontSize: 32, marginRight: 10 },
@@ -2226,7 +2486,11 @@ function createStyles(p: Palette) {
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.border,
   },
   sectionTitleRow: {
@@ -2249,7 +2513,7 @@ function createStyles(p: Palette) {
     height: 44,
     borderRadius: 22,
     backgroundColor: p.goldLight,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: p.accent,
     alignItems: "center" as const,
     justifyContent: "center" as const,
@@ -2260,7 +2524,7 @@ function createStyles(p: Palette) {
     height: 44,
     borderRadius: 22,
     backgroundColor: p.surfaceMuted,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderStyle: "dashed" as const,
     alignItems: "center" as const,
@@ -2294,12 +2558,23 @@ function createStyles(p: Palette) {
   // Screen title bar — 子供名＋現在画面を明示
   screenTitleBar: {
     marginHorizontal: 12,
+    marginTop: 14,
     marginBottom: 4,
     paddingVertical: 6,
     paddingHorizontal: 4,
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 6,
+<<<<<<< Updated upstream
+=======
+  },
+  screenTitleBarQuest: {
+    borderWidth: 1.5,
+    borderColor: p.accent,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+>>>>>>> Stashed changes
   },
   screenTitleAccent: {
     width: 3,
@@ -2329,7 +2604,11 @@ function createStyles(p: Palette) {
     marginBottom: 8,
   },
   specialQuestCard: {
+<<<<<<< Updated upstream
     borderWidth: 2,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.goldBorder,
     padding: 14,
     borderRadius: 14,
@@ -2388,7 +2667,11 @@ function createStyles(p: Palette) {
     padding: 14,
     borderRadius: 12,
     marginBottom: 8,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.border,
   },
   questInfo: { flexDirection: "row", alignItems: "center", flex: 1 },
@@ -2434,12 +2717,13 @@ function createStyles(p: Palette) {
     paddingVertical: 8,
     borderRadius: 8,
     backgroundColor: p.primaryLight,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.primary,
     minHeight: 40,
     justifyContent: "center" as const,
   },
   priceUpText: { fontSize: 14 },
+  priceUpHint: { fontSize: 8, color: p.textMuted, marginTop: 2, textAlign: "center" as const },
 
   // History
   historyItem: {
@@ -2448,12 +2732,17 @@ function createStyles(p: Palette) {
     padding: 12,
     borderRadius: 10,
     marginBottom: 6,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.border,
   },
   historyType: { marginRight: 10, width: 28, alignItems: "center" as const, justifyContent: "center" as const },
   historyInfo: { flex: 1 },
-  historyDesc: { fontSize: 14, color: p.textStrong },
+  historyDesc: { fontSize: 13, fontWeight: "bold" as const, color: p.textStrong },
+  historyDescSub: { fontSize: 11, color: p.textBase, marginTop: 1 },
   historyDate: { fontSize: 11, color: p.textMuted, marginTop: 2 },
   historyAmount: { fontSize: 16, fontWeight: "bold" },
 
@@ -2468,7 +2757,11 @@ function createStyles(p: Palette) {
     borderRadius: 12,
     padding: 24,
     marginBottom: 8,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.border,
   },
   emptyHint: {
@@ -2478,17 +2771,23 @@ function createStyles(p: Palette) {
     marginTop: 8,
   },
   trophyHint: {
+    ...linkStyles(p).linkText,
     textAlign: "center",
+<<<<<<< Updated upstream
     color: p.primary,
     fontSize: 10,
     marginTop: 8,
     textDecorationLine: "underline",
+=======
+    fontSize: 10,
+    marginTop: 8,
+>>>>>>> Stashed changes
   },
   titleBadge: {
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     marginTop: 4,
   },
   titleBadgeText: {
@@ -2502,20 +2801,25 @@ function createStyles(p: Palette) {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.primary,
     backgroundColor: p.primaryLight,
   },
   shopBtnText: {
-    fontSize: 10,
+    fontSize: 12,
     color: p.primary,
     fontWeight: "bold",
+  },
+  shopBtnHint: {
+    fontSize: 9,
+    color: p.textMuted,
+    marginTop: 1,
   },
   emptySpecialCard: {
     borderRadius: 12,
     padding: 24,
     alignItems: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.goldBorder,
     marginBottom: 12,
   },
@@ -2540,7 +2844,11 @@ function createStyles(p: Palette) {
     marginBottom: 6,
     borderLeftWidth: 3,
     borderLeftColor: p.primary,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.border,
   },
   repliedTaskName: {
@@ -2557,6 +2865,13 @@ function createStyles(p: Palette) {
   repliedChild: {
     fontSize: 12,
     color: p.primaryDark,
+  },
+  dismissHint: {
+    fontSize: 9,
+    color: p.textMuted,
+    textAlign: "right" as const,
+    marginTop: 4,
+    fontStyle: "italic" as const,
   },
 
   // クエストクリア反応バナー
@@ -2578,21 +2893,25 @@ function createStyles(p: Palette) {
     borderRadius: 16,
     padding: 12,
     gap: 10,
+<<<<<<< Updated upstream
     borderWidth: 2,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.goldBorder,
   },
   questClearBubble: {
     flex: 1,
-    backgroundColor: "rgba(255,215,0,0.15)",
+    backgroundColor: p.goldLight,
     borderRadius: 10,
     padding: 8,
-    borderWidth: 1,
-    borderColor: "rgba(255,215,0,0.3)",
+    borderWidth: 1.5,
+    borderColor: p.goldBorder,
   },
   questClearText: {
     fontSize: 14,
     fontWeight: "bold" as const,
-    color: "#FFD700",
+    color: p.gold,
   },
 
   // リセットボタン
@@ -2601,7 +2920,7 @@ function createStyles(p: Palette) {
     marginTop: 24,
     padding: 12,
     borderRadius: 10,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderStyle: "dashed" as const,
     alignItems: "center" as const,
@@ -2632,7 +2951,11 @@ function createStyles(p: Palette) {
     marginBottom: 0,
     padding: 14,
     borderRadius: 12,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.accent,
     alignItems: "center" as const,
     minHeight: 48,
@@ -2649,7 +2972,11 @@ function createStyles(p: Palette) {
     margin: 12,
     padding: 14,
     borderRadius: 12,
+<<<<<<< Updated upstream
     borderWidth: 1,
+=======
+    borderWidth: 1.5,
+>>>>>>> Stashed changes
     borderColor: p.primary,
     alignItems: "center" as const,
     minHeight: 48,
@@ -2674,7 +3001,7 @@ function createStyles(p: Palette) {
   proposalModalSub: { fontSize: 12, color: p.textMuted, marginBottom: 16, textAlign: "center" as const },
   proposalLabel: { fontSize: 13, fontWeight: "bold" as const, color: p.textStrong, marginTop: 8, marginBottom: 4 },
   proposalInput: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: p.border,
     borderRadius: 12,
     padding: 14,
@@ -2708,7 +3035,7 @@ function createStyles(p: Palette) {
     paddingVertical: 14,
     alignItems: "center" as const,
     marginTop: 10,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: p.primary,
     minHeight: 52,
     justifyContent: "center" as const,
@@ -2733,7 +3060,7 @@ function createStyles(p: Palette) {
     alignItems: "center" as const,
     width: "100%" as const,
     maxWidth: 340,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: p.borderStrong,
   },
   nudgeEmoji: {
@@ -2767,9 +3094,8 @@ function createStyles(p: Palette) {
     justifyContent: "center" as const,
   },
   nudgeSkipText: {
+    ...linkStyles(p).linkTextMuted,
     fontSize: rf(13),
-    color: p.textMuted,
-    textDecorationLine: "underline" as const,
   },
   });
 }

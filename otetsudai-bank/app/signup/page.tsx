@@ -103,7 +103,7 @@ export default function SignupPage() {
         <CardHeader className="text-center">
           <div className="mb-2 flex justify-center"><PixelHeroSvg type="warrior" size={48} /></div>
           <CardTitle className="text-2xl font-bold text-emerald-800">
-            ジョブサガをはじめよう
+            おこづかいクエストをはじめよう
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             ステップ {step}/2
