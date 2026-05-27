@@ -1,0 +1,161 @@
+// ゲームセッションストア（DESIGN 16 状態管理 / Zustand 4ストアのうちの1つ）。
+// 状態遷移はすべて engine.ts の純関数に委譲する薄い層。
+// 将来は各アクションを Server Action 呼び出し + Realtime 購読に置き換える（境界はここ）。
+
+import { create } from "zustand";
+import { SAMPLE_MAP } from "@/lib/game/content";
+import {
+  type DiceValue,
+  calcScore,
+  judgeAnswer,
+  move,
+  rollDice,
+} from "@/lib/game/engine";
+import type { GamePhase, GameMap, Player, Quiz, Station } from "@/lib/game/types";
+
+type GameState = {
+  map: GameMap;
+  players: Player[];
+  currentPlayerIndex: number;
+  turn: number;
+  phase: GamePhase;
+
+  // 直近アクションの一時表示用
+  lastDice: DiceValue | null;
+  lastGainedCoin: number; // 通過で得たコイン
+  activeQuiz: { quiz: Quiz; station: Station } | null;
+  lastAnswerCorrect: boolean | null;
+  message: string;
+
+  // actions
+  start: (nicknames: string[]) => void;
+  roll: () => void;
+  answer: (selected: "A" | "B" | "C") => void;
+  skipStation: () => void; // 物件マス以外 or 購入しない場合
+  endTurn: () => void;
+};
+
+const makePlayer = (nickname: string, i: number): Player => ({
+  userId: `local-${i}`,
+  nickname,
+  coin: 200,
+  score: 0,
+  stationIndex: 0,
+  ownedPropertyIds: [],
+});
+
+const DEFAULT_NICKNAMES = ["プレイヤー1", "プレイヤー2"];
+
+export const useGameStore = create<GameState>((set, get) => ({
+  map: SAMPLE_MAP,
+  players: DEFAULT_NICKNAMES.map(makePlayer),
+  currentPlayerIndex: 0,
+  turn: 1,
+  phase: "idle",
+  lastDice: null,
+  lastGainedCoin: 0,
+  activeQuiz: null,
+  lastAnswerCorrect: null,
+  message: "サイコロをふってね",
+
+  start: (nicknames) =>
+    set({
+      map: SAMPLE_MAP,
+      players: nicknames.map(makePlayer),
+      currentPlayerIndex: 0,
+      turn: 1,
+      phase: "idle",
+      lastDice: null,
+      lastGainedCoin: 0,
+      activeQuiz: null,
+      lastAnswerCorrect: null,
+      message: "サイコロをふってね",
+    }),
+
+  roll: () => {
+    const { phase, map, players, currentPlayerIndex } = get();
+    if (phase !== "idle") return;
+    const dice = rollDice();
+    const player = players[currentPlayerIndex];
+    const { toIndex, passCoin } = move(map, player.stationIndex, dice);
+    const station = map.stations[toIndex];
+
+    const updated = players.map((p, i) =>
+      i === currentPlayerIndex
+        ? { ...p, stationIndex: toIndex, coin: p.coin + passCoin }
+        : p,
+    );
+
+    if (station.kind === "property" && station.property) {
+      set({
+        players: updated,
+        lastDice: dice,
+        lastGainedCoin: passCoin,
+        phase: "quiz",
+        activeQuiz: { quiz: station.property.quiz, station },
+        lastAnswerCorrect: null,
+        message: `${station.label.base}にとうちゃく！クイズにこたえよう`,
+      });
+    } else {
+      set({
+        players: updated,
+        lastDice: dice,
+        lastGainedCoin: passCoin,
+        phase: "result",
+        activeQuiz: null,
+        message:
+          station.kind === "event"
+            ? "イベントマス！コインをゲット"
+            : "とまったマスはなにもないみたい",
+      });
+    }
+  },
+
+  answer: (selected) => {
+    const { activeQuiz, players, currentPlayerIndex, map } = get();
+    if (!activeQuiz) return;
+    const { quiz, station } = activeQuiz;
+    const property = station.property!;
+    const player = players[currentPlayerIndex];
+    const result = judgeAnswer(player, quiz, selected, property.id, property.price);
+
+    const updated = players.map((p, i) => {
+      if (i !== currentPlayerIndex) return p;
+      const coin = p.coin + result.coinDelta;
+      const ownedPropertyIds = result.acquiredPropertyId
+        ? [...p.ownedPropertyIds, result.acquiredPropertyId]
+        : p.ownedPropertyIds;
+      const next = { ...p, coin, ownedPropertyIds };
+      return { ...next, score: calcScore(next, map) };
+    });
+
+    set({
+      players: updated,
+      phase: "result",
+      lastAnswerCorrect: result.correct,
+      message: result.correct
+        ? result.acquiredPropertyId
+          ? `せいかい！${property.name.base}を手に入れた！`
+          : "せいかい！でもコインがたりなかった…"
+        : `ざんねん…ヒント: ${quiz.hint.base}`,
+    });
+  },
+
+  skipStation: () => set({ phase: "result", message: "つぎのプレイヤーへ" }),
+
+  endTurn: () => {
+    const { players, currentPlayerIndex, turn } = get();
+    const nextIndex = (currentPlayerIndex + 1) % players.length;
+    const nextTurn = nextIndex === 0 ? turn + 1 : turn;
+    set({
+      currentPlayerIndex: nextIndex,
+      turn: nextTurn,
+      phase: "idle",
+      lastDice: null,
+      lastGainedCoin: 0,
+      activeQuiz: null,
+      lastAnswerCorrect: null,
+      message: "サイコロをふってね",
+    });
+  },
+}));

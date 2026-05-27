@@ -7,6 +7,29 @@
 - **[DESIGN.md](./DESIGN.md)** - 設計ドキュメント本体
 - **[legal-analysis.md](./legal-analysis.md)** - 法務分析メモ（Phase 7.5）
 
+## 実装（試作版・2026-05-27 着手）
+
+設計（v2.7）を動くゲームに落とす実装フェーズを開始。**外部公開・マネタイズは当面行わず、まずゲームの形を整える**方針。Next.js App Router + TypeScript + Tailwind v4 + Zustand。バックエンド（Supabase / 認証 / RLS）は未接続で、ローカル状態のみで動作する。
+
+```bash
+npm install
+npm run dev        # http://localhost:3000
+```
+
+| 区分 | 内容 |
+|---|---|
+| `/` | ホーム（あそぶ導線） |
+| `/game` | WF1 ゲーム画面。円環マップ・サイコロ・移動・クイズ(WF2)・物件取得・ターン交代 |
+| `lib/game/` | ドメイン型・サンプルコンテンツ・**純関数エンジン**（DESIGN 15.3 Server Action に対応。将来そのままサーバ移植可能） |
+| `store/gameStore.ts` | Zustand セッションストア（DESIGN 16 状態管理）。状態遷移は engine の純関数に委譲 |
+| `components/RubyText.tsx` | 全漢字ルビ共通コンポーネント（DESIGN 16 共通7種） |
+
+**手戻り防止の境界**: ゲームロジックは副作用なしの純関数（`lib/game/engine.ts`）に分離。永続化・認証・Realtime を後付けする際は store のアクションを Server Action 呼び出しに差し替えるだけで済む構造。
+
+実装済みコアループ: サイコロ → 円環移動（通過コイン）→ 物件マスでクイズ3択 → 正解で物件取得 → ターン交代（2人ホットシート）。
+
+**未実装（次の候補）**: 分岐マップ生成(E-25) / カード・災難キャラ / 動的難易度(E-24) / 決算演出 / 実ピクセル素材 / Supabase 接続。
+
 ## 設計プロセスの状況
 
 | Phase | テーマ | 状態 |
