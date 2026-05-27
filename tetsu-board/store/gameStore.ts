@@ -48,6 +48,7 @@ const makePlayer = (nickname: string, i: number): Player => ({
 
 const DEFAULT_NICKNAMES = ["プレイヤー1", "プレイヤー2"];
 const INITIAL_SEED = "tetsu-mvp"; // SSR 一致のため初期は固定シード
+const MAX_TURNS = 5; // この周回数で年度末（決算）。DESIGN 4.6 大目的の簡易版
 
 export const useGameStore = create<GameState>((set, get) => ({
   seed: INITIAL_SEED,
@@ -157,9 +158,25 @@ export const useGameStore = create<GameState>((set, get) => ({
   skipStation: () => set({ phase: "result", message: "つぎのプレイヤーへ" }),
 
   endTurn: () => {
-    const { players, currentPlayerIndex, turn } = get();
+    const { players, currentPlayerIndex, turn, map } = get();
     const nextIndex = (currentPlayerIndex + 1) % players.length;
     const nextTurn = nextIndex === 0 ? turn + 1 : turn;
+
+    // 年度末（決算）: 全員のスコアを確定し勝者を出す（DESIGN 4.6 / 決算簡易版）
+    if (nextTurn > MAX_TURNS) {
+      const settled = players.map((p) => ({ ...p, score: calcScore(p, map) }));
+      const winner = settled.reduce((a, b) => (b.score > a.score ? b : a));
+      set({
+        players: settled,
+        phase: "finished",
+        activeQuiz: null,
+        lastDice: null,
+        lastAnswerCorrect: null,
+        message: `🏆 ${winner.nickname}のゆうしょう！（${winner.score}てん）`,
+      });
+      return;
+    }
+
     set({
       currentPlayerIndex: nextIndex,
       turn: nextTurn,
@@ -172,3 +189,5 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 }));
+
+export { MAX_TURNS };

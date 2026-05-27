@@ -3,7 +3,7 @@
 // WF1 ゲーム画面（DESIGN 14.1 / 16.5）。円環マップ・サイコロ・クイズ(WF2)・結果を1画面に集約。
 // 状態は useGameStore に集約し、このコンポーネントは描画とイベント送出に専念する。
 
-import { useGameStore } from "@/store/gameStore";
+import { MAX_TURNS, useGameStore } from "@/store/gameStore";
 import { RubyText } from "@/components/RubyText";
 import type { Station } from "@/lib/game/types";
 
@@ -81,7 +81,8 @@ export function GameBoard() {
       <div className="flex flex-1 flex-col items-center">
         <div className="mb-3 flex items-center gap-3 text-sm font-bold text-stone-600">
           <span>
-            {turn}ターン目 ・ <span className="text-rose-600">{current.nickname}</span>のばん
+            {turn}／{MAX_TURNS}ターン ・{" "}
+            <span className="text-rose-600">{current.nickname}</span>のばん
           </span>
           {phase === "idle" && (
             <button
@@ -206,6 +207,36 @@ export function GameBoard() {
           >
             {lastAnswerCorrect === false ? "つぎへ" : "つぎのプレイヤーへ"} ▶
           </button>
+        )}
+        {phase === "finished" && (
+          <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-center">
+            <div className="mb-3 text-lg font-black text-amber-700">けっか はっぴょう 🏆</div>
+            <ol className="mb-4 flex flex-col gap-2">
+              {[...players]
+                .sort((a, b) => b.score - a.score)
+                .map((p, rank) => (
+                  <li
+                    key={p.userId}
+                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm font-bold ${
+                      rank === 0 ? "bg-amber-200 text-amber-900" : "bg-white text-stone-600"
+                    }`}
+                  >
+                    <span>
+                      {["🥇", "🥈", "🥉"][rank] ?? `${rank + 1}い`} {p.nickname}
+                    </span>
+                    <span>
+                      {p.score}てん（物件{p.ownedPropertyIds.length}）
+                    </span>
+                  </li>
+                ))}
+            </ol>
+            <button
+              onClick={newGame}
+              className="w-full rounded-2xl bg-rose-500 py-4 text-xl font-black text-white shadow-lg transition hover:bg-rose-600 active:scale-[0.97]"
+            >
+              🔄 もういちど あそぶ
+            </button>
+          </div>
         )}
       </div>
     </div>
