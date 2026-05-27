@@ -16,3 +16,6 @@ next-env.d.ts
 
 # 独自 git リポを持つサブプロジェクト（親モノレポでは追跡しない）
 vialy/
+
+# Qwen ローカル作業領域（private-cowork-lite は独自リポ。親では管理しない）
+Qwen/
