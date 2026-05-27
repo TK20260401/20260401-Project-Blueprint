@@ -17,19 +17,27 @@ export type MoveResult = {
   passCoin: number; // 通過コインの合計（DESIGN 15.3.2）
 };
 
-/** 円環上の移動を計算。fromIndex から steps 進む。 */
+/**
+ * 移動を計算。fromIndex から steps 歩、駅の next エッジを辿る。
+ * next が1つ=円環。複数(分岐, DESIGN 4.5)は将来 next[0] 以外も選べるよう拡張する地点。
+ * 現状は next[0] を辿る（円環では一意）。
+ */
 export function move(map: GameMap, fromIndex: number, steps: DiceValue): MoveResult {
-  const n = map.stations.length;
+  const byId = new Map(map.stations.map((s) => [s.id, s]));
+  let current = map.stations[fromIndex];
   const passedStationIds: string[] = [];
   let passCoin = 0;
-  for (let i = 1; i < steps; i++) {
-    const idx = (fromIndex + i) % n;
-    const st = map.stations[idx];
-    passedStationIds.push(st.id);
-    passCoin += st.passCoin;
+  for (let i = 0; i < steps; i++) {
+    const nextId = current.next[0]; // TODO(分岐): next.length>1 で停止し選択を返す
+    const nextSt = byId.get(nextId)!;
+    if (i < steps - 1) {
+      // 到着駅は通過に含めない
+      passedStationIds.push(nextSt.id);
+      passCoin += nextSt.passCoin;
+    }
+    current = nextSt;
   }
-  const toIndex = (fromIndex + steps) % n;
-  return { toIndex, passedStationIds, passCoin };
+  return { toIndex: current.index, passedStationIds, passCoin };
 }
 
 export type AnswerResult = {

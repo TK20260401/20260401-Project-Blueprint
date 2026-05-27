@@ -3,7 +3,7 @@
 // 将来は各アクションを Server Action 呼び出し + Realtime 購読に置き換える（境界はここ）。
 
 import { create } from "zustand";
-import { SAMPLE_MAP } from "@/lib/game/content";
+import { generateMap, newSeed } from "@/lib/game/generateMap";
 import {
   type DiceValue,
   calcScore,
@@ -14,6 +14,7 @@ import {
 import type { GamePhase, GameMap, Player, Quiz, Station } from "@/lib/game/types";
 
 type GameState = {
+  seed: string;
   map: GameMap;
   players: Player[];
   currentPlayerIndex: number;
@@ -28,7 +29,8 @@ type GameState = {
   message: string;
 
   // actions
-  start: (nicknames: string[]) => void;
+  start: (nicknames: string[], seed?: string) => void;
+  newGame: () => void; // 新しいシードでマップ再生成（児童モード）
   roll: () => void;
   answer: (selected: "A" | "B" | "C") => void;
   skipStation: () => void; // 物件マス以外 or 購入しない場合
@@ -45,9 +47,11 @@ const makePlayer = (nickname: string, i: number): Player => ({
 });
 
 const DEFAULT_NICKNAMES = ["プレイヤー1", "プレイヤー2"];
+const INITIAL_SEED = "tetsu-mvp"; // SSR 一致のため初期は固定シード
 
 export const useGameStore = create<GameState>((set, get) => ({
-  map: SAMPLE_MAP,
+  seed: INITIAL_SEED,
+  map: generateMap(INITIAL_SEED),
   players: DEFAULT_NICKNAMES.map(makePlayer),
   currentPlayerIndex: 0,
   turn: 1,
@@ -58,9 +62,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   lastAnswerCorrect: null,
   message: "サイコロをふってね",
 
-  start: (nicknames) =>
+  start: (nicknames, seed = INITIAL_SEED) =>
     set({
-      map: SAMPLE_MAP,
+      seed,
+      map: generateMap(seed),
       players: nicknames.map(makePlayer),
       currentPlayerIndex: 0,
       turn: 1,
@@ -71,6 +76,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       lastAnswerCorrect: null,
       message: "サイコロをふってね",
     }),
+
+  newGame: () => {
+    const { players } = get();
+    get().start(
+      players.length ? players.map((p) => p.nickname) : DEFAULT_NICKNAMES,
+      newSeed(),
+    );
+  },
 
   roll: () => {
     const { phase, map, players, currentPlayerIndex } = get();

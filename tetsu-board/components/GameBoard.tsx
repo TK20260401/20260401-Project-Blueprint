@@ -43,29 +43,76 @@ export function GameBoard() {
     roll,
     answer,
     endTurn,
+    newGame,
   } = useGameStore();
 
   const current = players[currentPlayerIndex];
   const n = map.stations.length;
-  const radius = 160;
+
+  // 盤面ジオメトリ（桃鉄/モノポリー風の長方形ループ）。
+  // 駅は角丸長方形の「縁」を一周するトラック上に配置する（DESIGN 4.4）。
+  const BOARD = 480; // 盤面の一辺(px)
+  const HALF = 28; // 駅マス(56px)の半分
+  const INSET = 34; // 縁からトラック中心までの余白（>=HALF で角マスが盤内に収まる）
+  const L = BOARD - 2 * INSET; // トラック1辺の長さ
+  // 周回フラクション t(0..1) → トラック上の座標。t=0 は左上角からスタートし時計回り。
+  const trackPos = (t: number) => {
+    const d = t * 4 * L;
+    let px: number, py: number;
+    if (d < L) {
+      px = INSET + d;
+      py = INSET;
+    } else if (d < 2 * L) {
+      px = INSET + L;
+      py = INSET + (d - L);
+    } else if (d < 3 * L) {
+      px = INSET + L - (d - 2 * L);
+      py = INSET + L;
+    } else {
+      px = INSET;
+      py = INSET + L - (d - 3 * L);
+    }
+    return { x: Math.round(px - HALF), y: Math.round(py - HALF) };
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:flex-row">
       {/* 盤面 */}
       <div className="flex flex-1 flex-col items-center">
-        <div className="mb-3 text-center text-sm font-bold text-stone-600">
-          {turn}ターン目 ・ <span className="text-rose-600">{current.nickname}</span>のばん
+        <div className="mb-3 flex items-center gap-3 text-sm font-bold text-stone-600">
+          <span>
+            {turn}ターン目 ・ <span className="text-rose-600">{current.nickname}</span>のばん
+          </span>
+          {phase === "idle" && (
+            <button
+              onClick={newGame}
+              className="rounded-full border border-stone-300 bg-white px-3 py-1 text-xs text-stone-500 transition hover:bg-stone-100"
+            >
+              🗺 新しいマップ
+            </button>
+          )}
         </div>
-        <div className="relative h-[400px] w-[400px] rounded-full bg-[#f3ead7] shadow-inner">
+        <div
+          className="relative rounded-3xl bg-[#e3d3b0] shadow-inner"
+          style={{ width: BOARD, height: BOARD }}
+        >
+          {/* 盤の内側（フィールド）。トラックが縁を一周しているように見せる */}
+          <div
+            className="absolute rounded-2xl bg-[#f3ead7]"
+            style={{
+              left: INSET + HALF,
+              top: INSET + HALF,
+              right: INSET + HALF,
+              bottom: INSET + HALF,
+            }}
+          />
           {map.stations.map((st, i) => {
-            const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
-            const x = 200 + radius * Math.cos(angle) - 36;
-            const y = 200 + radius * Math.sin(angle) - 36;
+            const { x, y } = trackPos(i / n);
             const here = players.filter((p) => p.stationIndex === i);
             return (
               <div
                 key={st.id}
-                className={`absolute flex h-[72px] w-[72px] flex-col items-center justify-center rounded-xl border-2 text-center text-xs font-bold shadow ${stationColor(st)}`}
+                className={`absolute flex h-14 w-14 flex-col items-center justify-center rounded-lg border-2 px-0.5 text-center text-[10px] font-bold leading-tight shadow ${stationColor(st)}`}
                 style={{ left: x, top: y }}
               >
                 <RubyText text={st.label} />
@@ -74,7 +121,7 @@ export function GameBoard() {
                     {here.map((p) => (
                       <span
                         key={p.userId}
-                        className={`h-3 w-3 rounded-full border border-white ${
+                        className={`h-2.5 w-2.5 rounded-full border border-white ${
                           p.userId === current.userId ? "bg-rose-500" : "bg-blue-500"
                         }`}
                       />

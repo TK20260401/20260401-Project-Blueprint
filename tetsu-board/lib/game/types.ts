@@ -11,12 +11,21 @@ export type RubyText = {
 /** マス（駅）の種別。DESIGN 4.4 円環 + 少数分岐 / arrivedEvent と整合 */
 export type StationKind = "start" | "property" | "event" | "goal";
 
-/** マップ上の1マス。property の場合は物件＋クイズが紐づく */
+/** 物件カテゴリ（DESIGN 4.2 マスター駅プール / 16.6.2 物件カテゴリ5色） */
+export type StationCategory = "farm" | "sea" | "factory" | "city" | "tourism";
+
+/**
+ * マップ上の1マス。グラフ構造（next エッジ）で表現する。
+ * 円環は「各駅の next が1つ」の特殊形。分岐(DESIGN 4.5)は next が複数になる拡張で表せる
+ * ため、円環専用構造を作り込まず最初からグラフにしておく（手戻り防止）。
+ */
 export type Station = {
   id: string;
-  index: number; // 円環上の位置（0 始まり）
+  index: number; // 盤面レイアウト用の位置（円環上の並び順、0 始まり）
   kind: StationKind;
   label: RubyText;
+  /** 次に進める駅 id（1つ=円環 / 複数=分岐）。DESIGN 4.5 αβγ分岐の土台 */
+  next: string[];
   /** kind==='property' のとき：取得対象の物件 */
   property?: Property;
   /** 通過時に得られるコイン（DESIGN 15.3.2 通過駅 +1〜2） */
@@ -28,7 +37,7 @@ export type Property = {
   id: string;
   name: RubyText;
   price: number;
-  category: "station" | "shop" | "factory" | "tourism" | "farm"; // 16.6.2 物件カテゴリ5色
+  category: StationCategory; // 16.6.2 物件カテゴリ5色 / 4.2 駅プール5カテゴリ
   /** この物件を取得するために解くクイズ（DESIGN 15.3.3） */
   quiz: Quiz;
 };
