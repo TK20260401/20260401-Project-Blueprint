@@ -21,15 +21,19 @@ export type StationCategory = "farm" | "sea" | "factory" | "city" | "tourism";
  */
 export type Station = {
   id: string;
-  index: number; // 盤面レイアウト用の位置（円環上の並び順、0 始まり）
+  index: number; // 配列上の通し番号（安定キー用）
   kind: StationKind;
   label: RubyText;
-  /** 次に進める駅 id（1つ=円環 / 複数=分岐）。DESIGN 4.5 αβγ分岐の土台 */
+  /** 次に進める駅 id（1つ=直進 / 複数=分岐）。DESIGN 4.5 αβγ分岐 */
   next: string[];
+  /** 盤面上の座標（px）。generateMap が算出（円環＋分岐の見た目を確定） */
+  pos: { x: number; y: number };
   /** kind==='property' のとき：取得対象の物件 */
   property?: Property;
-  /** 通過時に得られるコイン（DESIGN 15.3.2 通過駅 +1〜2） */
+  /** 通過時のコイン増減（正=もらえる / 負=ピンチで失う。DESIGN 4.5 危険ルート） */
   passCoin: number;
+  /** 危険マスか（DESIGN 4.5 安全/危険）。ピンチ演出・色分け用 */
+  danger?: boolean;
 };
 
 /** 物件（DESIGN 12.3 properties / property_stations） */
@@ -53,11 +57,31 @@ export type Quiz = {
   hint: RubyText;
 };
 
+/** 経路の種別（DESIGN 4.5） */
+export type RouteKind = "short" | "long"; // 近道 / 遠回り
+
+/** 分岐の片側の選択肢（「どっちにいく?」の1つ） */
+export type BranchOption = {
+  firstNextId: string; // この方向に進む最初の駅 id（fork.next に含まれる）
+  routeLabel: RubyText; // 行先名（合流先の駅名）
+  route: RouteKind; // 近道 / 遠回り
+  steps: number; // 合流まで何マスか（DESIGN 4.5 距離表示）
+  danger: boolean; // 危険ルートか（安全/危険）
+};
+
+/** 分岐情報（DESIGN 4.5 / maps.branches_json 相当） */
+export type BranchInfo = {
+  forkId: string; // 分岐元の駅 id（next.length>1）
+  pattern: 1 | 2 | 3 | 4; // 4パターン（近道&危険 / 近道&安全 / 両方危険 / 両方安全）
+  options: BranchOption[]; // 2択
+};
+
 /** マップ（DESIGN 12.3 maps） */
 export type GameMap = {
   id: string;
   seed: string;
-  stations: Station[]; // index 順の円環
+  stations: Station[];
+  branches: BranchInfo[]; // 分岐の一覧（DESIGN 4.5）
 };
 
 /** プレイヤー（DESIGN session_participants） */
@@ -66,7 +90,7 @@ export type Player = {
   nickname: string;
   coin: number;
   score: number;
-  stationIndex: number; // 現在地（円環 index）
+  stationId: string; // 現在地の駅 id（グラフ対応）
   ownedPropertyIds: string[];
 };
 
@@ -75,6 +99,7 @@ export type GamePhase =
   | "idle" // サイコロ待ち
   | "rolling" // サイコロ演出中
   | "moving" // 駒移動中
+  | "branch" // 分岐の選択待ち（DESIGN 4.5）
   | "quiz" // クイズ回答中
   | "result" // 1ターンの結果表示
   | "finished"; // セッション終了

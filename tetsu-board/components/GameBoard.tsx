@@ -1,31 +1,32 @@
 "use client";
 
-// WF1 ゲーム画面（DESIGN 14.1 / 16.5）。円環マップ・サイコロ・クイズ(WF2)・結果を1画面に集約。
+// WF1 ゲーム画面（DESIGN 14.1 / 16.5）。円環+分岐マップ・サイコロ・分岐選択・クイズ(WF2)・結果を集約。
 // 状態は useGameStore に集約し、このコンポーネントは描画とイベント送出に専念する。
 
 import { MAX_TURNS, useGameStore } from "@/store/gameStore";
+import { BOARD } from "@/lib/game/generateMap";
 import { RubyText } from "@/components/RubyText";
 import type { Station } from "@/lib/game/types";
 
-const CATEGORY_COLOR: Record<string, string> = {
-  station: "bg-sky-200 border-sky-400",
-  shop: "bg-rose-200 border-rose-400",
-  factory: "bg-amber-200 border-amber-400",
-  tourism: "bg-violet-200 border-violet-400",
-  farm: "bg-lime-200 border-lime-400",
-};
+const HALF = 28; // 駅マス(56px)の半分
 
-const KIND_COLOR: Record<string, string> = {
-  start: "bg-emerald-300 border-emerald-500",
-  event: "bg-yellow-200 border-yellow-400",
-  goal: "bg-emerald-300 border-emerald-500",
+// 物件カテゴリ5色（DESIGN 16.6.2）
+const CATEGORY_COLOR: Record<string, string> = {
+  farm: "bg-lime-200 border-lime-400",
+  sea: "bg-cyan-200 border-cyan-400",
+  factory: "bg-amber-200 border-amber-400",
+  city: "bg-sky-200 border-sky-500",
+  tourism: "bg-violet-200 border-violet-400",
 };
 
 function stationColor(st: Station) {
+  if (st.danger) return "bg-red-200 border-red-400 text-red-800";
   if (st.kind === "property" && st.property) {
     return CATEGORY_COLOR[st.property.category] ?? "bg-stone-200 border-stone-400";
   }
-  return KIND_COLOR[st.kind] ?? "bg-stone-200 border-stone-400";
+  if (st.kind === "start") return "bg-emerald-300 border-emerald-500";
+  if (st.kind === "event") return "bg-yellow-200 border-yellow-400";
+  return "bg-stone-200 border-stone-400";
 }
 
 export function GameBoard() {
@@ -38,45 +39,21 @@ export function GameBoard() {
     lastDice,
     lastGainedCoin,
     activeQuiz,
+    pendingBranch,
     lastAnswerCorrect,
     message,
     roll,
+    chooseBranch,
     answer,
     endTurn,
     newGame,
   } = useGameStore();
 
   const current = players[currentPlayerIndex];
-  const n = map.stations.length;
-
-  // 盤面ジオメトリ（桃鉄/モノポリー風の長方形ループ）。
-  // 駅は角丸長方形の「縁」を一周するトラック上に配置する（DESIGN 4.4）。
-  const BOARD = 480; // 盤面の一辺(px)
-  const HALF = 28; // 駅マス(56px)の半分
-  const INSET = 34; // 縁からトラック中心までの余白（>=HALF で角マスが盤内に収まる）
-  const L = BOARD - 2 * INSET; // トラック1辺の長さ
-  // 周回フラクション t(0..1) → トラック上の座標。t=0 は左上角からスタートし時計回り。
-  const trackPos = (t: number) => {
-    const d = t * 4 * L;
-    let px: number, py: number;
-    if (d < L) {
-      px = INSET + d;
-      py = INSET;
-    } else if (d < 2 * L) {
-      px = INSET + L;
-      py = INSET + (d - L);
-    } else if (d < 3 * L) {
-      px = INSET + L - (d - 2 * L);
-      py = INSET + L;
-    } else {
-      px = INSET;
-      py = INSET + L - (d - 3 * L);
-    }
-    return { x: Math.round(px - HALF), y: Math.round(py - HALF) };
-  };
+  const byId = new Map(map.stations.map((s) => [s.id, s]));
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:flex-row">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 lg:flex-row">
       {/* 盤面 */}
       <div className="flex flex-1 flex-col items-center">
         <div className="mb-3 flex items-center gap-3 text-sm font-bold text-stone-600">
@@ -94,27 +71,44 @@ export function GameBoard() {
           )}
         </div>
         <div
-          className="relative rounded-3xl bg-[#e3d3b0] shadow-inner"
+          className="relative max-w-full rounded-3xl bg-[#efe3c7] shadow-inner"
           style={{ width: BOARD, height: BOARD }}
         >
-          {/* 盤の内側（フィールド）。トラックが縁を一周しているように見せる */}
-          <div
-            className="absolute rounded-2xl bg-[#f3ead7]"
-            style={{
-              left: INSET + HALF,
-              top: INSET + HALF,
-              right: INSET + HALF,
-              bottom: INSET + HALF,
-            }}
-          />
-          {map.stations.map((st, i) => {
-            const { x, y } = trackPos(i / n);
-            const here = players.filter((p) => p.stationIndex === i);
+          {/* 線路（グラフのエッジ）。分岐は fork から2方向に分かれて merge で合流する */}
+          <svg
+            className="pointer-events-none absolute inset-0"
+            width={BOARD}
+            height={BOARD}
+            viewBox={`0 0 ${BOARD} ${BOARD}`}
+          >
+            {map.stations.flatMap((s) =>
+              s.next.map((nid) => {
+                const t = byId.get(nid);
+                if (!t) return null;
+                return (
+                  <line
+                    key={`${s.id}->${nid}`}
+                    x1={s.pos.x}
+                    y1={s.pos.y}
+                    x2={t.pos.x}
+                    y2={t.pos.y}
+                    stroke="#cdb98c"
+                    strokeWidth={8}
+                    strokeLinecap="round"
+                  />
+                );
+              }),
+            )}
+          </svg>
+
+          {/* 駅マス */}
+          {map.stations.map((st) => {
+            const here = players.filter((p) => p.stationId === st.id);
             return (
               <div
                 key={st.id}
                 className={`absolute flex h-14 w-14 flex-col items-center justify-center rounded-lg border-2 px-0.5 text-center text-[10px] font-bold leading-tight shadow ${stationColor(st)}`}
-                style={{ left: x, top: y }}
+                style={{ left: st.pos.x - HALF, top: st.pos.y - HALF }}
               >
                 <RubyText text={st.label} />
                 {here.length > 0 && (
@@ -132,6 +126,7 @@ export function GameBoard() {
               </div>
             );
           })}
+
           {/* 中央：サイコロ表示 */}
           <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl bg-white text-4xl font-black text-stone-700 shadow-lg">
             {lastDice ?? "?"}
@@ -141,7 +136,7 @@ export function GameBoard() {
       </div>
 
       {/* 操作パネル */}
-      <div className="flex w-full flex-col gap-4 md:w-80">
+      <div className="flex w-full flex-col gap-4 lg:w-80">
         {/* プレイヤー情報 */}
         <div className="grid grid-cols-2 gap-2">
           {players.map((p, i) => (
@@ -168,7 +163,46 @@ export function GameBoard() {
           {lastGainedCoin > 0 && phase !== "quiz" && (
             <span className="ml-1 font-bold text-amber-600">(+{lastGainedCoin})</span>
           )}
+          {lastGainedCoin < 0 && (
+            <span className="ml-1 font-bold text-red-500">({lastGainedCoin})</span>
+          )}
         </div>
+
+        {/* 分岐の選択（DESIGN 4.5 どっちにいく？） */}
+        {phase === "branch" && pendingBranch && (
+          <div className="rounded-xl border-2 border-orange-300 bg-orange-50 p-3">
+            <div className="mb-2 text-center text-base font-bold text-orange-700">
+              どっちに いく？
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {pendingBranch.branch.options.map((opt) => (
+                <button
+                  key={opt.firstNextId}
+                  onClick={() => chooseBranch(opt.firstNextId)}
+                  className={`flex flex-col items-center gap-1 rounded-lg border-2 bg-white px-2 py-3 font-bold transition active:scale-[0.97] ${
+                    opt.danger
+                      ? "border-red-300 hover:bg-red-50"
+                      : "border-emerald-300 hover:bg-emerald-50"
+                  }`}
+                >
+                  <span className="text-sm text-stone-700">
+                    {opt.route === "short" ? "🏃 ちかみち" : "🚶 とおまわり"}
+                  </span>
+                  <span className="text-[11px] text-stone-500">
+                    <RubyText text={opt.routeLabel} />まで {opt.steps}マス
+                  </span>
+                  <span
+                    className={`text-xs font-black ${
+                      opt.danger ? "text-red-500" : "text-emerald-600"
+                    }`}
+                  >
+                    {opt.danger ? "⚠ きけん" : "✓ あんぜん"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* クイズ（WF2） */}
         {phase === "quiz" && activeQuiz && (

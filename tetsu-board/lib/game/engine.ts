@@ -11,33 +11,77 @@ export function rollDice(rng: () => number = Math.random): DiceValue {
   return (Math.floor(rng() * 6) + 1) as DiceValue;
 }
 
-export type MoveResult = {
-  toIndex: number;
-  passedStationIds: string[]; // 通過した駅（到着駅は含まない）
-  passCoin: number; // 通過コインの合計（DESIGN 15.3.2）
-};
+/**
+ * 移動の結果。途中で分岐(next が複数)に達したら停止して選択を促す（DESIGN 4.5）。
+ * - arrived: steps を歩き切って到着
+ * - branch: 分岐元 forkId に到達。remaining 歩ぶん残して選択待ち
+ */
+export type WalkResult =
+  | { type: "arrived"; stationId: string; passedIds: string[]; passCoin: number }
+  | {
+      type: "branch";
+      forkId: string;
+      remaining: number;
+      passedIds: string[];
+      passCoin: number;
+    };
+
+/** 駅 id から駅を引くマップ */
+function indexById(map: GameMap): Map<string, GameMap["stations"][number]> {
+  return new Map(map.stations.map((s) => [s.id, s]));
+}
 
 /**
- * 移動を計算。fromIndex から steps 歩、駅の next エッジを辿る。
- * next が1つ=円環。複数(分岐, DESIGN 4.5)は将来 next[0] 以外も選べるよう拡張する地点。
- * 現状は next[0] を辿る（円環では一意）。
+ * fromId から steps 歩、next エッジを辿る。分岐(next.length>1)に居る状態で
+ * まだ歩数が残っていれば、そこで停止して branch を返す。
  */
-export function move(map: GameMap, fromIndex: number, steps: DiceValue): MoveResult {
-  const byId = new Map(map.stations.map((s) => [s.id, s]));
-  let current = map.stations[fromIndex];
-  const passedStationIds: string[] = [];
+export function walk(map: GameMap, fromId: string, steps: number): WalkResult {
+  const byId = indexById(map);
+  let current = fromId;
+  const passedIds: string[] = [];
   let passCoin = 0;
   for (let i = 0; i < steps; i++) {
-    const nextId = current.next[0]; // TODO(分岐): next.length>1 で停止し選択を返す
+    const cur = byId.get(current)!;
+    if (cur.next.length > 1) {
+      // 分岐：どちらへ進むか選んでもらう（DESIGN 4.5「どっちにいく?」）
+      return { type: "branch", forkId: current, remaining: steps - i, passedIds, passCoin };
+    }
+    const nextId = cur.next[0];
     const nextSt = byId.get(nextId)!;
     if (i < steps - 1) {
-      // 到着駅は通過に含めない
-      passedStationIds.push(nextSt.id);
+      // 到着駅は通過に含めない（通過はコイン、到着はクイズ。DESIGN 4.7.3）
+      passedIds.push(nextId);
       passCoin += nextSt.passCoin;
     }
-    current = nextSt;
+    current = nextId;
   }
-  return { toIndex: current.index, passedStationIds, passCoin };
+  return { type: "arrived", stationId: current, passedIds, passCoin };
+}
+
+/**
+ * 分岐で方向を選んだあとの継続移動（DESIGN 4.5）。
+ * fork から chosenFirstId へ1歩進み、残り remaining-1 歩を walk で続行。
+ */
+export function continueFromBranch(
+  map: GameMap,
+  chosenFirstId: string,
+  remaining: number,
+): WalkResult {
+  const byId = indexById(map);
+  const firstSt = byId.get(chosenFirstId)!;
+  if (remaining <= 1) {
+    // 選んだ先がちょうど到着
+    return { type: "arrived", stationId: chosenFirstId, passedIds: [], passCoin: 0 };
+  }
+  // 選んだ先は通過扱い
+  const passedIds = [chosenFirstId];
+  let passCoin = firstSt.passCoin;
+  const rest = walk(map, chosenFirstId, remaining - 1);
+  return {
+    ...rest,
+    passedIds: [...passedIds, ...rest.passedIds],
+    passCoin: passCoin + rest.passCoin,
+  };
 }
 
 export type AnswerResult = {
