@@ -14,6 +14,7 @@
 ```bash
 npm install
 npm run dev        # http://localhost:3000
+npm test           # vitest（純関数エンジン・マップ生成の回帰テスト）
 ```
 
 | 区分 | 内容 |
@@ -27,6 +28,8 @@ npm run dev        # http://localhost:3000
 | `components/RubyText.tsx` `GameBoard.tsx` | 全漢字ルビ共通部品（DESIGN 16 共通7種）/ 長方形ループ盤面UI（DESIGN 4.4） |
 
 **手戻り防止の境界**: ゲームロジックは副作用なしの純関数（`lib/game/engine.ts`）に分離。永続化・認証・Realtime を後付けする際は store のアクションを Server Action 呼び出しに差し替えるだけで済む構造。
+
+**テスト**: `lib/game/*.test.ts`（vitest・計19件）で移動/分岐の歩数・通過コイン計算（`walk` / `continueFromBranch`）、クイズ判定（`judgeAnswer`）、スコア決算（`calcScore`）、マップ生成の決定性・構造不変条件（`generateMap`）を固定。純関数なので将来のサーバ移植時もそのまま回せる。
 
 実装済みコアループ（**1ゲーム完結**）: シード式マップ生成 → サイコロ → 移動（通過コイン）→ **分岐で「どっちにいく？」（近道/遠回り×安全/危険）** → 物件マスでクイズ3択 → 正解で物件取得 → 危険マスはコイン損失 → ターン交代（2人ホットシート）→ **5ターンで決算 → スコア順位＋🏆勝者発表 → もういちど**。
 
