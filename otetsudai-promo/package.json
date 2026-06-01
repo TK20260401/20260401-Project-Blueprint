@@ -4,7 +4,8 @@
   "description": "おこづかいクエスト PR動画 (Remotion)",
   "private": true,
   "scripts": {
-    "start": "remotion studio",
+    "dev": "remotion studio --port 3001",
+    "start": "remotion studio --port 3001",
     "build:vertical": "remotion render PromoVertical out/promo-vertical.mp4",
     "build:horizontal": "remotion render PromoHorizontal out/promo-horizontal.mp4",
     "build:all": "npm run build:vertical && npm run build:horizontal",
