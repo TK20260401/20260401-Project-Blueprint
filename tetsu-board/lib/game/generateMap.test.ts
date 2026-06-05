@@ -37,4 +37,12 @@ describe("generateMap", () => {
     const map = generateMap("seed-x");
     expect(map.stations.filter((s) => s.kind === "start")).toHaveLength(1);
   });
+
+  it("周回(loop)は start + 物件駅6つ＝目的地候補が常に6駅ある（DESIGN 4.6）", () => {
+    const map = generateMap("seed-x");
+    const loop = map.stations.filter((s) => s.loop);
+    expect(loop).toHaveLength(7);
+    expect(loop.filter((s) => s.kind === "start")).toHaveLength(1);
+    expect(loop.filter((s) => s.kind === "property")).toHaveLength(6);
+  });
 });

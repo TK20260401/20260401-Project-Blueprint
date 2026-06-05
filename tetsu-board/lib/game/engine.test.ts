@@ -3,7 +3,15 @@
 // マップは generateMap に依存せず、手組みの最小 fixture で意図を明示する。
 
 import { describe, expect, it } from "vitest";
-import { walk, continueFromBranch, judgeAnswer, calcScore } from "./engine";
+import {
+  walk,
+  continueFromBranch,
+  judgeAnswer,
+  calcScore,
+  shortestDistance,
+  destinationCandidates,
+  pickDestination,
+} from "./engine";
 import type { GameMap, Player, Property, Quiz, Station } from "./types";
 
 // --- fixture ヘルパ --------------------------------------------------------
@@ -181,5 +189,70 @@ describe("calcScore", () => {
 
   it("未所有の物件は加算しない", () => {
     expect(calcScore(player({ coin: 100, ownedPropertyIds: ["p1"] }), scoreMap)).toBe(150);
+  });
+});
+
+// --- shortestDistance（DESIGN 4.6 あと◯マス） --------------------------------
+describe("shortestDistance", () => {
+  it("同じ駅なら 0", () => {
+    expect(shortestDistance(linear, "A", "A")).toBe(0);
+  });
+
+  it("直線ループでは進行方向の歩数を返す（一方通行なので逆走はしない）", () => {
+    expect(shortestDistance(linear, "A", "C")).toBe(2); // A→B→C
+    expect(shortestDistance(linear, "C", "B")).toBe(2); // C→A→B（ループを回る）
+  });
+
+  it("分岐があるときは短いほうのルートで数える", () => {
+    // F→S→M（近道2歩）と F→L1→L2→M（遠回り3歩）→ 2 を返す
+    expect(shortestDistance(branchMap, "F", "M")).toBe(2);
+  });
+
+  it("到達できない駅は Infinity", () => {
+    const isolated: GameMap = {
+      id: "m4",
+      seed: "s4",
+      stations: [st("A", [], 0), st("B", [], 0)],
+      branches: [],
+    };
+    expect(shortestDistance(isolated, "A", "B")).toBe(Infinity);
+  });
+});
+
+// --- destinationCandidates / pickDestination（DESIGN 4.6 目的地駅） ----------
+describe("destinationCandidates", () => {
+  it("周回(loop)上の物件駅だけが候補になる", () => {
+    const m: GameMap = {
+      id: "m5",
+      seed: "s5",
+      stations: [
+        st("start", ["P1"], 0, { kind: "start", loop: true }),
+        st("P1", ["E"], 0, { kind: "property", loop: true }),
+        st("E", ["P2"], 0, { kind: "event", loop: true }), // 物件でない → 候補外
+        st("P2", ["start"], 0, { kind: "property" }), // loop でない → 候補外
+      ],
+      branches: [],
+    };
+    expect(destinationCandidates(m)).toEqual(["P1"]);
+  });
+});
+
+describe("pickDestination", () => {
+  const candidates = ["P1", "P2", "P3", "P4", "P5", "P6"];
+
+  it("同じシード・同じ世代なら同じ目的地を返す（決定的）", () => {
+    expect(pickDestination("seed-x", 0, candidates)).toBe(pickDestination("seed-x", 0, candidates));
+  });
+
+  it("候補の中から選ばれる", () => {
+    for (let seq = 0; seq < 10; seq++) {
+      expect(candidates).toContain(pickDestination("seed-x", seq, candidates));
+    }
+  });
+
+  it("直前の目的地（excludeId）は選ばれない", () => {
+    for (let seq = 0; seq < 20; seq++) {
+      expect(pickDestination("seed-x", seq, candidates, "P3")).not.toBe("P3");
+    }
   });
 });

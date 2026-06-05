@@ -8,7 +8,9 @@ import {
   type DiceValue,
   calcScore,
   continueFromBranch,
+  destinationCandidates,
   judgeAnswer,
+  pickDestination,
   rollDice,
   walk,
 } from "@/lib/game/engine";
@@ -21,6 +23,10 @@ type GameState = {
   currentPlayerIndex: number;
   turn: number;
   phase: GamePhase;
+
+  // 二段階目的地（DESIGN 4.6 小目的）。到達でボーナス → 次の目的地へローテーション
+  destinationId: string;
+  destSeq: number; // 何代目の目的地か（シードと合わせて決定的に選出）
 
   // 直近アクションの一時表示用
   lastDice: DiceValue | null;
@@ -51,52 +57,79 @@ const makePlayer = (nickname: string, i: number): Player => ({
 const DEFAULT_NICKNAMES = ["プレイヤー1", "プレイヤー2"];
 const INITIAL_SEED = "tetsu-mvp"; // SSR 一致のため初期は固定シード
 const MAX_TURNS = 5; // この周回数で年度末（決算）。DESIGN 4.6 大目的の簡易版
+const DEST_BONUS = 50; // 目的地1着到達ボーナス（DESIGN 4.6 小目的の簡易版）
 
 const clampCoin = (c: number) => Math.max(0, c);
 
-/** 移動の到着処理：コイン反映・到着駅に応じて quiz / result へ。roll と chooseBranch で共用。 */
+/** 目的地まわりの現在状態（arrive に渡して到達判定・ローテーションする） */
+type DestState = { seed: string; destinationId: string; destSeq: number };
+
+/**
+ * 移動の到着処理：コイン反映・到着駅に応じて quiz / result へ。roll と chooseBranch で共用。
+ * 目的地（DESIGN 4.6）に到達したらボーナスを与え、次の目的地へローテーションする。
+ */
 function arrive(
   map: GameMap,
   players: Player[],
   idx: number,
   stationId: string,
   passCoin: number,
+  dest: DestState,
 ) {
   const station = map.stations.find((s) => s.id === stationId)!;
+  const isDest = stationId === dest.destinationId;
+  const bonus = isDest ? DEST_BONUS : 0;
   const players2 = players.map((p, i) =>
-    i === idx ? { ...p, stationId, coin: clampCoin(p.coin + passCoin) } : p,
+    i === idx ? { ...p, stationId, coin: clampCoin(p.coin + passCoin + bonus) } : p,
   );
+  // 到達したら次の目的地へ（直前の目的地は除外。シード+世代で決定的）
+  const destSeq = isDest ? dest.destSeq + 1 : dest.destSeq;
+  const destinationId = isDest
+    ? pickDestination(dest.seed, destSeq, destinationCandidates(map), dest.destinationId)
+    : dest.destinationId;
+  const destPrefix = isDest ? `🚩 もくてきちに とうちゃく！ +${DEST_BONUS}コイン！ ` : "";
+
   if (station.kind === "property" && station.property) {
     return {
       players: players2,
+      destinationId,
+      destSeq,
       phase: "quiz" as const,
       activeQuiz: { quiz: station.property.quiz, station },
       lastAnswerCorrect: null,
-      message: `${station.label.base}にとうちゃく！クイズにこたえよう`,
+      message: `${destPrefix}${station.label.base}にとうちゃく！クイズにこたえよう`,
     };
   }
   return {
     players: players2,
+    destinationId,
+    destSeq,
     phase: "result" as const,
     activeQuiz: null,
     lastAnswerCorrect: null,
-    message: station.danger
-      ? "ピンチ！コインをすこし おとした…"
-      : station.kind === "event"
-        ? "イベントマス！"
-        : station.kind === "start"
-          ? "スタートに もどってきた！"
-          : "なにもないマス",
+    message:
+      destPrefix +
+      (station.danger
+        ? "ピンチ！コインをすこし おとした…"
+        : station.kind === "event"
+          ? "イベントマス！"
+          : station.kind === "start"
+            ? "スタートに もどってきた！"
+            : "なにもないマス"),
   };
 }
 
+const INITIAL_MAP = generateMap(INITIAL_SEED);
+
 export const useGameStore = create<GameState>((set, get) => ({
   seed: INITIAL_SEED,
-  map: generateMap(INITIAL_SEED),
+  map: INITIAL_MAP,
   players: DEFAULT_NICKNAMES.map(makePlayer),
   currentPlayerIndex: 0,
   turn: 1,
   phase: "idle",
+  destinationId: pickDestination(INITIAL_SEED, 0, destinationCandidates(INITIAL_MAP)),
+  destSeq: 0,
   lastDice: null,
   lastGainedCoin: 0,
   activeQuiz: null,
@@ -104,21 +137,25 @@ export const useGameStore = create<GameState>((set, get) => ({
   lastAnswerCorrect: null,
   message: "サイコロをふってね",
 
-  start: (nicknames, seed = INITIAL_SEED) =>
+  start: (nicknames, seed = INITIAL_SEED) => {
+    const map = generateMap(seed);
     set({
       seed,
-      map: generateMap(seed),
+      map,
       players: nicknames.map(makePlayer),
       currentPlayerIndex: 0,
       turn: 1,
       phase: "idle",
+      destinationId: pickDestination(seed, 0, destinationCandidates(map)),
+      destSeq: 0,
       lastDice: null,
       lastGainedCoin: 0,
       activeQuiz: null,
       pendingBranch: null,
       lastAnswerCorrect: null,
       message: "サイコロをふってね",
-    }),
+    });
+  },
 
   newGame: () => {
     const { players } = get();
@@ -129,7 +166,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   roll: () => {
-    const { phase, map, players, currentPlayerIndex } = get();
+    const { phase, map, players, currentPlayerIndex, seed, destinationId, destSeq } = get();
     if (phase !== "idle") return;
     const dice = rollDice();
     const player = players[currentPlayerIndex];
@@ -159,12 +196,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({
       lastDice: dice,
       lastGainedCoin: res.passCoin,
-      ...arrive(map, players, currentPlayerIndex, res.stationId, res.passCoin),
+      ...arrive(map, players, currentPlayerIndex, res.stationId, res.passCoin, {
+        seed,
+        destinationId,
+        destSeq,
+      }),
     });
   },
 
   chooseBranch: (firstNextId) => {
-    const { phase, map, players, currentPlayerIndex, pendingBranch } = get();
+    const { phase, map, players, currentPlayerIndex, pendingBranch, seed, destinationId, destSeq } =
+      get();
     if (phase !== "branch" || !pendingBranch) return;
     const res = continueFromBranch(map, firstNextId, pendingBranch.remaining);
 
@@ -188,7 +230,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({
       lastGainedCoin: res.passCoin,
       pendingBranch: null,
-      ...arrive(map, players, currentPlayerIndex, res.stationId, res.passCoin),
+      ...arrive(map, players, currentPlayerIndex, res.stationId, res.passCoin, {
+        seed,
+        destinationId,
+        destSeq,
+      }),
     });
   },
 
@@ -257,4 +303,4 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 }));
 
-export { MAX_TURNS };
+export { MAX_TURNS, DEST_BONUS };

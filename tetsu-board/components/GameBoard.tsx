@@ -5,6 +5,7 @@
 
 import { MAX_TURNS, useGameStore } from "@/store/gameStore";
 import { BOARD } from "@/lib/game/generateMap";
+import { shortestDistance } from "@/lib/game/engine";
 import { RubyText } from "@/components/RubyText";
 import type { Station } from "@/lib/game/types";
 
@@ -36,6 +37,7 @@ export function GameBoard() {
     currentPlayerIndex,
     turn,
     phase,
+    destinationId,
     lastDice,
     lastGainedCoin,
     activeQuiz,
@@ -52,10 +54,31 @@ export function GameBoard() {
   const current = players[currentPlayerIndex];
   const byId = new Map(map.stations.map((s) => [s.id, s]));
 
+  // 二段階目的地の常時表示（DESIGN 4.6）: 目的地名・あと◯マス・年度末までのこり◯ターン
+  const destination = byId.get(destinationId);
+  const destDistance = destination ? shortestDistance(map, current.stationId, destinationId) : 0;
+  const remainingTurns = MAX_TURNS - turn + 1;
+
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 lg:flex-row">
       {/* 盤面 */}
       <div className="flex flex-1 flex-col items-center">
+        {/* 二段階目的地の常時表示（DESIGN 4.6 画面上部） */}
+        {destination && phase !== "finished" && (
+          <div className="mb-3 flex w-full max-w-[560px] flex-wrap items-center justify-between gap-2 rounded-2xl border-2 border-rose-200 bg-white px-4 py-2 shadow">
+            <div className="flex items-center gap-2 text-sm font-bold text-stone-700">
+              <span className="text-lg">🚩</span>
+              <span className="text-stone-500">つぎの もくてきち:</span>
+              <RubyText text={destination.label} />
+              <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-black text-rose-600">
+                あと {destDistance}マス
+              </span>
+            </div>
+            <div className="text-xs font-bold text-stone-500">
+              ⏱ ねんどまつまで のこり {remainingTurns}ターン
+            </div>
+          </div>
+        )}
         <div className="mb-3 flex items-center gap-3 text-sm font-bold text-stone-600">
           <span>
             {turn}／{MAX_TURNS}ターン ・{" "}
@@ -107,9 +130,17 @@ export function GameBoard() {
             return (
               <div
                 key={st.id}
-                className={`absolute flex h-14 w-14 flex-col items-center justify-center rounded-lg border-2 px-0.5 text-center text-[10px] font-bold leading-tight shadow ${stationColor(st)}`}
+                className={`absolute flex h-14 w-14 flex-col items-center justify-center rounded-lg border-2 px-0.5 text-center text-[10px] font-bold leading-tight shadow ${stationColor(st)} ${
+                  st.id === destinationId ? "ring-4 ring-rose-400" : ""
+                }`}
                 style={{ left: st.pos.x - HALF, top: st.pos.y - HALF }}
               >
+                {/* 目的地の旗（DESIGN 4.6 マップ上の目的地に大きな旗） */}
+                {st.id === destinationId && (
+                  <span className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 animate-bounce text-2xl drop-shadow">
+                    🚩
+                  </span>
+                )}
                 <RubyText text={st.label} />
                 {here.length > 0 && (
                   <div className="mt-0.5 flex gap-0.5">

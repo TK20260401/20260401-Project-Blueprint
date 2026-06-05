@@ -64,7 +64,15 @@ export function generateMap(seed: string): GameMap {
     const c = I(perimeter(k / SPINE));
     if (k === 0) {
       spine.push(
-        mk({ id: "st-start", kind: "start", label: r("スタート"), next: [], pos: c, passCoin: 2 }),
+        mk({
+          id: "st-start",
+          kind: "start",
+          label: r("スタート"),
+          next: [],
+          pos: c,
+          passCoin: 2,
+          loop: true,
+        }),
       );
     } else {
       const p = takeProp();
@@ -77,6 +85,7 @@ export function generateMap(seed: string): GameMap {
           pos: c,
           property: p,
           passCoin: 1,
+          loop: true,
         }),
       );
     }

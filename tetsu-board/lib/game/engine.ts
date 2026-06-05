@@ -2,6 +2,7 @@
 // クライアントでも将来のサーバ実装でも共用できる。乱数だけ注入可能にして、
 // サーバ移行時は crypto.randomInt(1,7)（DESIGN 15.3.2 不正防止）へ差し替える。
 
+import { rngFromSeed } from "./rng";
 import type { GameMap, Player, Quiz } from "./types";
 
 export type DiceValue = 1 | 2 | 3 | 4 | 5 | 6;
@@ -75,7 +76,7 @@ export function continueFromBranch(
   }
   // 選んだ先は通過扱い
   const passedIds = [chosenFirstId];
-  let passCoin = firstSt.passCoin;
+  const passCoin = firstSt.passCoin;
   const rest = walk(map, chosenFirstId, remaining - 1);
   return {
     ...rest,
@@ -106,6 +107,58 @@ export function judgeAnswer(
   if (player.coin < price) return { correct: true, coinDelta: 0 }; // 正解だが資金不足
   if (player.ownedPropertyIds.includes(propertyId)) return { correct: true, coinDelta: 0 };
   return { correct: true, coinDelta: -price, acquiredPropertyId: propertyId };
+}
+
+/**
+ * fromId から toId への最短歩数（BFS）。「あと◯マス」常時表示用（DESIGN 4.6）。
+ * 分岐があるため next エッジのグラフ上で幅優先する。到達不能なら Infinity
+ * （生成器の不変条件上は起きない）。
+ */
+export function shortestDistance(map: GameMap, fromId: string, toId: string): number {
+  if (fromId === toId) return 0;
+  const byId = indexById(map);
+  const visited = new Set([fromId]);
+  let frontier = [fromId];
+  let dist = 0;
+  while (frontier.length > 0) {
+    dist++;
+    const next: string[] = [];
+    for (const id of frontier) {
+      for (const nid of byId.get(id)!.next) {
+        if (nid === toId) return dist;
+        if (visited.has(nid)) continue;
+        visited.add(nid);
+        next.push(nid);
+      }
+    }
+    frontier = next;
+  }
+  return Infinity;
+}
+
+/**
+ * 目的地駅にできる駅 id 一覧（DESIGN 4.6 小目的）。
+ * 周回（loop）上の物件駅のみ：分岐の選択に依らず毎周必ず通るため、
+ * どのルートを選んでも目的地に到達できることが保証される。
+ */
+export function destinationCandidates(map: GameMap): string[] {
+  return map.stations.filter((s) => s.loop && s.kind === "property").map((s) => s.id);
+}
+
+/**
+ * 目的地駅の決定（DESIGN 4.6「数ターンごとに目的地が変わる」）。
+ * シード + 何代目か(seq) で決定的 → 将来サーバ移植してもクライアントと同じ結果になる。
+ * excludeId（直前の目的地）は除外して連続選出を防ぐ。
+ */
+export function pickDestination(
+  seed: string,
+  seq: number,
+  candidateIds: string[],
+  excludeId?: string,
+): string {
+  const pool = candidateIds.filter((id) => id !== excludeId);
+  const rng = rngFromSeed(`${seed}-dest-${seq}`);
+  return pool[Math.floor(rng() * pool.length)];
 }
 
 /** スコア = 所持コイン + 所有物件価格の合計（DESIGN 決算の簡易版） */

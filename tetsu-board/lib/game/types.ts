@@ -34,6 +34,8 @@ export type Station = {
   passCoin: number;
   /** 危険マスか（DESIGN 4.5 安全/危険）。ピンチ演出・色分け用 */
   danger?: boolean;
+  /** 周回（spine）上の駅か。分岐の経路に依らず毎周必ず通るため目的地候補になる（DESIGN 4.6） */
+  loop?: boolean;
 };
 
 /** 物件（DESIGN 12.3 properties / property_stations） */
