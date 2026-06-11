@@ -8,7 +8,7 @@ import { MAX_TURNS, useGameStore } from "@/store/gameStore";
 import { BOARD } from "@/lib/game/generateMap";
 import { shortestDistance, shortestPath } from "@/lib/game/engine";
 import { RubyText } from "@/components/RubyText";
-import type { Player, Station } from "@/lib/game/types";
+import type { Player, Quiz, Station } from "@/lib/game/types";
 
 const DICE_TICK_MS = 80; // サイコロの目が切り替わる間隔
 const DICE_TICKS = 7; // 何回まわして止めるか
@@ -106,6 +106,68 @@ function MapBackdrop() {
         <span className="absolute bottom-2 left-3 text-xl opacity-70">⛵</span>
       </div>
     </>
+  );
+}
+
+// クイズの消去法パネル（DESIGN 7.4.2）。短タップで×（候補を消す）→1つにしぼって「これだ！」で確定。
+// 親から key={quiz.id} で渡されるのでクイズが変わると再マウントされ、eliminated は自動リセットされる。
+function QuizPanel({ quiz, onAnswer }: { quiz: Quiz; onAnswer: (k: "A" | "B" | "C") => void }) {
+  const [eliminated, setEliminated] = useState<Record<string, boolean>>({});
+  const remaining = quiz.choices.filter((c) => !eliminated[c.key]);
+  const canConfirm = remaining.length === 1;
+  return (
+    <div className="rounded-xl border-2 border-sky-300 bg-sky-50 p-4">
+      <div className="mb-1 text-base font-bold text-stone-800">
+        <RubyText text={quiz.question} />
+      </div>
+      <div className="mb-3 text-[11px] font-medium text-stone-400">
+        ちがうとおもうものを タップして けそう（消去法）
+      </div>
+      <div className="flex flex-col gap-2">
+        {quiz.choices.map((c) => {
+          const x = !!eliminated[c.key];
+          return (
+            <button
+              key={c.key}
+              type="button"
+              onClick={() => setEliminated((e) => ({ ...e, [c.key]: !e[c.key] }))}
+              className={`flex items-center rounded-lg border-2 px-4 py-3 text-left text-base font-bold transition active:scale-[0.98] ${
+                x
+                  ? "border-stone-200 bg-stone-100 text-stone-400 line-through"
+                  : "border-stone-300 bg-white text-stone-700 hover:border-sky-400 hover:bg-sky-100"
+              }`}
+            >
+              <span className={`mr-2 ${x ? "text-stone-300" : "text-sky-500"}`}>{c.key}.</span>
+              <span className="flex-1">
+                <RubyText text={c.text} />
+              </span>
+              {x && <span className="ml-2 text-lg text-red-400">✗</span>}
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setEliminated({})}
+          className="rounded-lg border-2 border-stone-300 bg-white px-3 py-2 text-sm font-bold text-stone-500 transition hover:bg-stone-100 active:scale-[0.98]"
+        >
+          ↺ もどす
+        </button>
+        <button
+          type="button"
+          onClick={() => canConfirm && onAnswer(remaining[0].key)}
+          disabled={!canConfirm}
+          className={`flex-1 rounded-lg border-2 py-2 text-base font-black transition active:scale-[0.98] ${
+            canConfirm
+              ? "border-sky-500 bg-sky-500 text-white hover:bg-sky-600"
+              : "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400"
+          }`}
+        >
+          {canConfirm ? "✓ これだ！" : `あと ${remaining.length - 1}こ けそう`}
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -429,25 +491,9 @@ export function GameBoard() {
           </div>
         )}
 
-        {/* クイズ（WF2） */}
+        {/* クイズ（WF2）＝消去法UI（DESIGN 7.4.2）。key でクイズごとに状態リセット */}
         {phase === "quiz" && activeQuiz && (
-          <div className="rounded-xl border-2 border-sky-300 bg-sky-50 p-4">
-            <div className="mb-3 text-base font-bold text-stone-800">
-              <RubyText text={activeQuiz.quiz.question} />
-            </div>
-            <div className="flex flex-col gap-2">
-              {activeQuiz.quiz.choices.map((c) => (
-                <button
-                  key={c.key}
-                  onClick={() => answer(c.key)}
-                  className="rounded-lg border-2 border-stone-300 bg-white px-4 py-3 text-left text-base font-bold text-stone-700 transition hover:border-sky-400 hover:bg-sky-100 active:scale-[0.98]"
-                >
-                  <span className="mr-2 text-sky-500">{c.key}.</span>
-                  <RubyText text={c.text} />
-                </button>
-              ))}
-            </div>
-          </div>
+          <QuizPanel key={activeQuiz.quiz.id} quiz={activeQuiz.quiz} onAnswer={answer} />
         )}
 
         {/* カード・災難（DESIGN 4.2 カードの駅/ピンチの駅） */}
