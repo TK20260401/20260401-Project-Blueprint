@@ -23,7 +23,8 @@ import {
   manualAdjust,
   recordAnswer,
 } from "@/lib/game/difficulty";
-import { pickQuiz } from "@/lib/game/quizBank";
+import { pickQuiz, quizById } from "@/lib/game/quizBank";
+import { rngFromSeed } from "@/lib/game/rng";
 import type {
   BranchInfo,
   Card,
@@ -55,7 +56,7 @@ type GameState = {
   // 直近アクションの一時表示用
   lastDice: DiceValue | null;
   lastGainedCoin: number; // 直近の通過コイン（負=ピンチで損失）
-  activeQuiz: { quiz: Quiz; station: Station } | null;
+  activeQuiz: { quiz: Quiz; station: Station; review?: boolean } | null; // review=苦手のふくしゅう出題
   pendingBranch: { branch: BranchInfo; remaining: number } | null; // 分岐選択待ち
   lastAnswerCorrect: boolean | null;
   message: string;
@@ -73,6 +74,10 @@ type GameState = {
   // 動的難易度（DESIGN 7.3 E-24）。プレイヤー×教科ごとに独立管理。
   diff: DiffMap;
   lastSubject: Subject | null; // 直近に回答したクイズの教科（手動調整の対象）
+
+  // 苦手問題リスト（DESIGN 7.6 学習接続）。プレイヤーごとに不正解の quizId を保持し、
+  // 後日「ふくしゅう」として再出題、正解で克服（除去）。将来 learning_records 相当。
+  wrong: Record<string, string[]>;
 
   // actions
   start: (nicknames: string[], seed?: string) => void;
@@ -101,6 +106,7 @@ const INITIAL_SEED = "tetsu-mvp"; // SSR 一致のため初期は固定シード
 const MAX_TURNS = 5; // この周回数で年度末（決算）。DESIGN 4.6 大目的の簡易版
 const DEST_BONUS = 50; // 目的地1着到達ボーナス（DESIGN 4.6 小目的の簡易版）
 const BONBY_BITE = 15; // 災難キャラが次ターン開始で奪うコイン（DESIGN 4.2 災難キャラ）
+const REVIEW_RATE = 0.5; // 苦手があるとき ふくしゅう出題になる確率（DESIGN 7.6 学習接続）
 
 const clampCoin = (c: number) => Math.max(0, c);
 
@@ -192,6 +198,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   bonbyHolderId: null,
   diff: {},
   lastSubject: null,
+  wrong: {},
 
   start: (nicknames, seed = INITIAL_SEED) => {
     const map = generateMap(seed);
@@ -216,6 +223,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       bonbyHolderId: null,
       diff: {},
       lastSubject: null,
+      wrong: {},
     });
   },
 
@@ -305,22 +313,32 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    // クイズ駅: プレイヤーの教科別難易度に応じて出題（DESIGN 7.3）。
-    // 「ふつう」は駅の themed クイズ、やさしい/むずかしいはバンクから（無ければ themed にフォールバック）。
-    let activeQuiz = patch.activeQuiz;
+    // クイズ駅の出題決定。優先度: ①苦手のふくしゅう(7.6) ②教科別難易度(7.3)。
+    let activeQuiz: { quiz: Quiz; station: Station; review?: boolean } | null = patch.activeQuiz;
     if (patch.phase === "quiz" && activeQuiz) {
       const themed = activeQuiz.quiz;
-      const level = diffLevel(get().diff, player.userId, themed.subject);
-      const quiz =
-        level === "normal"
-          ? themed
-          : pickQuiz(
-              `${seed}-q-${turn}-${currentPlayerIndex}-${landed.id}`,
-              themed.subject,
-              level,
-              themed,
-            );
-      activeQuiz = { quiz, station: activeQuiz.station };
+      const wrongIds = get().wrong[player.userId] ?? [];
+      const reviewRng = rngFromSeed(`${seed}-review-${turn}-${currentPlayerIndex}-${landed.id}`);
+      const reviewQuiz =
+        wrongIds.length > 0 && reviewRng() < REVIEW_RATE ? quizById(wrongIds[0]) : undefined;
+
+      if (reviewQuiz) {
+        // ふくしゅう（DESIGN 7.6）: 苦手リストの最古問題を再出題
+        activeQuiz = { quiz: reviewQuiz, station: activeQuiz.station, review: true };
+      } else {
+        // 通常: 難易度に応じて themed / バンクから出題（DESIGN 7.3）
+        const level = diffLevel(get().diff, player.userId, themed.subject);
+        const quiz =
+          level === "normal"
+            ? themed
+            : pickQuiz(
+                `${seed}-q-${turn}-${currentPlayerIndex}-${landed.id}`,
+                themed.subject,
+                level,
+                themed,
+              );
+        activeQuiz = { quiz, station: activeQuiz.station };
+      }
     }
 
     set({
@@ -368,9 +386,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   answer: (selected) => {
-    const { activeQuiz, players, currentPlayerIndex, map, diff } = get();
+    const { activeQuiz, players, currentPlayerIndex, map, diff, wrong } = get();
     if (!activeQuiz) return;
-    const { quiz, station } = activeQuiz;
+    const { quiz, station, review } = activeQuiz;
     const property = station.property!;
     const player = players[currentPlayerIndex];
     const result = judgeAnswer(player, quiz, selected, property.id, property.price);
@@ -394,17 +412,32 @@ export const useGameStore = create<GameState>((set, get) => ({
       [player.userId]: { ...diff[player.userId], [subj]: nextState },
     };
 
+    // 苦手問題リスト（DESIGN 7.6）: 不正解は追加、正解は除去（克服）。
+    const list = wrong[player.userId] ?? [];
+    const nextList = result.correct
+      ? list.filter((id) => id !== quiz.id)
+      : list.includes(quiz.id)
+        ? list
+        : [...list, quiz.id];
+    const nextWrong = { ...wrong, [player.userId]: nextList };
+    const mastered = review && result.correct; // ふくしゅうを正解＝克服
+
     set({
       players: updated,
       phase: "result",
       lastAnswerCorrect: result.correct,
       diff: nextDiff,
       lastSubject: subj,
+      wrong: nextWrong,
       message: result.correct
-        ? result.acquiredPropertyId
-          ? `せいかい！${property.name.base}を手に入れた！`
-          : "せいかい！でもコインがたりなかった…"
-        : `ざんねん…ヒント: ${quiz.hint.base}`,
+        ? mastered
+          ? `🎉 ふくしゅう せいかい！にがてを こくふくしたね！${
+              result.acquiredPropertyId ? `${property.name.base}も手に入れた！` : ""
+            }`
+          : result.acquiredPropertyId
+            ? `せいかい！${property.name.base}を手に入れた！`
+            : "せいかい！でもコインがたりなかった…"
+        : `ざんねん…ヒント: ${quiz.hint.base}（ふくしゅうリストに ついか）`,
     });
   },
 

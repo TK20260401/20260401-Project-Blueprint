@@ -121,17 +121,29 @@ function MapBackdrop() {
 function QuizPanel({
   quiz,
   mood,
+  review,
   onAnswer,
 }: {
   quiz: Quiz;
   mood: string;
+  review: boolean;
   onAnswer: (k: "A" | "B" | "C") => void;
 }) {
   const [eliminated, setEliminated] = useState<Record<string, boolean>>({});
   const remaining = quiz.choices.filter((c) => !eliminated[c.key]);
   const canConfirm = remaining.length === 1;
   return (
-    <div className="rounded-xl border-2 border-sky-300 bg-sky-50 p-4">
+    <div
+      className={`rounded-xl border-2 p-4 ${
+        review ? "border-amber-400 bg-amber-50" : "border-sky-300 bg-sky-50"
+      }`}
+    >
+      {/* ふくしゅう（DESIGN 7.6 苦手問題の再出題） */}
+      {review && (
+        <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-black text-white">
+          🔁 ふくしゅう
+        </div>
+      )}
       <div className="mb-1 flex items-start gap-2 text-base font-bold text-stone-800">
         <span className="shrink-0" title="いまの むずかしさ">
           {mood}
@@ -209,6 +221,7 @@ export function GameBoard() {
     activeCard,
     bonbyHolderId,
     diff,
+    wrong,
     roll,
     beginMove,
     finishMove,
@@ -455,6 +468,14 @@ export function GameBoard() {
                     👹
                   </span>
                 )}
+                {(wrong[p.userId]?.length ?? 0) > 0 && (
+                  <span
+                    title="ふくしゅうしたい もんだいの かず"
+                    className="rounded-full bg-amber-100 px-1.5 text-[10px] font-black text-amber-600"
+                  >
+                    🔁{wrong[p.userId].length}
+                  </span>
+                )}
               </div>
               <div className="text-lg font-black text-amber-600">{p.coin}コイン</div>
               <div className="text-[11px] text-stone-500">
@@ -517,6 +538,7 @@ export function GameBoard() {
             key={activeQuiz.quiz.id}
             quiz={activeQuiz.quiz}
             mood={MOOD_EMOJI[diff[current.userId]?.[activeQuiz.quiz.subject]?.level ?? "normal"]}
+            review={!!activeQuiz.review}
             onAnswer={answer}
           />
         )}

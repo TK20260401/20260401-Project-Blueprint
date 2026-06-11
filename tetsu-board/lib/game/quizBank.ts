@@ -4,6 +4,7 @@
 // コンテンツ追加だけで難易度カバレッジを広げられる（コード改修不要＝手戻りなし）。
 
 import { rngFromSeed } from "./rng";
+import { PROPERTY_POOL } from "./stationPool";
 import type { Difficulty, Quiz, RubyText, Subject } from "./types";
 
 const r = (base: string, ruby?: string): RubyText => ({ base, ruby });
@@ -250,4 +251,14 @@ export function pickQuiz(
   if (pool.length === 0) return fallback;
   const rng = rngFromSeed(seed);
   return pool[Math.floor(rng() * pool.length)];
+}
+
+// 全クイズの登録簿（themed=各駅 + バンク）。ふくしゅう(DESIGN 7.6)で quizId から問題を引く用。
+// 将来 Supabase の quizzes テーブル＋learning_records(quiz_id FK) と同型。
+const ALL_QUIZZES: Quiz[] = [...QUIZ_BANK, ...PROPERTY_POOL.map((p) => p.quiz)];
+const QUIZ_BY_ID = new Map(ALL_QUIZZES.map((q) => [q.id, q]));
+
+/** quizId から問題を引く（ふくしゅう再出題用）。無ければ undefined。 */
+export function quizById(id: string): Quiz | undefined {
+  return QUIZ_BY_ID.get(id);
 }
