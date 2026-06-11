@@ -45,23 +45,23 @@ function stationColor(st: Station) {
 // 日本列島の背景レイヤー（DESIGN 4.1/4.4 を地理に対応づけた盤）。
 // 駅は実在都市の相対位置に固定されているので、その下に本州・北海道・九州・四国・沖縄を描く。
 // pointer-events-none・駅マスより後ろ。北東=右上 / 南西=左下。
-// 本州（太平洋側 広島→大阪→東京→仙台→青森、日本海側 青森→秋田→新潟→金沢→鳥取→広島の外周）
+// 日本列島の海岸線。都市と同じ緯度経度→座標変換 [x=(lon-127)*42+10, y=(43.1-lat)*54+70]
+// で実際の海岸の代表点を打ち、紀伊半島・伊豆・房総・能登・男鹿などの半島も再現する。
 const HONSHU_PATH =
-  "M239 540 C300 536 360 532 420 514 C470 500 510 490 550 474 " +
-  "C580 430 600 380 602 320 C604 250 600 205 595 185 " +
-  "C566 220 548 258 520 300 C480 350 430 400 380 440 " +
-  "C330 480 285 510 239 540 Z";
-
-// 島（北海道・九州・四国）と沖縄。緯度経度に合わせた配置。
-const ISLANDS: { cx: number; cy: number; rx: number; ry: number; rot?: number }[] = [
-  { cx: 612, cy: 92, rx: 72, ry: 58, rot: -20 }, // 北海道
-  { cx: 182, cy: 636, rx: 64, ry: 82 }, // 九州
-  { cx: 300, cy: 600, rx: 56, ry: 30 }, // 四国（装飾）
-];
-const OKINAWA = [
-  { cx: 44, cy: 968, r: 11 },
-  { cx: 26, cy: 992, r: 7 },
-];
+  "M178 561 L241 551 L304 540 L350 551 L378 591 L422 545 L434 529 " + // 太平洋側（西→紀伊半島→東海）
+  "L480 529 L508 529 L548 507 L593 470 L598 399 L619 329 L619 183 L577 156 " + // 伊豆・房総・東北→青森
+  "L543 243 L514 345 L430 372 L413 426 L354 470 L262 480 L191 540 Z"; // 日本海側（男鹿・能登→山陰）
+// 北海道（札幌のまわり。菱形＋渡島半島）
+const HOKKAIDO_PATH =
+  "M600 16 C648 36 662 86 632 120 C612 150 596 150 576 178 " +
+  "C566 158 556 150 552 120 C544 84 562 40 600 16 Z";
+// 九州（福岡→大分→宮崎→大隅・薩摩→天草→長崎）
+const KYUSHU_PATH = "M157 567 L207 583 L216 621 L203 669 L191 702 L164 723 L149 709 L144 642 L132 629 L136 588 Z";
+// 四国（高松→徳島→室戸→足摺→宇和→松山。装飾） *中継都市は今は無し
+const SHIKOKU_PATH = "M308 545 L329 561 L311 602 L262 631 L241 599 L249 567 Z";
+const LAND_PATHS = [HONSHU_PATH, HOKKAIDO_PATH, KYUSHU_PATH, SHIKOKU_PATH];
+// 沖縄本島（細長い島）と佐渡
+const OKINAWA_PATH = "M38 950 C52 956 52 980 44 990 C34 982 28 960 38 950 Z";
 
 function MapBackdrop() {
   return (
@@ -86,26 +86,16 @@ function MapBackdrop() {
             />
           )),
         )}
-        {/* 本州 */}
-        <path d={HONSHU_PATH} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={12} strokeLinejoin="round" />
-        {/* 北海道・九州・四国 */}
-        {ISLANDS.map((is, i) => (
-          <ellipse
-            key={`is-${i}`}
-            cx={is.cx}
-            cy={is.cy}
-            rx={is.rx}
-            ry={is.ry}
-            fill="#dcebc2"
-            stroke="#ecd9a4"
-            strokeWidth={10}
-            transform={is.rot ? `rotate(${is.rot} ${is.cx} ${is.cy})` : undefined}
-          />
+        {/* 日本列島（本州・北海道・九州・四国）。実海岸線の代表点でかたどる */}
+        {LAND_PATHS.map((d, i) => (
+          <path key={`land-${i}`} d={d} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={11} strokeLinejoin="round" />
         ))}
-        {/* 沖縄 */}
-        {OKINAWA.map((o, i) => (
-          <circle key={`ok-${i}`} cx={o.cx} cy={o.cy} r={o.r} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={5} />
-        ))}
+        {/* 佐渡（新潟沖の島） */}
+        <ellipse cx={478} cy={326} rx={12} ry={8} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={5} />
+        {/* 沖縄本島 */}
+        <path d={OKINAWA_PATH} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={6} strokeLinejoin="round" />
+        <circle cx={20} cy={1000} r={5} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={4} />
+        {/* 渡島半島〜本州 のあいだ（青函）は海。北海道と本州はフェリー線でつながる */}
       </svg>
       {/* 地方ラベル + 方位 */}
       <div className="pointer-events-none absolute inset-0">
