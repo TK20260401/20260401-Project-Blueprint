@@ -65,14 +65,14 @@ export const BRANCHES: GeoBranch[] = [
   {
     forkId: "st-p-depart",
     mergeId: "st-p-jidosha",
-    short: [node("p-kinkaku", 35.01, 135.77)],
-    long: [node("p-biwako", 35.0, 135.87), node("p-daibutsu", 34.69, 135.83)],
+    short: [node("p-kinkaku", 35.01, 135.77)], // 京都
+    long: [node("p-biwako", 35.0, 135.87), node("p-daibutsu", 34.69, 135.83), node("p-kagaku", 34.97, 136.62)], // 大津→奈良→四日市
   },
-  // C 中央 vs 東海道（名古屋 ⇄ 東京）。近道=東海道の静岡、遠回り=中央の長野→甲府。
+  // C 中央 vs 東海道（名古屋 ⇄ 東京）。近道=東海道(静岡→横浜)、遠回り=中央(長野→甲府)。
   {
     forkId: "st-p-jidosha",
     mergeId: "st-start",
-    short: [node("p-cha", 34.97, 138.38)],
+    short: [node("p-cha", 34.97, 138.38), node("p-minato", 35.47, 139.62)], // 静岡→横浜
     long: [node("p-soba", 36.65, 138.19), node("p-budo", 35.66, 138.57)],
   },
 ];
