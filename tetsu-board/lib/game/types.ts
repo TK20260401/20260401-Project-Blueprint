@@ -36,6 +36,8 @@ export type Station = {
   danger?: boolean;
   /** 周回（spine）上の駅か。分岐の経路に依らず毎周必ず通るため目的地候補になる（DESIGN 4.6） */
   loop?: boolean;
+  /** 実在駅・都道府県の副表示（DESIGN 4.1。日本地図レイアウトで都市名を表示） */
+  sub?: RubyText;
 };
 
 /** 物件（DESIGN 12.3 properties / property_stations） */

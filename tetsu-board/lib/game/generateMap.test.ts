@@ -38,11 +38,18 @@ describe("generateMap", () => {
     expect(map.stations.filter((s) => s.kind === "start")).toHaveLength(1);
   });
 
-  it("周回(loop)は start + 物件駅6つ＝目的地候補が常に6駅ある（DESIGN 4.6）", () => {
+  it("周回(loop)は start + 物件駅9つ＝目的地候補が常に9駅ある（DESIGN 4.6・日本地図の本州ループ）", () => {
     const map = generateMap("seed-x");
     const loop = map.stations.filter((s) => s.loop);
-    expect(loop).toHaveLength(7);
+    expect(loop).toHaveLength(10);
     expect(loop.filter((s) => s.kind === "start")).toHaveLength(1);
-    expect(loop.filter((s) => s.kind === "property")).toHaveLength(6);
+    expect(loop.filter((s) => s.kind === "property")).toHaveLength(9);
+  });
+
+  it("全駅に実在駅・都道府県の副表示(sub)がある（DESIGN 4.1・地理学習）", () => {
+    const map = generateMap("seed-x");
+    for (const s of map.stations) {
+      expect(s.sub?.base, `station=${s.id}`).toBeTruthy();
+    }
   });
 });

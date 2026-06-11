@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { MAX_TURNS, useGameStore } from "@/store/gameStore";
-import { BOARD } from "@/lib/game/generateMap";
+import { BOARD_H, BOARD_W, REGIONS } from "@/lib/game/generateMap";
 import { shortestDistance, shortestPath } from "@/lib/game/engine";
 import { RubyText } from "@/components/RubyText";
 import type { Player, Quiz, Station } from "@/lib/game/types";
@@ -21,7 +21,7 @@ const DICE_TICK_MS = 80; // サイコロの目が切り替わる間隔
 const DICE_TICKS = 7; // 何回まわして止めるか
 const STEP_MS = 220; // 駒が1マス進む間隔（DESIGN 4.7.4 移動アニメ）
 
-const HALF = 28; // 駅マス(56px)の半分
+const HALF = 23; // 駅マス(46px)の半分
 
 // 物件カテゴリ5色（DESIGN 16.6.2）
 const CATEGORY_COLOR: Record<string, string> = {
@@ -42,28 +42,25 @@ function stationColor(st: Station) {
   return "bg-stone-200 border-stone-400";
 }
 
-// 地図風の背景レイヤー（海・大陸・海岸線・地形）。盤面を「ちず」に見せる装飾で、
-// pointer-events-none・駅マスより後ろに描画される。決定的（毎回同じ形）。
-// 大陸の輪郭は線路ループ(円環+外側にふくらむ分岐)をすべて陸地で覆うように大きめにとる。
-const LAND_PATH =
-  "M64 96 C120 52 200 70 268 52 C344 32 430 48 478 92 " +
-  "C516 132 500 196 522 252 C540 332 506 396 474 446 " +
-  "C420 512 332 500 256 514 C176 528 96 506 62 452 " +
-  "C30 396 52 324 38 260 C24 184 36 132 64 96 Z";
-// 海に浮かぶ小島（地図感を出す装飾）
-const ISLETS: { x: number; y: number; r: number }[] = [
-  { x: 502, y: 70, r: 14 },
-  { x: 44, y: 486, r: 11 },
-  { x: 510, y: 470, r: 9 },
+// 日本列島の背景レイヤー（DESIGN 4.1/4.4 を地理に対応づけた盤）。
+// 駅は実在都市の相対位置に固定されているので、その下に本州・北海道・九州・四国・沖縄を描く。
+// pointer-events-none・駅マスより後ろ。北東=右上 / 南西=左下。
+// 本州（青森→太平洋側を南西へ→広島／山口、日本海側を北東へ戻る一筆書きの陸塊）
+const HONSHU_PATH =
+  "M404 178 C436 210 446 270 442 330 C438 384 420 392 372 404 " +
+  "C320 416 300 446 250 450 C196 454 156 446 132 438 " +
+  "C150 408 196 384 214 360 C262 330 300 318 342 286 " +
+  "C372 250 380 214 404 178 Z";
+
+// 島（北海道・九州・四国）と沖縄
+const ISLANDS: { cx: number; cy: number; rx: number; ry: number; rot?: number }[] = [
+  { cx: 462, cy: 120, rx: 56, ry: 46, rot: -18 }, // 北海道
+  { cx: 78, cy: 474, rx: 44, ry: 58 }, // 九州
+  { cx: 166, cy: 480, rx: 56, ry: 30 }, // 四国
 ];
-// 地形の絵文字（陸地の内側・中央付近に散らす。駅マスとは重ならない位置）
-const TERRAIN: { e: string; x: number; y: number; s: number }[] = [
-  { e: "⛰️", x: 232, y: 196, s: 26 },
-  { e: "🏔️", x: 296, y: 188, s: 22 },
-  { e: "🌲", x: 196, y: 250, s: 18 },
-  { e: "🌲", x: 348, y: 256, s: 18 },
-  { e: "🌳", x: 250, y: 330, s: 18 },
-  { e: "🏞️", x: 320, y: 330, s: 20 },
+const OKINAWA = [
+  { cx: 58, cy: 582, r: 9 },
+  { cx: 44, cy: 604, r: 6 },
 ];
 
 function MapBackdrop() {
@@ -71,14 +68,14 @@ function MapBackdrop() {
     <>
       <svg
         className="pointer-events-none absolute inset-0"
-        width={BOARD}
-        height={BOARD}
-        viewBox={`0 0 ${BOARD} ${BOARD}`}
+        width={BOARD_W}
+        height={BOARD_H}
+        viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
         aria-hidden
       >
-        {/* 海の波（うっすら） */}
-        {[120, 240, 360, 480].map((y) =>
-          [70, 170, 270, 370, 470].map((x) => (
+        {/* 海の波 */}
+        {[90, 200, 320, 440, 560].map((y) =>
+          [50, 150, 250, 350, 450].map((x) => (
             <path
               key={`w-${x}-${y}`}
               d={`M${x} ${y} q8 -7 16 0 q8 7 16 0`}
@@ -89,28 +86,40 @@ function MapBackdrop() {
             />
           )),
         )}
-        {/* 陸地（緑）＋砂浜の海岸線（太いストローク） */}
-        <path d={LAND_PATH} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={14} strokeLinejoin="round" />
-        <path d={LAND_PATH} fill="none" stroke="#c7dca0" strokeWidth={2} strokeLinejoin="round" />
-        {/* 小島 */}
-        {ISLETS.map((i) => (
-          <circle key={`i-${i.x}`} cx={i.x} cy={i.y} r={i.r} fill="#efe2bf" stroke="#e7d199" strokeWidth={5} />
+        {/* 本州 */}
+        <path d={HONSHU_PATH} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={12} strokeLinejoin="round" />
+        {/* 北海道・九州・四国 */}
+        {ISLANDS.map((is, i) => (
+          <ellipse
+            key={`is-${i}`}
+            cx={is.cx}
+            cy={is.cy}
+            rx={is.rx}
+            ry={is.ry}
+            fill="#dcebc2"
+            stroke="#ecd9a4"
+            strokeWidth={10}
+            transform={is.rot ? `rotate(${is.rot} ${is.cx} ${is.cy})` : undefined}
+          />
+        ))}
+        {/* 沖縄 */}
+        {OKINAWA.map((o, i) => (
+          <circle key={`ok-${i}`} cx={o.cx} cy={o.cy} r={o.r} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={5} />
         ))}
       </svg>
-      {/* 地形の絵文字 + 方位（コンパス） */}
+      {/* 地方ラベル + 方位 */}
       <div className="pointer-events-none absolute inset-0">
-        {TERRAIN.map((t, i) => (
+        {REGIONS.map((rg) => (
           <span
-            key={`t-${i}`}
-            className="absolute -translate-x-1/2 -translate-y-1/2 opacity-80"
-            style={{ left: t.x, top: t.y, fontSize: t.s }}
+            key={rg.label}
+            className="absolute -translate-x-1/2 -translate-y-1/2 text-xs font-black text-emerald-700/50"
+            style={{ left: rg.x, top: rg.y }}
           >
-            {t.e}
+            {rg.label}
           </span>
         ))}
         <span className="absolute right-2 top-2 text-2xl opacity-80">🧭</span>
         <span className="absolute right-3 top-9 text-[10px] font-black text-sky-700/70">N</span>
-        <span className="absolute bottom-2 left-3 text-xl opacity-70">⛵</span>
       </div>
     </>
   );
@@ -344,17 +353,17 @@ export function GameBoard() {
         </div>
         <div
           className="relative max-w-full overflow-hidden rounded-3xl bg-gradient-to-br from-sky-200 to-cyan-100 shadow-inner"
-          style={{ width: BOARD, height: BOARD }}
+          style={{ width: BOARD_W, height: BOARD_H }}
         >
-          {/* 地図風の背景（海・大陸・海岸線・地形）。駅・線路より後ろ */}
+          {/* 日本列島の背景（本州・北海道・九州・四国・沖縄）。駅・線路より後ろ */}
           <MapBackdrop />
 
           {/* 線路（グラフのエッジ）。分岐は fork から2方向に分かれて merge で合流する */}
           <svg
             className="pointer-events-none absolute inset-0"
-            width={BOARD}
-            height={BOARD}
-            viewBox={`0 0 ${BOARD} ${BOARD}`}
+            width={BOARD_W}
+            height={BOARD_H}
+            viewBox={`0 0 ${BOARD_W} ${BOARD_H}`}
           >
             {map.stations.flatMap((s) =>
               s.next.map((nid) => {
@@ -397,10 +406,8 @@ export function GameBoard() {
             return (
               <div
                 key={st.id}
-                title={
-                  st.property?.sub ? `${st.label.base}（${st.property.sub.base}）` : st.label.base
-                }
-                className={`absolute flex h-14 w-14 flex-col items-center justify-center rounded-lg border-2 px-0.5 text-center text-[10px] font-bold leading-tight shadow ${stationColor(st)} ${
+                title={st.sub ? `${st.label.base}（${st.sub.base}）` : st.label.base}
+                className={`absolute flex h-[46px] w-[46px] flex-col items-center justify-center rounded-lg border-2 px-0.5 text-center text-[9px] font-bold leading-tight shadow ${stationColor(st)} ${
                   st.id === destinationId ? "ring-4 ring-rose-400" : ""
                 }`}
                 style={{ left: st.pos.x - HALF, top: st.pos.y - HALF }}
@@ -413,9 +420,9 @@ export function GameBoard() {
                 )}
                 <RubyText text={st.label} />
                 {/* 実在駅・都道府県の副表示（DESIGN 4.1。ON のときだけ） */}
-                {showSub && st.property?.sub && (
+                {showSub && st.sub && (
                   <span className="w-full truncate text-[7px] font-medium leading-none text-stone-600/90">
-                    {st.property.sub.base}
+                    {st.sub.base}
                   </span>
                 )}
                 {here.length > 0 && (
@@ -436,11 +443,12 @@ export function GameBoard() {
             );
           })}
 
-          {/* 中央：サイコロ表示（rolling 中はパラパラ回る） */}
+          {/* サイコロ表示（rolling 中はパラパラ回る）。海の空きスペース（右下）に配置 */}
           <div
-            className={`absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl bg-white text-4xl font-black text-stone-700 shadow-lg transition-transform ${
+            className={`absolute flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl bg-white/95 text-4xl font-black text-stone-700 shadow-lg transition-transform ${
               phase === "rolling" ? "scale-110 rotate-6" : ""
             }`}
+            style={{ left: 432, top: 566 }}
           >
             {phase === "rolling" ? (diceFace ?? "?") : (lastDice ?? "?")}
             <span className="text-[10px] font-medium text-stone-400">サイコロ</span>
