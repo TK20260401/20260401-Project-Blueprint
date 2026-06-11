@@ -44,27 +44,34 @@ export const SPINE: GeoNode[] = [
   node("p-jidosha", 35.18, 136.91), // 13 名古屋 ← 分岐N merge / 分岐C fork
 ];
 
-/** 分岐（fork→short/long→merge は SPINE の index 参照）。short=1中継, long=2中継。 */
-export type GeoBranch = { fork: number; merge: number; short: GeoNode[]; long: GeoNode[] };
+/** 分岐（fork/merge は駅 id 参照＝SPINE の挿入で番号がズレても壊れない）。short=1中継, long=2中継。 */
+export type GeoBranch = { forkId: string; mergeId: string; short: GeoNode[]; long: GeoNode[] };
 export const BRANCHES: GeoBranch[] = [
   // K 九州（福岡 ⇄ 鹿児島）。近道=西の熊本、遠回り=東の大分→宮崎。
   {
-    fork: 9,
-    merge: 10,
+    forkId: "st-p-seitetsu",
+    mergeId: "st-p-imo",
     short: [node("p-kumamoto", 32.8, 130.71)],
     long: [node("p-onsen", 33.28, 131.5), node("p-miyazaki", 31.91, 131.42)],
   },
+  // 四国/山陽（鳥取 ⇄ 広島）。近道=山陽の岡山、遠回り=四国の高松→松山。
+  {
+    forkId: "st-p-kani",
+    mergeId: "st-p-itsukushima",
+    short: [node("p-momo", 34.66, 133.92)], // 岡山
+    long: [node("p-shiohama", 34.34, 134.05), node("p-mikan", 33.84, 132.77)], // 高松→松山
+  },
   // N 近畿（大阪 ⇄ 名古屋）。近道=京都、遠回り=大津→奈良。
   {
-    fork: 12,
-    merge: 13,
+    forkId: "st-p-depart",
+    mergeId: "st-p-jidosha",
     short: [node("p-kinkaku", 35.01, 135.77)],
     long: [node("p-biwako", 35.0, 135.87), node("p-daibutsu", 34.69, 135.83)],
   },
   // C 中央 vs 東海道（名古屋 ⇄ 東京）。近道=東海道の静岡、遠回り=中央の長野→甲府。
   {
-    fork: 13,
-    merge: 0,
+    forkId: "st-p-jidosha",
+    mergeId: "st-start",
     short: [node("p-cha", 34.97, 138.38)],
     long: [node("p-soba", 36.65, 138.19), node("p-budo", 35.66, 138.57)],
   },

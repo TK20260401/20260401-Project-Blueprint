@@ -82,12 +82,13 @@ export function generateMap(seed: string): GameMap {
     return cityStation(node.propId, { x: node.x, y: node.y }, true, false);
   });
 
-  const forkIndex = new Set(BRANCHES.map((b) => b.fork));
+  const spineById = new Map(spine.map((s) => [s.id, s]));
+  const forkIds = new Set(BRANCHES.map((b) => b.forkId));
 
-  // 2. 分岐（中継都市）を作って結線。short=1中継, long=2中継。
+  // 2. 分岐（中継都市）を作って結線。short=1中継, long=2中継。fork/merge は駅 id 参照。
   for (const b of BRANCHES) {
-    const fork = spine[b.fork];
-    const merge = spine[b.merge];
+    const fork = spineById.get(b.forkId)!;
+    const merge = spineById.get(b.mergeId)!;
 
     // 災難パターン（DESIGN 4.5 4パターン）をシードで割当
     const pattern = (1 + Math.floor(rng() * 4)) as 1 | 2 | 3 | 4;
@@ -118,7 +119,7 @@ export function generateMap(seed: string): GameMap {
 
   // 3. spine の直進エッジ（分岐 fork でない駅は次の spine 駅へ。最後は start へ）
   for (let i = 0; i < spine.length; i++) {
-    if (forkIndex.has(i)) continue; // fork は分岐側で next 設定済み
+    if (forkIds.has(spine[i].id)) continue; // fork は分岐側で next 設定済み
     spine[i].next = [spine[(i + 1) % spine.length].id];
   }
 

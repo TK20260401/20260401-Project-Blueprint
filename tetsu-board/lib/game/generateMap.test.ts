@@ -13,9 +13,9 @@ describe("generateMap", () => {
     expect(generateMap("seed-a")).not.toEqual(generateMap("seed-b"));
   });
 
-  it("分岐は3つ、各分岐は2択（近道/遠回り）を持つ", () => {
+  it("分岐は4つ（九州・四国/山陽・近畿・中央/東海道）、各分岐は2択（近道/遠回り）を持つ", () => {
     const map = generateMap("seed-x");
-    expect(map.branches).toHaveLength(3);
+    expect(map.branches).toHaveLength(4);
     for (const b of map.branches) {
       expect(b.options).toHaveLength(2);
       expect(b.options.map((o) => o.route).sort()).toEqual(["long", "short"]);
