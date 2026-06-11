@@ -5,15 +5,8 @@
 
 import { useEffect, useState } from "react";
 import { MAX_TURNS, useGameStore } from "@/store/gameStore";
-import {
-  BOARD_H,
-  BOARD_W,
-  FERRY_EDGES,
-  LAND_PATHS,
-  OKINAWA_PATH,
-  REGIONS,
-  SADO,
-} from "@/lib/game/generateMap";
+import { BOARD_H, BOARD_W, FERRY_EDGES, REGIONS } from "@/lib/game/generateMap";
+import { JAPAN_PATHS } from "@/lib/game/japanGeo";
 import { shortestDistance, shortestPath } from "@/lib/game/engine";
 import { RubyText } from "@/components/RubyText";
 import type { Player, Quiz, Station } from "@/lib/game/types";
@@ -79,14 +72,10 @@ function MapBackdrop() {
             />
           )),
         )}
-        {/* 日本列島（本州・北海道・九州・四国）。実海岸線の代表点でかたどる */}
-        {LAND_PATHS.map((d, i) => (
-          <path key={`land-${i}`} d={d} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={11} strokeLinejoin="round" />
+        {/* 日本地図（実データ＝都道府県アウトライン）。都市座標と同一投影なので必ず整合する */}
+        {JAPAN_PATHS.map((d, i) => (
+          <path key={`jp-${i}`} d={d} fill="#dcebc2" stroke="#bcd49a" strokeWidth={0.8} strokeLinejoin="round" />
         ))}
-        {/* 佐渡（新潟沖の島） */}
-        <ellipse cx={SADO.x} cy={SADO.y} rx={13} ry={9} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={5} />
-        {/* 沖縄本島 */}
-        <path d={OKINAWA_PATH} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={6} strokeLinejoin="round" />
       </svg>
       {/* 地方ラベル + 方位 */}
       <div className="pointer-events-none absolute inset-0">
