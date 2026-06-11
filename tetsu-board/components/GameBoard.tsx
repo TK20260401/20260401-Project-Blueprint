@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { MAX_TURNS, useGameStore } from "@/store/gameStore";
-import { BOARD_H, BOARD_W, REGIONS } from "@/lib/game/generateMap";
+import { BOARD_H, BOARD_W, FERRY_EDGES, REGIONS } from "@/lib/game/generateMap";
 import { shortestDistance, shortestPath } from "@/lib/game/engine";
 import { RubyText } from "@/components/RubyText";
 import type { Player, Quiz, Station } from "@/lib/game/types";
@@ -45,22 +45,22 @@ function stationColor(st: Station) {
 // 日本列島の背景レイヤー（DESIGN 4.1/4.4 を地理に対応づけた盤）。
 // 駅は実在都市の相対位置に固定されているので、その下に本州・北海道・九州・四国・沖縄を描く。
 // pointer-events-none・駅マスより後ろ。北東=右上 / 南西=左下。
-// 本州（青森→太平洋側を南西へ→広島／山口、日本海側を北東へ戻る一筆書きの陸塊）
+// 本州（太平洋側 広島→大阪→東京→仙台→青森、日本海側 青森→秋田→新潟→金沢→鳥取→広島の外周）
 const HONSHU_PATH =
-  "M404 178 C436 210 446 270 442 330 C438 384 420 392 372 404 " +
-  "C320 416 300 446 250 450 C196 454 156 446 132 438 " +
-  "C150 408 196 384 214 360 C262 330 300 318 342 286 " +
-  "C372 250 380 214 404 178 Z";
+  "M239 540 C300 536 360 532 420 514 C470 500 510 490 550 474 " +
+  "C580 430 600 380 602 320 C604 250 600 205 595 185 " +
+  "C566 220 548 258 520 300 C480 350 430 400 380 440 " +
+  "C330 480 285 510 239 540 Z";
 
-// 島（北海道・九州・四国）と沖縄
+// 島（北海道・九州・四国）と沖縄。緯度経度に合わせた配置。
 const ISLANDS: { cx: number; cy: number; rx: number; ry: number; rot?: number }[] = [
-  { cx: 462, cy: 120, rx: 56, ry: 46, rot: -18 }, // 北海道
-  { cx: 78, cy: 474, rx: 44, ry: 58 }, // 九州
-  { cx: 166, cy: 480, rx: 56, ry: 30 }, // 四国
+  { cx: 612, cy: 92, rx: 72, ry: 58, rot: -20 }, // 北海道
+  { cx: 182, cy: 636, rx: 64, ry: 82 }, // 九州
+  { cx: 300, cy: 600, rx: 56, ry: 30 }, // 四国（装飾）
 ];
 const OKINAWA = [
-  { cx: 58, cy: 582, r: 9 },
-  { cx: 44, cy: 604, r: 6 },
+  { cx: 44, cy: 968, r: 11 },
+  { cx: 26, cy: 992, r: 7 },
 ];
 
 function MapBackdrop() {
@@ -74,8 +74,8 @@ function MapBackdrop() {
         aria-hidden
       >
         {/* 海の波 */}
-        {[90, 200, 320, 440, 560].map((y) =>
-          [50, 150, 250, 350, 450].map((x) => (
+        {[120, 240, 360, 480, 600, 720, 840, 940].map((y) =>
+          [60, 170, 280, 390, 500, 600].map((x) => (
             <path
               key={`w-${x}-${y}`}
               d={`M${x} ${y} q8 -7 16 0 q8 7 16 0`}
@@ -244,6 +244,8 @@ export function GameBoard() {
 
   const current = players[currentPlayerIndex];
   const byId = new Map(map.stations.map((s) => [s.id, s]));
+  // フェリー航路（離島・長距離）のエッジは点線で描く
+  const ferrySet = new Set(FERRY_EDGES.flatMap(([a, b]) => [`${a}->${b}`, `${b}->${a}`]));
 
   // サイコロ演出（DESIGN 4.7.4）。rolling の間だけ目をパラパラ回し、止まったら駒移動へ。
   const [diceFace, setDiceFace] = useState<number | null>(null);
@@ -351,8 +353,10 @@ export function GameBoard() {
             📍 じつざい駅 {showSub ? "ON" : "OFF"}
           </button>
         </div>
+        {/* 日本列島は縦長なのでスクロールして見る（北海道〜沖縄） */}
+        <div className="max-h-[74vh] w-full max-w-full overflow-auto rounded-3xl border border-sky-200 shadow-inner">
         <div
-          className="relative max-w-full overflow-hidden rounded-3xl bg-gradient-to-br from-sky-200 to-cyan-100 shadow-inner"
+          className="relative bg-gradient-to-br from-sky-200 to-cyan-100"
           style={{ width: BOARD_W, height: BOARD_H }}
         >
           {/* 日本列島の背景（本州・北海道・九州・四国・沖縄）。駅・線路より後ろ */}
@@ -369,6 +373,7 @@ export function GameBoard() {
               s.next.map((nid) => {
                 const t = byId.get(nid);
                 if (!t) return null;
+                const ferry = ferrySet.has(`${s.id}->${nid}`);
                 return (
                   <line
                     key={`${s.id}->${nid}`}
@@ -376,9 +381,10 @@ export function GameBoard() {
                     y1={s.pos.y}
                     x2={t.pos.x}
                     y2={t.pos.y}
-                    stroke="#cdb98c"
-                    strokeWidth={8}
+                    stroke={ferry ? "#7dd3fc" : "#cdb98c"}
+                    strokeWidth={ferry ? 5 : 8}
                     strokeLinecap="round"
+                    strokeDasharray={ferry ? "3 10" : undefined}
                   />
                 );
               }),
@@ -448,11 +454,12 @@ export function GameBoard() {
             className={`absolute flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl bg-white/95 text-4xl font-black text-stone-700 shadow-lg transition-transform ${
               phase === "rolling" ? "scale-110 rotate-6" : ""
             }`}
-            style={{ left: 432, top: 566 }}
+            style={{ left: 150, top: 250 }}
           >
             {phase === "rolling" ? (diceFace ?? "?") : (lastDice ?? "?")}
             <span className="text-[10px] font-medium text-stone-400">サイコロ</span>
           </div>
+        </div>
         </div>
       </div>
 

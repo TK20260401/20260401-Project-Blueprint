@@ -1063,6 +1063,103 @@ export const PROPERTY_POOL: Property[] = [
       hint: r("一年中あたたかい、南の島の県だよ", "いちねんじゅうあたたかい、みなみのしまのけんだよ"),
     },
   },
+
+  // === 日本一周ループ用に追加した都市（東北・北陸・九州） ===
+  {
+    id: "p-sendai",
+    name: r("ぎゅうたん駅", "ぎゅうたんえき"),
+    price: 90,
+    category: "city",
+    sub: r("宮城・仙台駅", "みやぎ・せんだいえき"),
+    quiz: {
+      id: "q-sendai",
+      subject: "geography",
+      question: r("東北地方でいちばん大きい都市は？", "とうほくちほうでいちばんおおきいとしは？"),
+      choices: [
+        { key: "A", text: r("仙台市", "せんだいし") },
+        { key: "B", text: r("那覇市", "なはし") },
+        { key: "C", text: r("広島市", "ひろしまし") },
+      ],
+      answer: "A",
+      hint: r("宮城県にある、東北でいちばんの都市だよ", "みやぎけんにある、とうほくでいちばんのとしだよ"),
+    },
+  },
+  {
+    id: "p-akita",
+    name: r("こまち駅", "こまちえき"),
+    price: 78,
+    category: "farm",
+    sub: r("秋田・秋田駅", "あきた・あきたえき"),
+    quiz: {
+      id: "q-akita",
+      subject: "geography",
+      question: r("秋田のおいしいお米のなまえは？", "あきたのおいしいおこめのなまえは？"),
+      choices: [
+        { key: "A", text: r("あきたこまち") },
+        { key: "B", text: r("コシヒカリ") },
+        { key: "C", text: r("ゆめぴりか") },
+      ],
+      answer: "A",
+      hint: r("「秋田」の名前が入ったお米だよ", "「あきた」のなまえがはいったおこめだよ"),
+    },
+  },
+  {
+    id: "p-kanazawa",
+    name: r("けんろくえん駅", "けんろくえんえき"),
+    price: 88,
+    category: "tourism",
+    sub: r("石川・金沢駅", "いしかわ・かなざわえき"),
+    quiz: {
+      id: "q-kanazawa",
+      subject: "geography",
+      question: r("金沢市があるのは何県？", "かなざわしがあるのはなにけん？"),
+      choices: [
+        { key: "A", text: r("石川県", "いしかわけん") },
+        { key: "B", text: r("富山県", "とやまけん") },
+        { key: "C", text: r("福井県", "ふくいけん") },
+      ],
+      answer: "A",
+      hint: r("北陸地方の、日本海がわの県だよ", "ほくりくちほうの、にほんかいがわのけんだよ"),
+    },
+  },
+  {
+    id: "p-kumamoto",
+    name: r("くまもん駅", "くまもんえき"),
+    price: 82,
+    category: "tourism",
+    sub: r("熊本・熊本駅", "くまもと・くまもとえき"),
+    quiz: {
+      id: "q-kumamoto",
+      subject: "geography",
+      question: r("大きな火山「阿蘇山」がある九州の県は？", "おおきなかざん「あそさん」があるきゅうしゅうのけんは？"),
+      choices: [
+        { key: "A", text: r("熊本県", "くまもとけん") },
+        { key: "B", text: r("北海道", "ほっかいどう") },
+        { key: "C", text: r("沖縄県", "おきなわけん") },
+      ],
+      answer: "A",
+      hint: r("くまモンで有名な九州の県だよ", "くまモンでゆうめいなきゅうしゅうのけんだよ"),
+    },
+  },
+  {
+    id: "p-miyazaki",
+    name: r("マンゴー駅", "まんごーえき"),
+    price: 80,
+    category: "farm",
+    sub: r("宮崎・宮崎駅", "みやざき・みやざきえき"),
+    quiz: {
+      id: "q-miyazaki",
+      subject: "geography",
+      question: r("あたたかく、マンゴーで有名な九州の県は？", "あたたかく、マンゴーでゆうめいなきゅうしゅうのけんは？"),
+      choices: [
+        { key: "A", text: r("宮崎県", "みやざきけん") },
+        { key: "B", text: r("青森県", "あおもりけん") },
+        { key: "C", text: r("石川県", "いしかわけん") },
+      ],
+      answer: "A",
+      hint: r("九州の南東がわ、太平洋にめんした県だよ", "きゅうしゅうのなんとうがわ、たいへいようにめんしたけんだよ"),
+    },
+  },
 ];
 
 export const ALL_CATEGORIES: StationCategory[] = [
