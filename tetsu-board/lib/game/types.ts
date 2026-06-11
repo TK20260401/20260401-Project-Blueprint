@@ -102,9 +102,22 @@ export type GamePhase =
   | "rolling" // サイコロ演出中
   | "moving" // 駒移動中
   | "branch" // 分岐の選択待ち（DESIGN 4.5）
+  | "card" // カード・災難イベント表示中（DESIGN 4.2 カードの駅/ピンチの駅）
   | "quiz" // クイズ回答中
   | "result" // 1ターンの結果表示
   | "finished"; // セッション終了
+
+/** カード・災難イベント（DESIGN 4.2 イベント駅 カードの駅🃏 / ピンチの駅⚠️） */
+export type Card = {
+  id: string;
+  kind: "lucky" | "disaster"; // ラッキー（良）/ さいなん（悪）
+  emoji: string;
+  title: RubyText;
+  desc: RubyText;
+  coin: number; // 所持コインの増減（正=もらえる / 負=失う）
+  /** 災難キャラ（独自・ボンビー相当）が憑くか。次の自分のターン開始時にいたずらして去る */
+  bonby?: boolean;
+};
 
 /** ゲームセッション全体（DESIGN game_sessions / session_participants の集約） */
 export type GameSession = {

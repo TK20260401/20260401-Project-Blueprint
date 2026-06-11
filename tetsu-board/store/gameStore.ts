@@ -6,6 +6,7 @@ import { create } from "zustand";
 import { generateMap, newSeed } from "@/lib/game/generateMap";
 import {
   type DiceValue,
+  type WalkResult,
   calcScore,
   continueFromBranch,
   destinationCandidates,
@@ -14,7 +15,8 @@ import {
   rollDice,
   walk,
 } from "@/lib/game/engine";
-import type { BranchInfo, GameMap, GamePhase, Player, Quiz, Station } from "@/lib/game/types";
+import { applyCard, drawCard } from "@/lib/game/cards";
+import type { BranchInfo, Card, GameMap, GamePhase, Player, Quiz, Station } from "@/lib/game/types";
 
 type GameState = {
   seed: string;
@@ -36,10 +38,23 @@ type GameState = {
   lastAnswerCorrect: boolean | null;
   message: string;
 
+  // 移動アニメ（DESIGN 4.7.4）。駒をマス単位で動かす演出用の一時状態。
+  animPath: string[]; // この移動で通る駅 id の並び（現在地の次〜到着まで）
+  pendingMove: WalkResult | null; // アニメ完了後に確定する移動結果
+  rollToken: number; // roll のたびに増やしてサイコロ演出を再生
+  moveToken: number; // moving 開始のたびに増やして駒移動演出を再生
+
+  // カード・災難（DESIGN 4.2）。card フェーズで表示し closeCard で効果を適用。
+  activeCard: Card | null;
+  bonbyHolderId: string | null; // 災難キャラが憑いているプレイヤー（次の自ターン開始で発動）
+
   // actions
   start: (nicknames: string[], seed?: string) => void;
   newGame: () => void; // 新しいシードでマップ再生成（児童モード）
   roll: () => void;
+  beginMove: () => void; // サイコロ演出後に駒移動を開始（rolling→moving）
+  finishMove: () => void; // 駒移動アニメ完了後に着地を確定（moving→quiz/result/branch/card）
+  closeCard: () => void; // カードの効果を適用して result へ（DESIGN 4.2）
   chooseBranch: (firstNextId: string) => void; // DESIGN 4.5 どっちにいく
   answer: (selected: "A" | "B" | "C") => void;
   endTurn: () => void;
@@ -58,8 +73,14 @@ const DEFAULT_NICKNAMES = ["プレイヤー1", "プレイヤー2"];
 const INITIAL_SEED = "tetsu-mvp"; // SSR 一致のため初期は固定シード
 const MAX_TURNS = 5; // この周回数で年度末（決算）。DESIGN 4.6 大目的の簡易版
 const DEST_BONUS = 50; // 目的地1着到達ボーナス（DESIGN 4.6 小目的の簡易版）
+const BONBY_BITE = 15; // 災難キャラが次ターン開始で奪うコイン（DESIGN 4.2 災難キャラ）
 
 const clampCoin = (c: number) => Math.max(0, c);
+
+/** WalkResult から、駒がこの移動で通る駅 id の並び（到着 or fork まで）を作る */
+function animPathOf(res: WalkResult): string[] {
+  return res.type === "branch" ? [...res.passedIds, res.forkId] : [...res.passedIds, res.stationId];
+}
 
 /** 目的地まわりの現在状態（arrive に渡して到達判定・ローテーションする） */
 type DestState = { seed: string; destinationId: string; destSeq: number };
@@ -136,6 +157,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   pendingBranch: null,
   lastAnswerCorrect: null,
   message: "サイコロをふってね",
+  animPath: [],
+  pendingMove: null,
+  rollToken: 0,
+  moveToken: 0,
+  activeCard: null,
+  bonbyHolderId: null,
 
   start: (nicknames, seed = INITIAL_SEED) => {
     const map = generateMap(seed);
@@ -154,6 +181,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       pendingBranch: null,
       lastAnswerCorrect: null,
       message: "サイコロをふってね",
+      animPath: [],
+      pendingMove: null,
+      activeCard: null,
+      bonbyHolderId: null,
     });
   },
 
@@ -166,14 +197,40 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   roll: () => {
-    const { phase, map, players, currentPlayerIndex, seed, destinationId, destSeq } = get();
+    const { phase, map, players, currentPlayerIndex, rollToken } = get();
     if (phase !== "idle") return;
     const dice = rollDice();
     const player = players[currentPlayerIndex];
     const res = walk(map, player.stationId, dice);
+    // ここでは確定せず、サイコロ演出(rolling)→駒移動(moving)→着地(finishMove) の順に進める。
+    set({
+      lastDice: dice,
+      phase: "rolling",
+      pendingMove: res,
+      animPath: animPathOf(res),
+      lastGainedCoin: 0,
+      activeQuiz: null,
+      pendingBranch: null,
+      lastAnswerCorrect: null,
+      rollToken: rollToken + 1,
+      message: "コロコロ…🎲",
+    });
+  },
+
+  beginMove: () => {
+    const { phase, moveToken } = get();
+    if (phase !== "rolling") return; // サイコロ演出が終わってから駒を動かす
+    set({ phase: "moving", moveToken: moveToken + 1, message: "しゅっぱつ！" });
+  },
+
+  finishMove: () => {
+    const { phase, pendingMove, map, players, currentPlayerIndex, seed, destinationId, destSeq, turn } =
+      get();
+    if (phase !== "moving" || !pendingMove) return;
+    const res = pendingMove;
 
     if (res.type === "branch") {
-      // 分岐に到達：駒を fork へ進め、選択待ちにする（DESIGN 4.5）
+      // 分岐に到達：駒は fork で停止。通過コインを反映し選択待ちへ（DESIGN 4.5）
       const players2 = players.map((p, i) =>
         i === currentPlayerIndex
           ? { ...p, stationId: res.forkId, coin: clampCoin(p.coin + res.passCoin) }
@@ -182,59 +239,80 @@ export const useGameStore = create<GameState>((set, get) => ({
       const branch = map.branches.find((b) => b.forkId === res.forkId)!;
       set({
         players: players2,
-        lastDice: dice,
         lastGainedCoin: res.passCoin,
         phase: "branch",
         pendingBranch: { branch, remaining: res.remaining },
-        activeQuiz: null,
-        lastAnswerCorrect: null,
+        pendingMove: null,
+        animPath: [],
         message: "わかれみち！どっちに いく？",
       });
       return;
     }
 
-    set({
-      lastDice: dice,
-      lastGainedCoin: res.passCoin,
-      ...arrive(map, players, currentPlayerIndex, res.stationId, res.passCoin, {
-        seed,
-        destinationId,
-        destSeq,
-      }),
+    const patch = arrive(map, players, currentPlayerIndex, res.stationId, res.passCoin, {
+      seed,
+      destinationId,
+      destSeq,
     });
-  },
 
-  chooseBranch: (firstNextId) => {
-    const { phase, map, players, currentPlayerIndex, pendingBranch, seed, destinationId, destSeq } =
-      get();
-    if (phase !== "branch" || !pendingBranch) return;
-    const res = continueFromBranch(map, firstNextId, pendingBranch.remaining);
-
-    if (res.type === "branch") {
-      // 続きでまた分岐（まれ）：再度選択待ち
-      const players2 = players.map((p, i) =>
-        i === currentPlayerIndex
-          ? { ...p, stationId: res.forkId, coin: clampCoin(p.coin + res.passCoin) }
-          : p,
-      );
-      const branch = map.branches.find((b) => b.forkId === res.forkId)!;
+    // カード・災難（DESIGN 4.2）: イベント駅=さいなん / スタート=ラッキー を着地時に1枚引く。
+    // クイズ駅(property)はクイズ優先なのでカードは引かない。
+    const landed = map.stations.find((s) => s.id === res.stationId)!;
+    if (patch.phase === "result" && (landed.kind === "event" || landed.kind === "start")) {
+      const kind = landed.kind === "event" ? "disaster" : "lucky";
+      const card = drawCard(`${seed}-card-${turn}-${currentPlayerIndex}-${landed.id}`, kind);
       set({
-        players: players2,
+        ...patch,
         lastGainedCoin: res.passCoin,
-        pendingBranch: { branch, remaining: res.remaining },
-        message: "また わかれみち！どっちに いく？",
+        pendingMove: null,
+        animPath: [],
+        phase: "card",
+        activeCard: card,
+        message: card.kind === "lucky" ? "カードを ひいた！🃏" : "ピンチ！さいなん カード…",
       });
       return;
     }
 
     set({
       lastGainedCoin: res.passCoin,
+      pendingMove: null,
+      animPath: [],
+      ...patch,
+    });
+  },
+
+  closeCard: () => {
+    const { activeCard, players, currentPlayerIndex, map, bonbyHolderId } = get();
+    if (!activeCard) return;
+    const { coin, bonby } = applyCard(activeCard);
+    const me = players[currentPlayerIndex];
+    const updated = players.map((p, i) => {
+      if (i !== currentPlayerIndex) return p;
+      const next = { ...p, coin: clampCoin(p.coin + coin) };
+      return { ...next, score: calcScore(next, map) };
+    });
+    set({
+      players: updated,
+      activeCard: null,
+      phase: "result",
+      lastGainedCoin: coin,
+      bonbyHolderId: bonby ? me.userId : bonbyHolderId,
+      message: `${activeCard.emoji} ${activeCard.desc.base}（${coin >= 0 ? "+" : ""}${coin}コイン）`,
+    });
+  },
+
+  chooseBranch: (firstNextId) => {
+    const { phase, map, pendingBranch, moveToken } = get();
+    if (phase !== "branch" || !pendingBranch) return;
+    const res = continueFromBranch(map, firstNextId, pendingBranch.remaining);
+    // 選んだ方向へ駒移動アニメを再生 → finishMove で着地（また分岐ならその時点で再度選択待ち）
+    set({
+      phase: "moving",
+      pendingMove: res,
+      animPath: animPathOf(res),
       pendingBranch: null,
-      ...arrive(map, players, currentPlayerIndex, res.stationId, res.passCoin, {
-        seed,
-        destinationId,
-        destSeq,
-      }),
+      moveToken: moveToken + 1,
+      message: "しゅっぱつ！",
     });
   },
 
@@ -269,7 +347,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   endTurn: () => {
-    const { players, currentPlayerIndex, turn, map } = get();
+    const { players, currentPlayerIndex, turn, map, bonbyHolderId } = get();
     const nextIndex = (currentPlayerIndex + 1) % players.length;
     const nextTurn = nextIndex === 0 ? turn + 1 : turn;
 
@@ -282,6 +360,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         phase: "finished",
         activeQuiz: null,
         pendingBranch: null,
+        pendingMove: null,
+        animPath: [],
         lastDice: null,
         lastAnswerCorrect: null,
         message: `🏆 ${winner.nickname}のゆうしょう！（${winner.score}てん）`,
@@ -289,16 +369,33 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
+    // 災難キャラ（DESIGN 4.2）: 憑いているプレイヤーのターン開始で いたずら→立ち去る
+    const nextPlayer = players[nextIndex];
+    const bonbyBites = bonbyHolderId === nextPlayer.userId;
+    const players2 = bonbyBites
+      ? players.map((p) => {
+          if (p.userId !== bonbyHolderId) return p;
+          const next = { ...p, coin: clampCoin(p.coin - BONBY_BITE) };
+          return { ...next, score: calcScore(next, map) };
+        })
+      : players;
+
     set({
+      players: players2,
       currentPlayerIndex: nextIndex,
       turn: nextTurn,
       phase: "idle",
       lastDice: null,
-      lastGainedCoin: 0,
+      lastGainedCoin: bonbyBites ? -BONBY_BITE : 0,
       activeQuiz: null,
       pendingBranch: null,
+      pendingMove: null,
+      animPath: [],
       lastAnswerCorrect: null,
-      message: "サイコロをふってね",
+      bonbyHolderId: bonbyBites ? null : bonbyHolderId,
+      message: bonbyBites
+        ? `👹 びんぼうがみの いたずら！${nextPlayer.nickname}は ${BONBY_BITE}コイン とられた…`
+        : "サイコロをふってね",
     });
   },
 }));

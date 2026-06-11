@@ -3,11 +3,16 @@
 // WF1 ゲーム画面（DESIGN 14.1 / 16.5）。円環+分岐マップ・サイコロ・分岐選択・クイズ(WF2)・結果を集約。
 // 状態は useGameStore に集約し、このコンポーネントは描画とイベント送出に専念する。
 
+import { useEffect, useState } from "react";
 import { MAX_TURNS, useGameStore } from "@/store/gameStore";
 import { BOARD } from "@/lib/game/generateMap";
-import { shortestDistance } from "@/lib/game/engine";
+import { shortestDistance, shortestPath } from "@/lib/game/engine";
 import { RubyText } from "@/components/RubyText";
-import type { Station } from "@/lib/game/types";
+import type { Player, Station } from "@/lib/game/types";
+
+const DICE_TICK_MS = 80; // サイコロの目が切り替わる間隔
+const DICE_TICKS = 7; // 何回まわして止めるか
+const STEP_MS = 220; // 駒が1マス進む間隔（DESIGN 4.7.4 移動アニメ）
 
 const HALF = 28; // 駅マス(56px)の半分
 
@@ -30,6 +35,80 @@ function stationColor(st: Station) {
   return "bg-stone-200 border-stone-400";
 }
 
+// 地図風の背景レイヤー（海・大陸・海岸線・地形）。盤面を「ちず」に見せる装飾で、
+// pointer-events-none・駅マスより後ろに描画される。決定的（毎回同じ形）。
+// 大陸の輪郭は線路ループ(円環+外側にふくらむ分岐)をすべて陸地で覆うように大きめにとる。
+const LAND_PATH =
+  "M64 96 C120 52 200 70 268 52 C344 32 430 48 478 92 " +
+  "C516 132 500 196 522 252 C540 332 506 396 474 446 " +
+  "C420 512 332 500 256 514 C176 528 96 506 62 452 " +
+  "C30 396 52 324 38 260 C24 184 36 132 64 96 Z";
+// 海に浮かぶ小島（地図感を出す装飾）
+const ISLETS: { x: number; y: number; r: number }[] = [
+  { x: 502, y: 70, r: 14 },
+  { x: 44, y: 486, r: 11 },
+  { x: 510, y: 470, r: 9 },
+];
+// 地形の絵文字（陸地の内側・中央付近に散らす。駅マスとは重ならない位置）
+const TERRAIN: { e: string; x: number; y: number; s: number }[] = [
+  { e: "⛰️", x: 232, y: 196, s: 26 },
+  { e: "🏔️", x: 296, y: 188, s: 22 },
+  { e: "🌲", x: 196, y: 250, s: 18 },
+  { e: "🌲", x: 348, y: 256, s: 18 },
+  { e: "🌳", x: 250, y: 330, s: 18 },
+  { e: "🏞️", x: 320, y: 330, s: 20 },
+];
+
+function MapBackdrop() {
+  return (
+    <>
+      <svg
+        className="pointer-events-none absolute inset-0"
+        width={BOARD}
+        height={BOARD}
+        viewBox={`0 0 ${BOARD} ${BOARD}`}
+        aria-hidden
+      >
+        {/* 海の波（うっすら） */}
+        {[120, 240, 360, 480].map((y) =>
+          [70, 170, 270, 370, 470].map((x) => (
+            <path
+              key={`w-${x}-${y}`}
+              d={`M${x} ${y} q8 -7 16 0 q8 7 16 0`}
+              fill="none"
+              stroke="#bfe3f4"
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
+          )),
+        )}
+        {/* 陸地（緑）＋砂浜の海岸線（太いストローク） */}
+        <path d={LAND_PATH} fill="#dcebc2" stroke="#ecd9a4" strokeWidth={14} strokeLinejoin="round" />
+        <path d={LAND_PATH} fill="none" stroke="#c7dca0" strokeWidth={2} strokeLinejoin="round" />
+        {/* 小島 */}
+        {ISLETS.map((i) => (
+          <circle key={`i-${i.x}`} cx={i.x} cy={i.y} r={i.r} fill="#efe2bf" stroke="#e7d199" strokeWidth={5} />
+        ))}
+      </svg>
+      {/* 地形の絵文字 + 方位（コンパス） */}
+      <div className="pointer-events-none absolute inset-0">
+        {TERRAIN.map((t, i) => (
+          <span
+            key={`t-${i}`}
+            className="absolute -translate-x-1/2 -translate-y-1/2 opacity-80"
+            style={{ left: t.x, top: t.y, fontSize: t.s }}
+          >
+            {t.e}
+          </span>
+        ))}
+        <span className="absolute right-2 top-2 text-2xl opacity-80">🧭</span>
+        <span className="absolute right-3 top-9 text-[10px] font-black text-sky-700/70">N</span>
+        <span className="absolute bottom-2 left-3 text-xl opacity-70">⛵</span>
+      </div>
+    </>
+  );
+}
+
 export function GameBoard() {
   const {
     map,
@@ -44,9 +123,17 @@ export function GameBoard() {
     pendingBranch,
     lastAnswerCorrect,
     message,
+    animPath,
+    rollToken,
+    moveToken,
+    activeCard,
+    bonbyHolderId,
     roll,
+    beginMove,
+    finishMove,
     chooseBranch,
     answer,
+    closeCard,
     endTurn,
     newGame,
   } = useGameStore();
@@ -54,10 +141,65 @@ export function GameBoard() {
   const current = players[currentPlayerIndex];
   const byId = new Map(map.stations.map((s) => [s.id, s]));
 
+  // サイコロ演出（DESIGN 4.7.4）。rolling の間だけ目をパラパラ回し、止まったら駒移動へ。
+  const [diceFace, setDiceFace] = useState<number | null>(null);
+  // 駒移動アニメ。moving の間、アクティブプレイヤーの駒を animPath に沿って1マスずつ進める。
+  const [animStationId, setAnimStationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (phase !== "rolling") return;
+    let ticks = 0;
+    const id = setInterval(() => {
+      setDiceFace(1 + Math.floor(Math.random() * 6));
+      if (++ticks >= DICE_TICKS) {
+        clearInterval(id);
+        setDiceFace(null);
+        beginMove();
+      }
+    }, DICE_TICK_MS);
+    return () => clearInterval(id);
+    // rollToken が増えるたび（＝サイコロを振るたび）に1回だけ再生する
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rollToken]);
+
+  useEffect(() => {
+    if (phase !== "moving" || animPath.length === 0) return;
+    // 1マスぶん待ってから animPath[0] へ（最初の STEP_MS は出発駅に駒が留まる）。
+    // setState はインターバル内（=非同期）でのみ呼び、エフェクト本体では呼ばない。
+    let i = -1;
+    const id = setInterval(() => {
+      i++;
+      if (i >= animPath.length) {
+        clearInterval(id);
+        setAnimStationId(null);
+        finishMove();
+      } else {
+        setAnimStationId(animPath[i]);
+      }
+    }, STEP_MS);
+    return () => clearInterval(id);
+    // moveToken が増えるたび（＝駒移動開始のたび）に1回だけ再生する
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moveToken]);
+
+  // 駒の表示位置：移動中のアクティブプレイヤーだけ animStationId、ほかは論理位置。
+  const pieceStationId = (p: Player) =>
+    p.userId === current.userId && phase === "moving" && animStationId
+      ? animStationId
+      : p.stationId;
+
   // 二段階目的地の常時表示（DESIGN 4.6）: 目的地名・あと◯マス・年度末までのこり◯ターン
   const destination = byId.get(destinationId);
   const destDistance = destination ? shortestDistance(map, current.stationId, destinationId) : 0;
   const remainingTurns = MAX_TURNS - turn + 1;
+
+  // 現在地 → 🚩目的地 の視覚誘導線（DESIGN 4.6）。最短経路の駅座標をつないだ折れ線。
+  const routeIds = destination ? shortestPath(map, current.stationId, destinationId) : [];
+  const routePoints = routeIds
+    .map((id) => byId.get(id))
+    .filter((s): s is Station => !!s)
+    .map((s) => `${s.pos.x},${s.pos.y}`)
+    .join(" ");
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 lg:flex-row">
@@ -94,9 +236,12 @@ export function GameBoard() {
           )}
         </div>
         <div
-          className="relative max-w-full rounded-3xl bg-[#efe3c7] shadow-inner"
+          className="relative max-w-full overflow-hidden rounded-3xl bg-gradient-to-br from-sky-200 to-cyan-100 shadow-inner"
           style={{ width: BOARD, height: BOARD }}
         >
+          {/* 地図風の背景（海・大陸・海岸線・地形）。駅・線路より後ろ */}
+          <MapBackdrop />
+
           {/* 線路（グラフのエッジ）。分岐は fork から2方向に分かれて merge で合流する */}
           <svg
             className="pointer-events-none absolute inset-0"
@@ -122,11 +267,26 @@ export function GameBoard() {
                 );
               }),
             )}
+
+            {/* 目的地への視覚誘導線（DESIGN 4.6）。現在地→🚩を点線でハイライト */}
+            {phase !== "finished" && routeIds.length > 1 && (
+              <polyline
+                points={routePoints}
+                fill="none"
+                stroke="#fb7185"
+                strokeWidth={5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeDasharray="2 12"
+                className="animate-pulse"
+                opacity={0.9}
+              />
+            )}
           </svg>
 
           {/* 駅マス */}
           {map.stations.map((st) => {
-            const here = players.filter((p) => p.stationId === st.id);
+            const here = players.filter((p) => pieceStationId(p) === st.id);
             return (
               <div
                 key={st.id}
@@ -147,9 +307,11 @@ export function GameBoard() {
                     {here.map((p) => (
                       <span
                         key={p.userId}
-                        className={`h-2.5 w-2.5 rounded-full border border-white ${
-                          p.userId === current.userId ? "bg-rose-500" : "bg-blue-500"
-                        }`}
+                        className={`rounded-full border border-white shadow ${
+                          p.userId === current.userId
+                            ? "h-3.5 w-3.5 bg-rose-500"
+                            : "h-2.5 w-2.5 bg-blue-500"
+                        } ${p.userId === current.userId && phase === "moving" ? "animate-bounce" : ""}`}
                       />
                     ))}
                   </div>
@@ -158,9 +320,13 @@ export function GameBoard() {
             );
           })}
 
-          {/* 中央：サイコロ表示 */}
-          <div className="absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl bg-white text-4xl font-black text-stone-700 shadow-lg">
-            {lastDice ?? "?"}
+          {/* 中央：サイコロ表示（rolling 中はパラパラ回る） */}
+          <div
+            className={`absolute left-1/2 top-1/2 flex h-24 w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center justify-center rounded-2xl bg-white text-4xl font-black text-stone-700 shadow-lg transition-transform ${
+              phase === "rolling" ? "scale-110 rotate-6" : ""
+            }`}
+          >
+            {phase === "rolling" ? (diceFace ?? "?") : (lastDice ?? "?")}
             <span className="text-[10px] font-medium text-stone-400">サイコロ</span>
           </div>
         </div>
@@ -179,7 +345,14 @@ export function GameBoard() {
                   : "border-stone-200 bg-white"
               }`}
             >
-              <div className="text-xs font-bold text-stone-500">{p.nickname}</div>
+              <div className="flex items-center gap-1 text-xs font-bold text-stone-500">
+                {p.nickname}
+                {bonbyHolderId === p.userId && (
+                  <span title="びんぼうがみが ついている" className="animate-pulse">
+                    👹
+                  </span>
+                )}
+              </div>
               <div className="text-lg font-black text-amber-600">{p.coin}コイン</div>
               <div className="text-[11px] text-stone-500">
                 物件{p.ownedPropertyIds.length} ・ {p.score}点
@@ -253,6 +426,43 @@ export function GameBoard() {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* カード・災難（DESIGN 4.2 カードの駅/ピンチの駅） */}
+        {phase === "card" && activeCard && (
+          <div
+            className={`flex flex-col items-center gap-2 rounded-2xl border-4 p-4 text-center shadow-lg ${
+              activeCard.kind === "lucky"
+                ? "border-amber-300 bg-amber-50"
+                : "border-purple-300 bg-purple-50"
+            }`}
+          >
+            <div className="animate-bounce text-5xl">{activeCard.emoji}</div>
+            <div
+              className={`text-lg font-black ${
+                activeCard.kind === "lucky" ? "text-amber-700" : "text-purple-700"
+              }`}
+            >
+              <RubyText text={activeCard.title} />
+            </div>
+            <div className="text-sm font-medium text-stone-600">
+              <RubyText text={activeCard.desc} />
+            </div>
+            <div
+              className={`text-xl font-black ${
+                activeCard.coin >= 0 ? "text-amber-600" : "text-red-500"
+              }`}
+            >
+              {activeCard.coin >= 0 ? "+" : ""}
+              {activeCard.coin}コイン
+            </div>
+            <button
+              onClick={closeCard}
+              className="mt-1 w-full rounded-xl bg-stone-700 py-3 text-lg font-black text-white shadow transition hover:bg-stone-800 active:scale-[0.98]"
+            >
+              OK ▶
+            </button>
           </div>
         )}
 

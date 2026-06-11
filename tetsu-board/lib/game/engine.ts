@@ -137,6 +137,42 @@ export function shortestDistance(map: GameMap, fromId: string, toId: string): nu
 }
 
 /**
+ * fromId から toId への最短経路（駅 id の並び。from を含み to を含む）。BFS。
+ * 目的地への視覚誘導線（DESIGN 4.6「目的地まで線でつなぐ」）の描画用。
+ * 分岐があるため複数経路のうち最短を返す。到達不能なら空配列。
+ */
+export function shortestPath(map: GameMap, fromId: string, toId: string): string[] {
+  if (fromId === toId) return [fromId];
+  const byId = indexById(map);
+  const prev = new Map<string, string>();
+  const visited = new Set([fromId]);
+  let frontier = [fromId];
+  while (frontier.length > 0) {
+    const next: string[] = [];
+    for (const id of frontier) {
+      for (const nid of byId.get(id)!.next) {
+        if (visited.has(nid)) continue;
+        visited.add(nid);
+        prev.set(nid, id);
+        if (nid === toId) {
+          // 復元
+          const path = [nid];
+          let cur = nid;
+          while (cur !== fromId) {
+            cur = prev.get(cur)!;
+            path.push(cur);
+          }
+          return path.reverse();
+        }
+        next.push(nid);
+      }
+    }
+    frontier = next;
+  }
+  return [];
+}
+
+/**
  * 目的地駅にできる駅 id 一覧（DESIGN 4.6 小目的）。
  * 周回（loop）上の物件駅のみ：分岐の選択に依らず毎周必ず通るため、
  * どのルートを選んでも目的地に到達できることが保証される。

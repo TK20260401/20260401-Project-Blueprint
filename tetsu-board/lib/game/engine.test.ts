@@ -9,6 +9,7 @@ import {
   judgeAnswer,
   calcScore,
   shortestDistance,
+  shortestPath,
   destinationCandidates,
   pickDestination,
 } from "./engine";
@@ -216,6 +217,32 @@ describe("shortestDistance", () => {
       branches: [],
     };
     expect(shortestDistance(isolated, "A", "B")).toBe(Infinity);
+  });
+});
+
+// --- shortestPath（DESIGN 4.6 目的地への誘導線） ----------------------------
+describe("shortestPath", () => {
+  it("同じ駅なら自分1つだけの経路", () => {
+    expect(shortestPath(linear, "A", "A")).toEqual(["A"]);
+  });
+
+  it("from を含み to を含む駅 id の並びを返す", () => {
+    expect(shortestPath(linear, "A", "C")).toEqual(["A", "B", "C"]);
+  });
+
+  it("分岐があるときは短いほうのルートの駅列を返す", () => {
+    // F→S→M（近道）が F→L1→L2→M（遠回り）より短い
+    expect(shortestPath(branchMap, "F", "M")).toEqual(["F", "S", "M"]);
+  });
+
+  it("到達できなければ空配列", () => {
+    const isolated: GameMap = {
+      id: "m6",
+      seed: "s6",
+      stations: [st("A", [], 0), st("B", [], 0)],
+      branches: [],
+    };
+    expect(shortestPath(isolated, "A", "B")).toEqual([]);
   });
 });
 
