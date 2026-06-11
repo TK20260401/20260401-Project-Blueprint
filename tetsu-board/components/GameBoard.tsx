@@ -22,7 +22,6 @@ const DICE_TICK_MS = 80; // サイコロの目が切り替わる間隔
 const DICE_TICKS = 7; // 何回まわして止めるか
 const STEP_MS = 220; // 駒が1マス進む間隔（DESIGN 4.7.4 移動アニメ）
 
-const HALF = 23; // 駅マス(46px)の半分
 
 // 物件カテゴリ5色（DESIGN 16.6.2）
 const CATEGORY_COLOR: Record<string, string> = {
@@ -320,7 +319,7 @@ export function GameBoard() {
                 : "border-stone-300 bg-white text-stone-400 hover:bg-stone-100"
             }`}
           >
-            📍 じつざい駅 {showSub ? "ON" : "OFF"}
+            🏷 ぜんぶの えきめい {showSub ? "ON" : "OFF"}
           </button>
         </div>
         {/* 日本列島は縦長なのでスクロールして見る（北海道〜沖縄） */}
@@ -379,28 +378,30 @@ export function GameBoard() {
           {/* 駅マス */}
           {map.stations.map((st) => {
             const here = players.filter((p) => pieceStationId(p) === st.id);
+            const isDest = st.id === destinationId;
+            const isCurrent = pieceStationId(current) === st.id;
+            // 駅名は密集して重なるので、現在地・目的地のみ常時表示。トグルONで全表示。
+            const showName = showSub || isDest || isCurrent;
             return (
               <div
                 key={st.id}
                 title={st.sub ? `${st.label.base}（${st.sub.base}）` : st.label.base}
-                className={`absolute flex h-[46px] w-[46px] flex-col items-center justify-center rounded-lg border-2 px-0.5 text-center text-[9px] font-bold leading-tight shadow ${stationColor(st)} ${
-                  st.id === destinationId ? "ring-4 ring-rose-400" : ""
-                }`}
-                style={{ left: st.pos.x - HALF, top: st.pos.y - HALF }}
+                className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+                style={{ left: st.pos.x, top: st.pos.y }}
               >
-                {/* 目的地の旗（DESIGN 4.6 マップ上の目的地に大きな旗） */}
-                {st.id === destinationId && (
-                  <span className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 animate-bounce text-2xl drop-shadow">
+                {/* 目的地の旗 */}
+                {isDest && (
+                  <span className="pointer-events-none absolute -top-5 left-1/2 -translate-x-1/2 animate-bounce text-xl drop-shadow">
                     🚩
                   </span>
                 )}
-                <RubyText text={st.label} />
-                {/* 実在駅・都道府県の副表示（DESIGN 4.1。ON のときだけ） */}
-                {showSub && st.sub && (
-                  <span className="w-full truncate text-[7px] font-medium leading-none text-stone-600/90">
-                    {st.sub.base}
-                  </span>
-                )}
+                {/* 駅ドット（カテゴリ色） */}
+                <div
+                  className={`h-3.5 w-3.5 rounded-full border-2 shadow ${stationColor(st)} ${
+                    isDest ? "ring-2 ring-rose-400" : ""
+                  }`}
+                />
+                {/* 駒 */}
                 {here.length > 0 && (
                   <div className="mt-0.5 flex gap-0.5">
                     {here.map((p) => (
@@ -408,12 +409,18 @@ export function GameBoard() {
                         key={p.userId}
                         className={`rounded-full border border-white shadow ${
                           p.userId === current.userId
-                            ? "h-3.5 w-3.5 bg-rose-500"
+                            ? "h-3 w-3 bg-rose-500"
                             : "h-2.5 w-2.5 bg-blue-500"
                         } ${p.userId === current.userId && phase === "moving" ? "animate-bounce" : ""}`}
                       />
                     ))}
                   </div>
+                )}
+                {/* 駅名ラベル */}
+                {showName && (
+                  <span className="pointer-events-none mt-0.5 max-w-[80px] truncate whitespace-nowrap rounded bg-white/85 px-1 text-[8px] font-bold leading-tight text-stone-700 shadow-sm">
+                    {st.label.base}
+                  </span>
                 )}
               </div>
             );

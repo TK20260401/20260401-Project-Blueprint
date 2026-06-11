@@ -95,24 +95,26 @@ export function generateMap(seed: string): GameMap {
     const shortDanger = pattern === 1 || pattern === 3; // 近道&危険 / 両方危険
     const longDanger = pattern === 2 || pattern === 3; // 遠回り&危険 / 両方危険
 
-    // 近道（中継1）
-    const S = cityStation(b.short[0].propId, b.short[0], false, shortDanger);
-    S.next = [merge.id];
-
-    // 遠回り（中継2）。L1 は必ず物件、L2 が遠回りの危険スロット。
-    const L1 = cityStation(b.long[0].propId, b.long[0], false, false);
-    const L2 = cityStation(b.long[1].propId, b.long[1], false, longDanger);
-    L1.next = [L2.id];
-    L2.next = [merge.id];
-
-    fork.next = [S.id, L1.id];
+    // 中継都市の列を fork→…→merge に結線。危険ルートは最後の中継をピンチにする。
+    const buildChain = (cities: typeof b.short, dangerLast: boolean) => {
+      const sts = cities.map((c, i) =>
+        cityStation(c.propId, c, false, dangerLast && i === cities.length - 1),
+      );
+      sts.forEach((s, i) => {
+        s.next = [i < sts.length - 1 ? sts[i + 1].id : merge.id];
+      });
+      return sts;
+    };
+    const shortSts = buildChain(b.short, shortDanger);
+    const longSts = buildChain(b.long, longDanger);
+    fork.next = [shortSts[0].id, longSts[0].id];
 
     branches.push({
       forkId: fork.id,
       pattern,
       options: [
-        { firstNextId: S.id, routeLabel: merge.label, route: "short", steps: 2, danger: shortDanger },
-        { firstNextId: L1.id, routeLabel: merge.label, route: "long", steps: 3, danger: longDanger },
+        { firstNextId: shortSts[0].id, routeLabel: merge.label, route: "short", steps: b.short.length + 1, danger: shortDanger },
+        { firstNextId: longSts[0].id, routeLabel: merge.label, route: "long", steps: b.long.length + 1, danger: longDanger },
       ],
     });
   }
