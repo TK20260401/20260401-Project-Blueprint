@@ -44,6 +44,8 @@ export type Property = {
   name: RubyText;
   price: number;
   category: StationCategory; // 16.6.2 物件カテゴリ5色 / 4.2 駅プール5カテゴリ
+  /** 実在駅・都道府県の副表示（DESIGN 4.1 ハイブリッド表示。例: 「愛媛・松山駅」） */
+  sub?: RubyText;
   /** この物件を取得するために解くクイズ（DESIGN 15.3.3） */
   quiz: Quiz;
 };

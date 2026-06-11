@@ -145,6 +145,8 @@ export function GameBoard() {
   const [diceFace, setDiceFace] = useState<number | null>(null);
   // 駒移動アニメ。moving の間、アクティブプレイヤーの駒を animPath に沿って1マスずつ進める。
   const [animStationId, setAnimStationId] = useState<string | null>(null);
+  // 実在駅・都道府県の副表示（DESIGN 4.1）。タップで切替（C層配慮で OFF も可）。
+  const [showSub, setShowSub] = useState(true);
 
   useEffect(() => {
     if (phase !== "rolling") return;
@@ -234,6 +236,16 @@ export function GameBoard() {
               🗺 新しいマップ
             </button>
           )}
+          <button
+            onClick={() => setShowSub((v) => !v)}
+            className={`rounded-full border px-3 py-1 text-xs transition ${
+              showSub
+                ? "border-sky-300 bg-sky-50 text-sky-600"
+                : "border-stone-300 bg-white text-stone-400 hover:bg-stone-100"
+            }`}
+          >
+            📍 じつざい駅 {showSub ? "ON" : "OFF"}
+          </button>
         </div>
         <div
           className="relative max-w-full overflow-hidden rounded-3xl bg-gradient-to-br from-sky-200 to-cyan-100 shadow-inner"
@@ -290,6 +302,9 @@ export function GameBoard() {
             return (
               <div
                 key={st.id}
+                title={
+                  st.property?.sub ? `${st.label.base}（${st.property.sub.base}）` : st.label.base
+                }
                 className={`absolute flex h-14 w-14 flex-col items-center justify-center rounded-lg border-2 px-0.5 text-center text-[10px] font-bold leading-tight shadow ${stationColor(st)} ${
                   st.id === destinationId ? "ring-4 ring-rose-400" : ""
                 }`}
@@ -302,6 +317,12 @@ export function GameBoard() {
                   </span>
                 )}
                 <RubyText text={st.label} />
+                {/* 実在駅・都道府県の副表示（DESIGN 4.1。ON のときだけ） */}
+                {showSub && st.property?.sub && (
+                  <span className="w-full truncate text-[7px] font-medium leading-none text-stone-600/90">
+                    {st.property.sub.base}
+                  </span>
+                )}
                 {here.length > 0 && (
                   <div className="mt-0.5 flex gap-0.5">
                     {here.map((p) => (

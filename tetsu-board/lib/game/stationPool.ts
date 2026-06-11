@@ -1,5 +1,6 @@
 // 駅マスタープール（DESIGN 4.2 マスター駅プール / 4.3.1 駅選定の元データ）。
-// MVP は5カテゴリ×各4駅の計20駅。本番は65〜70駅まで拡張予定（データ追加のみ）。
+// 5カテゴリ計55駅（本番65〜70駅へはデータ追加のみで拡張可）。
+// 主表示=親しみやすい架空名、副表示(sub)=実在駅・都道府県（DESIGN 4.1 ハイブリッド表示）。
 // generateMap がここからカテゴリ均等に選抜する。
 
 import type { Property, RubyText, StationCategory } from "./types";
@@ -8,12 +9,13 @@ const r = (base: string, ruby?: string): RubyText => ({ base, ruby });
 
 // 物件（=駅に紐づく取得対象）の候補。category ごとにまとまっている。
 export const PROPERTY_POOL: Property[] = [
-  // === farm 田畑 ===
+  // === farm 田畑・里山（第一次産業） ===
   {
     id: "p-ichigo",
     name: r("いちご農園", "いちごのうえん"),
     price: 70,
     category: "farm",
+    sub: r("栃木・宇都宮駅", "とちぎ・うつのみやえき"),
     quiz: {
       id: "q-ichigo",
       subject: "geography",
@@ -32,6 +34,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("田んぼ", "たんぼ"),
     price: 80,
     category: "farm",
+    sub: r("新潟・新潟駅", "にいがた・にいがたえき"),
     quiz: {
       id: "q-kome",
       subject: "geography",
@@ -50,6 +53,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("牧場", "ぼくじょう"),
     price: 90,
     category: "farm",
+    sub: r("北海道・帯広駅", "ほっかいどう・おびひろえき"),
     quiz: {
       id: "q-bokujo",
       subject: "geography",
@@ -68,6 +72,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("りんご畑", "りんごばたけ"),
     price: 75,
     category: "farm",
+    sub: r("青森・青森駅", "あおもり・あおもりえき"),
     quiz: {
       id: "q-ringo",
       subject: "math",
@@ -81,13 +86,166 @@ export const PROPERTY_POOL: Property[] = [
       hint: r("3 + 3 をけいさんしよう"),
     },
   },
+  {
+    id: "p-mikan",
+    name: r("みかん畑", "みかんばたけ"),
+    price: 75,
+    category: "farm",
+    sub: r("愛媛・松山駅", "えひめ・まつやまえき"),
+    quiz: {
+      id: "q-mikan",
+      subject: "geography",
+      question: r("みかんの名産で有名な県は？", "みかんのめいさんでゆうめいなけんは？"),
+      choices: [
+        { key: "A", text: r("愛媛県", "えひめけん") },
+        { key: "B", text: r("北海道", "ほっかいどう") },
+        { key: "C", text: r("青森県", "あおもりけん") },
+      ],
+      answer: "A",
+      hint: r("四国にある、あたたかい県だよ", "しこくにある、あたたかいけんだよ"),
+    },
+  },
+  {
+    id: "p-cha",
+    name: r("茶畑", "ちゃばたけ"),
+    price: 80,
+    category: "farm",
+    sub: r("静岡・静岡駅", "しずおか・しずおかえき"),
+    quiz: {
+      id: "q-cha",
+      subject: "geography",
+      question: r("お茶づくりが日本一の県は？", "おちゃづくりがにっぽんいちのけんは？"),
+      choices: [
+        { key: "A", text: r("静岡県", "しずおかけん") },
+        { key: "B", text: r("沖縄県", "おきなわけん") },
+        { key: "C", text: r("岩手県", "いわてけん") },
+      ],
+      answer: "A",
+      hint: r("富士山のちかくの県だよ", "ふじさんのちかくのけんだよ"),
+    },
+  },
+  {
+    id: "p-budo",
+    name: r("ぶどう園", "ぶどうえん"),
+    price: 78,
+    category: "farm",
+    sub: r("山梨・甲府駅", "やまなし・こうふえき"),
+    quiz: {
+      id: "q-budo",
+      subject: "geography",
+      question: r("ぶどうづくりがさかんな県は？", "ぶどうづくりがさかんなけんは？"),
+      choices: [
+        { key: "A", text: r("山梨県", "やまなしけん") },
+        { key: "B", text: r("沖縄県", "おきなわけん") },
+        { key: "C", text: r("北海道", "ほっかいどう") },
+      ],
+      answer: "A",
+      hint: r("富士山のとなりの県だよ", "ふじさんのとなりのけんだよ"),
+    },
+  },
+  {
+    id: "p-sakura",
+    name: r("さくらんぼ園", "さくらんぼえん"),
+    price: 82,
+    category: "farm",
+    sub: r("山形・山形駅", "やまがた・やまがたえき"),
+    quiz: {
+      id: "q-sakura",
+      subject: "geography",
+      question: r("さくらんぼで有名な県は？", "さくらんぼでゆうめいなけんは？"),
+      choices: [
+        { key: "A", text: r("山形県", "やまがたけん") },
+        { key: "B", text: r("大阪府", "おおさかふ") },
+        { key: "C", text: r("沖縄県", "おきなわけん") },
+      ],
+      answer: "A",
+      hint: r("東北地方の県だよ", "とうほくちほうのけんだよ"),
+    },
+  },
+  {
+    id: "p-imo",
+    name: r("さつまいも畑", "さつまいもばたけ"),
+    price: 68,
+    category: "farm",
+    sub: r("鹿児島・鹿児島中央駅", "かごしま・かごしまちゅうおうえき"),
+    quiz: {
+      id: "q-imo",
+      subject: "geography",
+      question: r("さつまいもの名産、九州の県は？", "さつまいものめいさん、きゅうしゅうのけんは？"),
+      choices: [
+        { key: "A", text: r("鹿児島県", "かごしまけん") },
+        { key: "B", text: r("青森県", "あおもりけん") },
+        { key: "C", text: r("石川県", "いしかわけん") },
+      ],
+      answer: "A",
+      hint: r("いちばん南の九州の県だよ", "いちばんみなみのきゅうしゅうのけんだよ"),
+    },
+  },
+  {
+    id: "p-soba",
+    name: r("そば畑", "そばばたけ"),
+    price: 72,
+    category: "farm",
+    sub: r("長野・長野駅", "ながの・ながのえき"),
+    quiz: {
+      id: "q-soba",
+      subject: "geography",
+      question: r("そばで有名な、山の多い県は？", "そばでゆうめいな、やまのおおいけんは？"),
+      choices: [
+        { key: "A", text: r("長野県", "ながのけん") },
+        { key: "B", text: r("沖縄県", "おきなわけん") },
+        { key: "C", text: r("千葉県", "ちばけん") },
+      ],
+      answer: "A",
+      hint: r("高い山がたくさんある県だよ", "たかいやまがたくさんあるけんだよ"),
+    },
+  },
+  {
+    id: "p-momo",
+    name: r("もも畑", "ももばたけ"),
+    price: 80,
+    category: "farm",
+    sub: r("岡山・岡山駅", "おかやま・おかやまえき"),
+    quiz: {
+      id: "q-momo",
+      subject: "geography",
+      question: r("ももや「ももたろう」で有名な県は？", "ももや「ももたろう」でゆうめいなけんは？"),
+      choices: [
+        { key: "A", text: r("岡山県", "おかやまけん") },
+        { key: "B", text: r("北海道", "ほっかいどう") },
+        { key: "C", text: r("沖縄県", "おきなわけん") },
+      ],
+      answer: "A",
+      hint: r("中国地方の県だよ", "ちゅうごくちほうのけんだよ"),
+    },
+  },
+  {
+    id: "p-negi",
+    name: r("ねぎ畑", "ねぎばたけ"),
+    price: 65,
+    category: "farm",
+    sub: r("群馬・前橋駅", "ぐんま・まえばしえき"),
+    quiz: {
+      id: "q-negi",
+      subject: "math",
+      question: r("ねぎが3本ずつ4たば。ぜんぶで何本？", "ねぎが3ぼんずつ4たば。ぜんぶでなんぼん？"),
+      choices: [
+        { key: "A", text: r("7本", "7ほん") },
+        { key: "B", text: r("12本", "12ほん") },
+        { key: "C", text: r("9本", "9ほん") },
+      ],
+      answer: "B",
+      hint: r("3 × 4 をけいさんしよう"),
+    },
+  },
 
-  // === sea 海 ===
+  // === sea 海・港（第一次産業） ===
   {
     id: "p-gyoko",
     name: r("漁港", "ぎょこう"),
     price: 85,
     category: "sea",
+    sub: r("北海道・函館駅", "ほっかいどう・はこだてえき"),
     quiz: {
       id: "q-gyoko",
       subject: "geography",
@@ -106,6 +264,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("水族館", "すいぞくかん"),
     price: 110,
     category: "sea",
+    sub: r("三重・鳥羽駅", "みえ・とばえき"),
     quiz: {
       id: "q-suizoku",
       subject: "geography",
@@ -124,6 +283,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("塩田", "えんでん"),
     price: 70,
     category: "sea",
+    sub: r("香川・坂出駅", "かがわ・さかいでえき"),
     quiz: {
       id: "q-shiohama",
       subject: "geography",
@@ -142,6 +302,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("みなと", "みなと"),
     price: 95,
     category: "sea",
+    sub: r("神奈川・横浜駅", "かながわ・よこはまえき"),
     quiz: {
       id: "q-minato",
       subject: "economics",
@@ -155,13 +316,147 @@ export const PROPERTY_POOL: Property[] = [
       hint: r("うみをわたるよ"),
     },
   },
+  {
+    id: "p-kani",
+    name: r("かに港", "かにこう"),
+    price: 95,
+    category: "sea",
+    sub: r("鳥取・鳥取駅", "とっとり・とっとりえき"),
+    quiz: {
+      id: "q-kani",
+      subject: "geography",
+      question: r("冬のかにで有名な、日本海がわの県は？", "ふゆのかにでゆうめいな、にほんかいがわのけんは？"),
+      choices: [
+        { key: "A", text: r("鳥取県", "とっとりけん") },
+        { key: "B", text: r("東京都", "とうきょうと") },
+        { key: "C", text: r("埼玉県", "さいたまけん") },
+      ],
+      answer: "A",
+      hint: r("大きなさきゅう(すなやま)で有名な県だよ", "おおきなさきゅう(すなやま)でゆうめいなけんだよ"),
+    },
+  },
+  {
+    id: "p-maguro",
+    name: r("まぐろ港", "まぐろこう"),
+    price: 88,
+    category: "sea",
+    sub: r("静岡・清水駅", "しずおか・しみずえき"),
+    quiz: {
+      id: "q-maguro",
+      subject: "economics",
+      question: r("まぐろ1ぴき5000円。2ひきでいくら？", "まぐろ1ぴき5000えん。2ひきでいくら？"),
+      choices: [
+        { key: "A", text: r("7000円", "7000えん") },
+        { key: "B", text: r("10000円", "10000えん") },
+        { key: "C", text: r("5000円", "5000えん") },
+      ],
+      answer: "B",
+      hint: r("5000 + 5000 をけいさんしよう"),
+    },
+  },
+  {
+    id: "p-kombu",
+    name: r("こんぶ漁場", "こんぶりょうば"),
+    price: 76,
+    category: "sea",
+    sub: r("北海道・釧路駅", "ほっかいどう・くしろえき"),
+    quiz: {
+      id: "q-kombu",
+      subject: "geography",
+      question: r("こんぶがたくさんとれる、北の大きな島は？", "こんぶがたくさんとれる、きたのおおきなしまは？"),
+      choices: [
+        { key: "A", text: r("北海道", "ほっかいどう") },
+        { key: "B", text: r("沖縄県", "おきなわけん") },
+        { key: "C", text: r("四国", "しこく") },
+      ],
+      answer: "A",
+      hint: r("いちばん北にある、すずしい島だよ", "いちばんきたにある、すずしいしまだよ"),
+    },
+  },
+  {
+    id: "p-shinju",
+    name: r("真珠の海", "しんじゅのうみ"),
+    price: 120,
+    category: "sea",
+    sub: r("愛媛・宇和島駅", "えひめ・うわじまえき"),
+    quiz: {
+      id: "q-shinju",
+      subject: "geography",
+      question: r("しんじゅを海でそだてる、四国の県は？", "しんじゅをうみでそだてる、しこくのけんは？"),
+      choices: [
+        { key: "A", text: r("愛媛県", "えひめけん") },
+        { key: "B", text: r("北海道", "ほっかいどう") },
+        { key: "C", text: r("群馬県", "ぐんまけん") },
+      ],
+      answer: "A",
+      hint: r("みかんでも有名な四国の県だよ", "みかんでもゆうめいなしこくのけんだよ"),
+    },
+  },
+  {
+    id: "p-nori",
+    name: r("のり漁場", "のりりょうば"),
+    price: 70,
+    category: "sea",
+    sub: r("佐賀・佐賀駅", "さが・さがえき"),
+    quiz: {
+      id: "q-nori",
+      subject: "geography",
+      question: r("「ありあけ海」ののりで有名な、九州の県は？", "「ありあけかい」ののりでゆうめいな、きゅうしゅうのけんは？"),
+      choices: [
+        { key: "A", text: r("佐賀県", "さがけん") },
+        { key: "B", text: r("長野県", "ながのけん") },
+        { key: "C", text: r("栃木県", "とちぎけん") },
+      ],
+      answer: "A",
+      hint: r("九州の北のほうの県だよ", "きゅうしゅうのきたのほうのけんだよ"),
+    },
+  },
+  {
+    id: "p-kujira",
+    name: r("くじらの海", "くじらのうみ"),
+    price: 100,
+    category: "sea",
+    sub: r("和歌山・紀伊勝浦駅", "わかやま・きいかつうらえき"),
+    quiz: {
+      id: "q-kujira",
+      subject: "geography",
+      question: r("くじらは さかな？ それとも？", "くじらは さかな？ それとも？"),
+      choices: [
+        { key: "A", text: r("さかな") },
+        { key: "B", text: r("ほにゅうるい") },
+        { key: "C", text: r("とり") },
+      ],
+      answer: "B",
+      hint: r("海にいるけど、おっぱいで子をそだてるよ", "うみにいるけど、おっぱいでこをそだてるよ"),
+    },
+  },
+  {
+    id: "p-shirasu",
+    name: r("しらす漁場", "しらすりょうば"),
+    price: 74,
+    category: "sea",
+    sub: r("静岡・焼津駅", "しずおか・やいづえき"),
+    quiz: {
+      id: "q-shirasu",
+      subject: "math",
+      question: r("しらす100gで200円。300gでいくら？", "しらす100gで200えん。300gでいくら？"),
+      choices: [
+        { key: "A", text: r("400円", "400えん") },
+        { key: "B", text: r("600円", "600えん") },
+        { key: "C", text: r("200円", "200えん") },
+      ],
+      answer: "B",
+      hint: r("100gが3つぶんだから 200 × 3 だよ"),
+    },
+  },
 
-  // === factory 工業 ===
+  // === factory 工業・ものづくり（第二次産業） ===
   {
     id: "p-jidosha",
     name: r("自動車工場", "じどうしゃこうじょう"),
     price: 120,
     category: "factory",
+    sub: r("愛知・豊田市駅", "あいち・とよたしえき"),
     quiz: {
       id: "q-jidosha",
       subject: "economics",
@@ -180,6 +475,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("製鉄所", "せいてつじょ"),
     price: 130,
     category: "factory",
+    sub: r("福岡・八幡駅", "ふくおか・やはたえき"),
     quiz: {
       id: "q-seitetsu",
       subject: "geography",
@@ -198,6 +494,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("電気工場", "でんきこうじょう"),
     price: 115,
     category: "factory",
+    sub: r("大阪・大阪駅", "おおさか・おおさかえき"),
     quiz: {
       id: "q-denki",
       subject: "math",
@@ -216,6 +513,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("パン工場", "ぱんこうじょう"),
     price: 90,
     category: "factory",
+    sub: r("兵庫・神戸駅", "ひょうご・こうべえき"),
     quiz: {
       id: "q-pan",
       subject: "economics",
@@ -229,13 +527,128 @@ export const PROPERTY_POOL: Property[] = [
       hint: r("むぎからできるこなだよ"),
     },
   },
+  {
+    id: "p-zosen",
+    name: r("造船所", "ぞうせんじょ"),
+    price: 125,
+    category: "factory",
+    sub: r("長崎・長崎駅", "ながさき・ながさきえき"),
+    quiz: {
+      id: "q-zosen",
+      subject: "geography",
+      question: r("大きな船をつくる場所で有名な、九州の県は？", "おおきなふねをつくるばしょでゆうめいな、きゅうしゅうのけんは？"),
+      choices: [
+        { key: "A", text: r("長崎県", "ながさきけん") },
+        { key: "B", text: r("奈良県", "ならけん") },
+        { key: "C", text: r("栃木県", "とちぎけん") },
+      ],
+      answer: "A",
+      hint: r("海にめんした九州の県だよ", "うみにめんしたきゅうしゅうのけんだよ"),
+    },
+  },
+  {
+    id: "p-kami",
+    name: r("製紙工場", "せいしこうじょう"),
+    price: 95,
+    category: "factory",
+    sub: r("静岡・富士駅", "しずおか・ふじえき"),
+    quiz: {
+      id: "q-kami",
+      subject: "geography",
+      question: r("紙をたくさんつくる、富士山のふもとの市は？", "かみをたくさんつくる、ふじさんのふもとのしは？"),
+      choices: [
+        { key: "A", text: r("富士市", "ふじし") },
+        { key: "B", text: r("那覇市", "なはし") },
+        { key: "C", text: r("青森市", "あおもりし") },
+      ],
+      answer: "A",
+      hint: r("富士山と同じ名前の市だよ", "ふじさんとおなじなまえのしだよ"),
+    },
+  },
+  {
+    id: "p-yakimono",
+    name: r("焼き物工場", "やきものこうじょう"),
+    price: 85,
+    category: "factory",
+    sub: r("佐賀・有田駅", "さが・ありたえき"),
+    quiz: {
+      id: "q-yakimono",
+      subject: "economics",
+      question: r("「有田焼」のおさらをつくるのに使うのは？", "「ありたやき」のおさらをつくるのにつかうのは？"),
+      choices: [
+        { key: "A", text: r("つち(ねんど)") },
+        { key: "B", text: r("てつ") },
+        { key: "C", text: r("ガラス") },
+      ],
+      answer: "A",
+      hint: r("やわらかくて形がつくれるものだよ", "やわらかくてかたちがつくれるものだよ"),
+    },
+  },
+  {
+    id: "p-orimono",
+    name: r("織物工場", "おりものこうじょう"),
+    price: 88,
+    category: "factory",
+    sub: r("群馬・桐生駅", "ぐんま・きりゅうえき"),
+    quiz: {
+      id: "q-orimono",
+      subject: "economics",
+      question: r("いとからぬのをつくる工場を何工場という？", "いとからぬのをつくるこうじょうをなにこうじょうという？"),
+      choices: [
+        { key: "A", text: r("おりもの工場", "おりものこうじょう") },
+        { key: "B", text: r("じどうしゃ工場", "じどうしゃこうじょう") },
+        { key: "C", text: r("パン工場", "ぱんこうじょう") },
+      ],
+      answer: "A",
+      hint: r("ふくのもとになるぬのをつくるよ"),
+    },
+  },
+  {
+    id: "p-kagaku",
+    name: r("化学工場", "かがくこうじょう"),
+    price: 118,
+    category: "factory",
+    sub: r("三重・四日市駅", "みえ・よっかいちえき"),
+    quiz: {
+      id: "q-kagaku",
+      subject: "math",
+      question: r("きかい2台で1日100こつくる。4台では何こ？", "きかい2だいで1にち100こつくる。4だいではなんこ？"),
+      choices: [
+        { key: "A", text: r("150こ") },
+        { key: "B", text: r("200こ") },
+        { key: "C", text: r("400こ") },
+      ],
+      answer: "B",
+      hint: r("台数が2ばいなら つくる数も2ばい"),
+    },
+  },
+  {
+    id: "p-biru",
+    name: r("飲み物工場", "のみものこうじょう"),
+    price: 100,
+    category: "factory",
+    sub: r("北海道・札幌駅", "ほっかいどう・さっぽろえき"),
+    quiz: {
+      id: "q-biru",
+      subject: "geography",
+      question: r("飲み物の工場が多い、北海道の大きな都市は？", "のみもののこうじょうがおおい、ほっかいどうのおおきなとしは？"),
+      choices: [
+        { key: "A", text: r("札幌市", "さっぽろし") },
+        { key: "B", text: r("那覇市", "なはし") },
+        { key: "C", text: r("奈良市", "ならし") },
+      ],
+      answer: "A",
+      hint: r("北海道でいちばん大きい都市だよ", "ほっかいどうでいちばんおおきいとしだよ"),
+    },
+  },
 
-  // === city 都市 ===
+  // === city 都市・繁華街（第三次産業） ===
   {
     id: "p-tokyo",
     name: r("東京駅", "とうきょうえき"),
     price: 100,
     category: "city",
+    sub: r("東京・東京駅", "とうきょう・とうきょうえき"),
     quiz: {
       id: "q-tokyo",
       subject: "geography",
@@ -254,6 +667,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("中華街", "ちゅうかがい"),
     price: 90,
     category: "city",
+    sub: r("神奈川・元町・中華街駅", "かながわ・もとまち・ちゅうかがいえき"),
     quiz: {
       id: "q-yokohama",
       subject: "geography",
@@ -272,6 +686,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("デパート", "でぱーと"),
     price: 105,
     category: "city",
+    sub: r("大阪・梅田駅", "おおさか・うめだえき"),
     quiz: {
       id: "q-depart",
       subject: "math",
@@ -290,6 +705,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("市役所", "しやくしょ"),
     price: 95,
     category: "city",
+    sub: r("愛知・名古屋駅", "あいち・なごやえき"),
     quiz: {
       id: "q-shiyakusho",
       subject: "civics",
@@ -303,13 +719,147 @@ export const PROPERTY_POOL: Property[] = [
       hint: r("みんなの意見をきくことだよ", "みんなのいけんをきくことだよ"),
     },
   },
+  {
+    id: "p-tower",
+    name: r("でんぱとう", "でんぱとう"),
+    price: 110,
+    category: "city",
+    sub: r("東京・押上駅", "とうきょう・おしあげえき"),
+    quiz: {
+      id: "q-tower",
+      subject: "geography",
+      question: r("高いタワー「スカイツリー」があるのは何都？", "たかいタワー「スカイツリー」があるのはなにと？"),
+      choices: [
+        { key: "A", text: r("東京都", "とうきょうと") },
+        { key: "B", text: r("大阪府", "おおさかふ") },
+        { key: "C", text: r("京都府", "きょうとふ") },
+      ],
+      answer: "A",
+      hint: r("日本の首都だよ", "にほんのしゅとだよ"),
+    },
+  },
+  {
+    id: "p-stadium",
+    name: r("スタジアム", "すたじあむ"),
+    price: 108,
+    category: "city",
+    sub: r("埼玉・さいたま新都心駅", "さいたま・さいたましんとしんえき"),
+    quiz: {
+      id: "q-stadium",
+      subject: "math",
+      question: r("せきが1れつ100。3れつでぜんぶ何せき？", "せきが1れつ100。3れつでぜんぶなんせき？"),
+      choices: [
+        { key: "A", text: r("103せき") },
+        { key: "B", text: r("300せき") },
+        { key: "C", text: r("30せき") },
+      ],
+      answer: "B",
+      hint: r("100 × 3 をけいさんしよう"),
+    },
+  },
+  {
+    id: "p-kuko",
+    name: r("空港", "くうこう"),
+    price: 115,
+    category: "city",
+    sub: r("北海道・新千歳空港駅", "ほっかいどう・しんちとせくうこうえき"),
+    quiz: {
+      id: "q-kuko",
+      subject: "economics",
+      question: r("空からにもつや人をはこぶのりものは？", "そらからにもつやひとをはこぶのりものは？"),
+      choices: [
+        { key: "A", text: r("ひこうき") },
+        { key: "B", text: r("ふね") },
+        { key: "C", text: r("でんしゃ") },
+      ],
+      answer: "A",
+      hint: r("空をとぶのりものだよ", "そらをとぶのりものだよ"),
+    },
+  },
+  {
+    id: "p-ginko",
+    name: r("銀行街", "ぎんこうがい"),
+    price: 100,
+    category: "city",
+    sub: r("東京・日本橋駅", "とうきょう・にほんばしえき"),
+    quiz: {
+      id: "q-ginko",
+      subject: "economics",
+      question: r("お金をあずかったり かしたりする場所は？", "おかねをあずかったり かしたりするばしょは？"),
+      choices: [
+        { key: "A", text: r("ぎんこう") },
+        { key: "B", text: r("びょういん") },
+        { key: "C", text: r("がっこう") },
+      ],
+      answer: "A",
+      hint: r("つうちょうにお金をあずけるところだよ", "つうちょうにおかねをあずけるところだよ"),
+    },
+  },
+  {
+    id: "p-yatai",
+    name: r("屋台街", "やたいがい"),
+    price: 78,
+    category: "city",
+    sub: r("福岡・博多駅", "ふくおか・はかたえき"),
+    quiz: {
+      id: "q-yatai",
+      subject: "geography",
+      question: r("「とんこつラーメン」と屋台で有名な、九州の市は？", "「とんこつラーメン」とやたいでゆうめいな、きゅうしゅうのしは？"),
+      choices: [
+        { key: "A", text: r("福岡市", "ふくおかし") },
+        { key: "B", text: r("札幌市", "さっぽろし") },
+        { key: "C", text: r("名古屋市", "なごやし") },
+      ],
+      answer: "A",
+      hint: r("九州でいちばん大きい市だよ", "きゅうしゅうでいちばんおおきいしだよ"),
+    },
+  },
+  {
+    id: "p-shoten",
+    name: r("商店街", "しょうてんがい"),
+    price: 82,
+    category: "city",
+    sub: r("大阪・天王寺駅", "おおさか・てんのうじえき"),
+    quiz: {
+      id: "q-shoten",
+      subject: "math",
+      question: r("80円のパンと120円の牛にゅう。あわせていくら？", "80えんのパンと120えんのぎゅうにゅう。あわせていくら？"),
+      choices: [
+        { key: "A", text: r("200円", "200えん") },
+        { key: "B", text: r("180円", "180えん") },
+        { key: "C", text: r("220円", "220えん") },
+      ],
+      answer: "A",
+      hint: r("80 + 120 をけいさんしよう"),
+    },
+  },
+  {
+    id: "p-univ",
+    name: r("大学のまち", "だいがくのまち"),
+    price: 90,
+    category: "city",
+    sub: r("京都・出町柳駅", "きょうと・でまちやなぎえき"),
+    quiz: {
+      id: "q-univ",
+      subject: "civics",
+      question: r("たくさんの学生が学ぶ学校を何という？", "たくさんのがくせいがまなぶがっこうをなんという？"),
+      choices: [
+        { key: "A", text: r("だいがく") },
+        { key: "B", text: r("びょういん") },
+        { key: "C", text: r("こうじょう") },
+      ],
+      answer: "A",
+      hint: r("小学校のずっと先の学校だよ", "しょうがっこうのずっとさきのがっこうだよ"),
+    },
+  },
 
-  // === tourism 観光 ===
+  // === tourism 観光・自然（第三次産業） ===
   {
     id: "p-kinkaku",
     name: r("金閣寺", "きんかくじ"),
     price: 100,
     category: "tourism",
+    sub: r("京都・京都駅", "きょうと・きょうとえき"),
     quiz: {
       id: "q-kinkaku",
       subject: "geography",
@@ -328,6 +878,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("温泉", "おんせん"),
     price: 80,
     category: "tourism",
+    sub: r("大分・別府駅", "おおいた・べっぷえき"),
     quiz: {
       id: "q-onsen",
       subject: "geography",
@@ -346,6 +897,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("遊園地", "ゆうえんち"),
     price: 115,
     category: "tourism",
+    sub: r("千葉・舞浜駅", "ちば・まいはまえき"),
     quiz: {
       id: "q-yuen",
       subject: "math",
@@ -364,6 +916,7 @@ export const PROPERTY_POOL: Property[] = [
     name: r("お城", "おしろ"),
     price: 110,
     category: "tourism",
+    sub: r("兵庫・姫路駅", "ひょうご・ひめじえき"),
     quiz: {
       id: "q-shiro",
       subject: "geography",
@@ -375,6 +928,139 @@ export const PROPERTY_POOL: Property[] = [
       ],
       answer: "A",
       hint: r("いしがきの上にあるよ", "いしがきのうえにあるよ"),
+    },
+  },
+  {
+    id: "p-fuji",
+    name: r("富士山", "ふじさん"),
+    price: 100,
+    category: "tourism",
+    sub: r("山梨・富士山駅", "やまなし・ふじさんえき"),
+    quiz: {
+      id: "q-fuji",
+      subject: "geography",
+      question: r("日本でいちばん高い山は？", "にほんでいちばんたかいやまは？"),
+      choices: [
+        { key: "A", text: r("富士山", "ふじさん") },
+        { key: "B", text: r("立山", "たてやま") },
+        { key: "C", text: r("白山", "はくさん") },
+      ],
+      answer: "A",
+      hint: r("しずおかと山なしのさかいにあるよ", "しずおかとやまなしのさかいにあるよ"),
+    },
+  },
+  {
+    id: "p-daibutsu",
+    name: r("大仏", "だいぶつ"),
+    price: 95,
+    category: "tourism",
+    sub: r("奈良・奈良駅", "なら・ならえき"),
+    quiz: {
+      id: "q-daibutsu",
+      subject: "geography",
+      question: r("大きな大仏と しかで有名な、むかしのみやこは？", "おおきなだいぶつと しかでゆうめいな、むかしのみやこは？"),
+      choices: [
+        { key: "A", text: r("奈良県", "ならけん") },
+        { key: "B", text: r("札幌市", "さっぽろし") },
+        { key: "C", text: r("那覇市", "なはし") },
+      ],
+      answer: "A",
+      hint: r("京都のとなりの、むかしのみやこだよ", "きょうとのとなりの、むかしのみやこだよ"),
+    },
+  },
+  {
+    id: "p-itsukushima",
+    name: r("神社の島", "じんじゃのしま"),
+    price: 98,
+    category: "tourism",
+    sub: r("広島・宮島口駅", "ひろしま・みやじまぐちえき"),
+    quiz: {
+      id: "q-itsukushima",
+      subject: "geography",
+      question: r("海にうかぶ赤い鳥居で有名な、広島の島は？", "うみにうかぶあかいとりいでゆうめいな、ひろしまのしまは？"),
+      choices: [
+        { key: "A", text: r("宮島", "みやじま") },
+        { key: "B", text: r("佐渡", "さど") },
+        { key: "C", text: r("淡路島", "あわじしま") },
+      ],
+      answer: "A",
+      hint: r("広島県にある、海の上の鳥居の島だよ", "ひろしまけんにある、うみのうえのとりいのしまだよ"),
+    },
+  },
+  {
+    id: "p-zoo",
+    name: r("動物園", "どうぶつえん"),
+    price: 92,
+    category: "tourism",
+    sub: r("北海道・旭川駅", "ほっかいどう・あさひかわえき"),
+    quiz: {
+      id: "q-zoo",
+      subject: "geography",
+      question: r("ペンギンの行進で有名な、北海道の動物園のまちは？", "ペンギンのこうしんでゆうめいな、ほっかいどうのどうぶつえんのまちは？"),
+      choices: [
+        { key: "A", text: r("旭川市", "あさひかわし") },
+        { key: "B", text: r("那覇市", "なはし") },
+        { key: "C", text: r("福岡市", "ふくおかし") },
+      ],
+      answer: "A",
+      hint: r("北海道のさむいまちだよ", "ほっかいどうのさむいまちだよ"),
+    },
+  },
+  {
+    id: "p-toshogu",
+    name: r("山の神社", "やまのじんじゃ"),
+    price: 90,
+    category: "tourism",
+    sub: r("栃木・日光駅", "とちぎ・にっこうえき"),
+    quiz: {
+      id: "q-toshogu",
+      subject: "geography",
+      question: r("きれいな神社と自然で有名な、栃木のまちは？", "きれいなじんじゃとしぜんでゆうめいな、とちぎのまちは？"),
+      choices: [
+        { key: "A", text: r("日光", "にっこう") },
+        { key: "B", text: r("大阪", "おおさか") },
+        { key: "C", text: r("博多", "はかた") },
+      ],
+      answer: "A",
+      hint: r("「光」の字が入るまちの名前だよ", "「ひかり」のじがはいるまちのなまえだよ"),
+    },
+  },
+  {
+    id: "p-biwako",
+    name: r("みずうみ", "みずうみ"),
+    price: 80,
+    category: "tourism",
+    sub: r("滋賀・大津駅", "しが・おおつえき"),
+    quiz: {
+      id: "q-biwako",
+      subject: "geography",
+      question: r("日本でいちばん大きいみずうみ「びわ湖」がある県は？", "にほんでいちばんおおきいみずうみ「びわこ」があるけんは？"),
+      choices: [
+        { key: "A", text: r("滋賀県", "しがけん") },
+        { key: "B", text: r("東京都", "とうきょうと") },
+        { key: "C", text: r("沖縄県", "おきなわけん") },
+      ],
+      answer: "A",
+      hint: r("京都のとなりの県だよ", "きょうとのとなりのけんだよ"),
+    },
+  },
+  {
+    id: "p-okinawa",
+    name: r("きれいな海", "きれいなうみ"),
+    price: 105,
+    category: "tourism",
+    sub: r("沖縄・那覇空港駅", "おきなわ・なはくうこうえき"),
+    quiz: {
+      id: "q-okinawa",
+      subject: "geography",
+      question: r("あたたかくて海がきれいな、いちばん南の県は？", "あたたかくてうみがきれいな、いちばんみなみのけんは？"),
+      choices: [
+        { key: "A", text: r("沖縄県", "おきなわけん") },
+        { key: "B", text: r("北海道", "ほっかいどう") },
+        { key: "C", text: r("青森県", "あおもりけん") },
+      ],
+      answer: "A",
+      hint: r("一年中あたたかい、南の島の県だよ", "いちねんじゅうあたたかい、みなみのしまのけんだよ"),
     },
   },
 ];
