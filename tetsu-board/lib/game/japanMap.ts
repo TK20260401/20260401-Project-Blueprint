@@ -1,32 +1,47 @@
 // 日本地図レイアウト（DESIGN 4.4 円環+少数分岐 を「日本一周」に対応づけたもの）。
-// 北海道〜沖縄までを1つの外周ループに乗せる：太平洋側を北上→北海道→日本海側を南下→
-// 九州→沖縄→太平洋側で大阪へ戻る一筆書き。離島接続は実在フェリー航路（仙台↔苫小牧、
-// 青函、鹿児島↔那覇、那覇↔本土）を使うので地理的に自然で、engine（forward 専用）は無改修。
-// 座標は緯度経度から算出（北=上 / 東=右）。盤は縦長でスクロール表示。
+// 都市も海岸線も同一の緯度経度投影 project(lat,lon) で配置するので、駅は必ず陸地に乗り、
+// 紀伊半島・能登・房総・知床・薩摩などの半島も実データでかたどれる。
+// 北海道〜沖縄を1つの外周ループに乗せ、離島は実在フェリー航路で接続（engine は forward 専用のまま無改修）。
 
-export const BOARD_W = 660;
-export const BOARD_H = 1040;
+// --- 緯度経度 → 盤座標（等緯度経度。経度方向は cos(lat) ぶん詰めて縦横比を自然に） ---
+const LON0 = 127.6; // 左端の経度（那覇あたり）
+const LAT0 = 45.7; // 上端の緯度（宗谷岬の少し上）
+const SX = 36; // 経度1°あたりpx
+const SY = 46; // 緯度1°あたりpx
+const OX = 20;
+const OY = 22;
+const px = (lat: number, lon: number) => ({
+  x: Math.round((lon - LON0) * SX + OX),
+  y: Math.round((LAT0 - lat) * SY + OY),
+});
+/** 緯度経度の点列から閉じた SVG path を作る */
+const coast = (pts: [number, number][]) =>
+  "M" + pts.map(([la, lo]) => { const q = px(la, lo); return `${q.x} ${q.y}`; }).join(" L") + " Z";
+
+export const BOARD_W = 700;
+export const BOARD_H = 980;
 
 /** 地理ノード：盤上の実在都市。propId は stationPool の物件 id（実在駅・都道府県を持つ） */
 export type GeoNode = { propId: string; x: number; y: number };
+const node = (propId: string, lat: number, lon: number): GeoNode => ({ propId, ...px(lat, lon) });
 
-// 周回ループ上の都市（index 0 = スタート＝東京）。太平洋を北上→北海道→日本海を南下→九州→沖縄→大阪。
-export const START_POS = { x: 543, y: 470 }; // 東京
+export const START_POS = px(35.68, 139.77); // 東京
+// 周回ループ（index 0 = スタート＝東京）。太平洋を北上→北海道→日本海を南下→九州→沖縄→大阪。
 export const SPINE: GeoNode[] = [
-  { propId: "", x: 543, y: 470 }, // 0 東京（スタート）
-  { propId: "p-sendai", x: 592, y: 331 }, // 1 仙台
-  { propId: "p-biru", x: 612, y: 78 }, // 2 札幌（仙台↔苫小牧フェリー）
-  { propId: "p-ringo", x: 587, y: 193 }, // 3 青森（青函）
-  { propId: "p-akita", x: 560, y: 253 }, // 4 秋田
-  { propId: "p-kome", x: 516, y: 350 }, // 5 新潟
-  { propId: "p-kanazawa", x: 415, y: 423 }, // 6 金沢
-  { propId: "p-kani", x: 314, y: 480 }, // 7 鳥取
-  { propId: "p-itsukushima", x: 239, y: 540 }, // 8 広島
-  { propId: "p-seitetsu", x: 153, y: 584 }, // 9 福岡 ← 分岐K fork
-  { propId: "p-imo", x: 160, y: 691 }, // 10 鹿児島 ← 分岐K merge
-  { propId: "p-okinawa", x: 44, y: 968 }, // 11 那覇（鹿児島↔那覇フェリー）
-  { propId: "p-depart", x: 367, y: 524 }, // 12 大阪（那覇↔本土フェリー）← 分岐N fork
-  { propId: "p-jidosha", x: 426, y: 498 }, // 13 名古屋 ← 分岐N merge / 分岐C fork
+  node("", 35.68, 139.77), // 0 東京（スタート）
+  node("p-sendai", 38.27, 140.87), // 1 仙台
+  node("p-biru", 43.06, 141.35), // 2 札幌（仙台↔苫小牧フェリー）
+  node("p-ringo", 40.82, 140.74), // 3 青森（青函）
+  node("p-akita", 39.72, 140.1), // 4 秋田
+  node("p-kome", 37.92, 139.04), // 5 新潟
+  node("p-kanazawa", 36.56, 136.66), // 6 金沢
+  node("p-kani", 35.5, 134.24), // 7 鳥取
+  node("p-itsukushima", 34.39, 132.46), // 8 広島
+  node("p-seitetsu", 33.59, 130.4), // 9 福岡 ← 分岐K fork
+  node("p-imo", 31.6, 130.56), // 10 鹿児島 ← 分岐K merge
+  node("p-okinawa", 26.21, 127.68), // 11 那覇（鹿児島↔那覇フェリー）
+  node("p-depart", 34.69, 135.5), // 12 大阪（那覇↔本土フェリー）← 分岐N fork
+  node("p-jidosha", 35.18, 136.91), // 13 名古屋 ← 分岐N merge / 分岐C fork
 ];
 
 /** 分岐（fork→short/long→merge は SPINE の index 参照）。short=1中継, long=2中継。 */
@@ -36,31 +51,22 @@ export const BRANCHES: GeoBranch[] = [
   {
     fork: 9,
     merge: 10,
-    short: [{ propId: "p-kumamoto", x: 166, y: 626 }], // 熊本
-    long: [
-      { propId: "p-onsen", x: 210, y: 602 }, // 大分（別府）
-      { propId: "p-miyazaki", x: 198, y: 672 }, // 宮崎
-    ],
+    short: [node("p-kumamoto", 32.8, 130.71)],
+    long: [node("p-onsen", 33.28, 131.5), node("p-miyazaki", 31.91, 131.42)],
   },
   // N 近畿（大阪 ⇄ 名古屋）。近道=京都、遠回り=大津→奈良。
   {
     fork: 12,
     merge: 13,
-    short: [{ propId: "p-kinkaku", x: 380, y: 506 }], // 京都
-    long: [
-      { propId: "p-biwako", x: 396, y: 492 }, // 大津（滋賀）
-      { propId: "p-daibutsu", x: 392, y: 530 }, // 奈良
-    ],
+    short: [node("p-kinkaku", 35.01, 135.77)],
+    long: [node("p-biwako", 35.0, 135.87), node("p-daibutsu", 34.69, 135.83)],
   },
   // C 中央 vs 東海道（名古屋 ⇄ 東京）。近道=東海道の静岡、遠回り=中央の長野→甲府。
   {
     fork: 13,
     merge: 0,
-    short: [{ propId: "p-cha", x: 488, y: 508 }], // 静岡（東海道）
-    long: [
-      { propId: "p-soba", x: 480, y: 420 }, // 長野（中央）
-      { propId: "p-budo", x: 498, y: 472 }, // 甲府（中央）
-    ],
+    short: [node("p-cha", 34.97, 138.38)],
+    long: [node("p-soba", 36.65, 138.19), node("p-budo", 35.66, 138.57)],
   },
 ];
 
@@ -72,11 +78,40 @@ export const FERRY_EDGES: [string, string][] = [
   ["st-p-okinawa", "st-p-depart"], // 那覇 → 大阪（本土へ）
 ];
 
+// --- 海岸線（実緯度経度を多点でなぞる。半島も再現） ---
+export const HONSHU_PATH = coast([
+  [34.0, 131.0], [34.05, 131.8], [34.3, 132.5], [34.45, 133.6], [34.3, 135.0],
+  [33.43, 135.76], [34.2, 136.5], [34.3, 136.85], [34.58, 137.05], [34.6, 138.2],
+  [34.6, 138.85], [35.13, 139.6], [34.9, 139.85], [35.7, 140.87], [36.9, 140.95],
+  [38.27, 141.5], [39.5, 142.05], [41.4, 141.45], [41.2, 140.35], [40.0, 139.7],
+  [38.3, 139.0], [37.85, 138.8], [37.55, 137.1], [37.2, 136.7], [36.2, 136.0],
+  [35.7, 135.2], [35.6, 134.0], [34.7, 131.7],
+]);
+export const HOKKAIDO_PATH = coast([
+  [45.5, 141.9], [44.3, 143.7], [43.9, 144.8], [43.3, 145.6], [42.6, 143.5],
+  [42.0, 143.2], [41.8, 141.6], [41.4, 140.1], [42.0, 139.8], [43.1, 140.5],
+  [43.9, 141.6], [44.8, 141.6],
+]);
+export const KYUSHU_PATH = coast([
+  [33.95, 130.95], [33.6, 131.7], [32.95, 131.9], [31.9, 131.6], [31.4, 131.35],
+  [31.0, 130.66], [31.25, 130.25], [32.0, 130.2], [32.6, 130.0], [33.0, 129.9],
+  [33.5, 129.9], [33.9, 130.3],
+]);
+export const SHIKOKU_PATH = coast([
+  [34.35, 134.05], [34.05, 134.6], [33.5, 134.3], [33.25, 134.18], [32.72, 133.0],
+  [33.25, 132.5], [33.95, 132.7],
+]);
+export const OKINAWA_PATH = coast([
+  [26.85, 128.25], [26.5, 127.95], [26.2, 127.7], [26.07, 127.66], [26.4, 127.85],
+]);
+export const LAND_PATHS = [HONSHU_PATH, HOKKAIDO_PATH, KYUSHU_PATH, SHIKOKU_PATH];
+export const SADO = px(38.05, 138.4); // 佐渡島（装飾）
+
 /** 背景に描く地方ラベル（装飾） */
 export const REGIONS: { label: string; x: number; y: number }[] = [
-  { label: "北海道", x: 612, y: 150 },
-  { label: "本州", x: 470, y: 360 },
-  { label: "九州", x: 110, y: 640 },
-  { label: "四国", x: 300, y: 600 },
-  { label: "沖縄", x: 90, y: 980 },
+  { label: "北海道", x: px(44.0, 142.6).x, y: px(44.0, 142.6).y },
+  { label: "本州", x: px(36.5, 137.6).x, y: px(36.5, 137.6).y },
+  { label: "九州", x: px(32.6, 130.9).x, y: px(32.6, 130.9).y },
+  { label: "四国", x: px(33.6, 133.4).x, y: px(33.6, 133.4).y },
+  { label: "沖縄", x: px(26.6, 128.6).x, y: px(26.6, 128.6).y },
 ];

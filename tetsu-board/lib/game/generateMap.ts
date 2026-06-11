@@ -11,7 +11,7 @@ import type { BranchInfo, GameMap, Property, RubyText, Station } from "./types";
 const r = (base: string, ruby?: string): RubyText => ({ base, ruby });
 
 // 盤面サイズ・装飾（GameBoard が読む）。japanMap の portrait 盤に合わせる。
-export { BOARD_W, BOARD_H, REGIONS, FERRY_EDGES } from "./japanMap";
+export { BOARD_W, BOARD_H, REGIONS, FERRY_EDGES, LAND_PATHS, OKINAWA_PATH, SADO } from "./japanMap";
 
 const PASS_PROP = 1; // 物件駅の通過コイン
 const PASS_START = 2; // スタートの通過コイン
