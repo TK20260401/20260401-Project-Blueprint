@@ -10,6 +10,13 @@ import { shortestDistance, shortestPath } from "@/lib/game/engine";
 import { RubyText } from "@/components/RubyText";
 import type { Player, Quiz, Station } from "@/lib/game/types";
 
+// 難易度の気分アイコン（DESIGN 7.3.1: 児童には段階名を出さず感情ベースで表す）
+const MOOD_EMOJI: Record<"easy" | "normal" | "hard", string> = {
+  easy: "😌",
+  normal: "🙂",
+  hard: "🔥",
+};
+
 const DICE_TICK_MS = 80; // サイコロの目が切り替わる間隔
 const DICE_TICKS = 7; // 何回まわして止めるか
 const STEP_MS = 220; // 駒が1マス進む間隔（DESIGN 4.7.4 移動アニメ）
@@ -111,13 +118,24 @@ function MapBackdrop() {
 
 // クイズの消去法パネル（DESIGN 7.4.2）。短タップで×（候補を消す）→1つにしぼって「これだ！」で確定。
 // 親から key={quiz.id} で渡されるのでクイズが変わると再マウントされ、eliminated は自動リセットされる。
-function QuizPanel({ quiz, onAnswer }: { quiz: Quiz; onAnswer: (k: "A" | "B" | "C") => void }) {
+function QuizPanel({
+  quiz,
+  mood,
+  onAnswer,
+}: {
+  quiz: Quiz;
+  mood: string;
+  onAnswer: (k: "A" | "B" | "C") => void;
+}) {
   const [eliminated, setEliminated] = useState<Record<string, boolean>>({});
   const remaining = quiz.choices.filter((c) => !eliminated[c.key]);
   const canConfirm = remaining.length === 1;
   return (
     <div className="rounded-xl border-2 border-sky-300 bg-sky-50 p-4">
-      <div className="mb-1 text-base font-bold text-stone-800">
+      <div className="mb-1 flex items-start gap-2 text-base font-bold text-stone-800">
+        <span className="shrink-0" title="いまの むずかしさ">
+          {mood}
+        </span>
         <RubyText text={quiz.question} />
       </div>
       <div className="mb-3 text-[11px] font-medium text-stone-400">
@@ -190,12 +208,14 @@ export function GameBoard() {
     moveToken,
     activeCard,
     bonbyHolderId,
+    diff,
     roll,
     beginMove,
     finishMove,
     chooseBranch,
     answer,
     closeCard,
+    adjustDifficulty,
     endTurn,
     newGame,
   } = useGameStore();
@@ -493,7 +513,12 @@ export function GameBoard() {
 
         {/* クイズ（WF2）＝消去法UI（DESIGN 7.4.2）。key でクイズごとに状態リセット */}
         {phase === "quiz" && activeQuiz && (
-          <QuizPanel key={activeQuiz.quiz.id} quiz={activeQuiz.quiz} onAnswer={answer} />
+          <QuizPanel
+            key={activeQuiz.quiz.id}
+            quiz={activeQuiz.quiz}
+            mood={MOOD_EMOJI[diff[current.userId]?.[activeQuiz.quiz.subject]?.level ?? "normal"]}
+            onAnswer={answer}
+          />
         )}
 
         {/* カード・災難（DESIGN 4.2 カードの駅/ピンチの駅） */}
@@ -543,12 +568,34 @@ export function GameBoard() {
           </button>
         )}
         {phase === "result" && (
-          <button
-            onClick={endTurn}
-            className="rounded-2xl bg-emerald-500 py-5 text-2xl font-black text-white shadow-lg transition hover:bg-emerald-600 active:scale-[0.97]"
-          >
-            {lastAnswerCorrect === false ? "つぎへ" : "つぎのプレイヤーへ"} ▶
-          </button>
+          <div className="flex flex-col gap-2">
+            {/* 感情ベースの手動むずかしさ調整（DESIGN 7.3.1/7.3.4。段階名は出さない） */}
+            {lastAnswerCorrect !== null && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => adjustDifficulty(-1)}
+                  className="flex-1 rounded-xl border-2 border-sky-200 bg-sky-50 py-2 text-sm font-bold text-sky-700 transition hover:bg-sky-100 active:scale-[0.98]"
+                >
+                  😌 ゆっくり やりたい
+                </button>
+                <button
+                  type="button"
+                  onClick={() => adjustDifficulty(1)}
+                  className="flex-1 rounded-xl border-2 border-orange-200 bg-orange-50 py-2 text-sm font-bold text-orange-700 transition hover:bg-orange-100 active:scale-[0.98]"
+                >
+                  🔥 もっと がんばりたい
+                </button>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={endTurn}
+              className="rounded-2xl bg-emerald-500 py-5 text-2xl font-black text-white shadow-lg transition hover:bg-emerald-600 active:scale-[0.97]"
+            >
+              {lastAnswerCorrect === false ? "つぎへ" : "つぎのプレイヤーへ"} ▶
+            </button>
+          </div>
         )}
         {phase === "finished" && (
           <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 text-center">

@@ -16,7 +16,29 @@ import {
   walk,
 } from "@/lib/game/engine";
 import { applyCard, drawCard } from "@/lib/game/cards";
-import type { BranchInfo, Card, GameMap, GamePhase, Player, Quiz, Station } from "@/lib/game/types";
+import {
+  DEFAULT_CAPS,
+  type DiffState,
+  initDiff,
+  manualAdjust,
+  recordAnswer,
+} from "@/lib/game/difficulty";
+import { pickQuiz } from "@/lib/game/quizBank";
+import type {
+  BranchInfo,
+  Card,
+  GameMap,
+  GamePhase,
+  Player,
+  Quiz,
+  Station,
+  Subject,
+} from "@/lib/game/types";
+
+/** プレイヤー×教科ごとの難易度状態（DESIGN 7.3.2 教科別独立） */
+type DiffMap = Record<string, Partial<Record<Subject, DiffState>>>;
+const diffLevel = (diff: DiffMap, userId: string, subject: Subject) =>
+  (diff[userId]?.[subject] ?? initDiff()).level;
 
 type GameState = {
   seed: string;
@@ -48,6 +70,10 @@ type GameState = {
   activeCard: Card | null;
   bonbyHolderId: string | null; // 災難キャラが憑いているプレイヤー（次の自ターン開始で発動）
 
+  // 動的難易度（DESIGN 7.3 E-24）。プレイヤー×教科ごとに独立管理。
+  diff: DiffMap;
+  lastSubject: Subject | null; // 直近に回答したクイズの教科（手動調整の対象）
+
   // actions
   start: (nicknames: string[], seed?: string) => void;
   newGame: () => void; // 新しいシードでマップ再生成（児童モード）
@@ -57,6 +83,7 @@ type GameState = {
   closeCard: () => void; // カードの効果を適用して result へ（DESIGN 4.2）
   chooseBranch: (firstNextId: string) => void; // DESIGN 4.5 どっちにいく
   answer: (selected: "A" | "B" | "C") => void;
+  adjustDifficulty: (dir: 1 | -1) => void; // 感情ベース手動調整（DESIGN 7.3.4）
   endTurn: () => void;
 };
 
@@ -163,6 +190,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   moveToken: 0,
   activeCard: null,
   bonbyHolderId: null,
+  diff: {},
+  lastSubject: null,
 
   start: (nicknames, seed = INITIAL_SEED) => {
     const map = generateMap(seed);
@@ -185,6 +214,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       pendingMove: null,
       activeCard: null,
       bonbyHolderId: null,
+      diff: {},
+      lastSubject: null,
     });
   },
 
@@ -228,6 +259,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       get();
     if (phase !== "moving" || !pendingMove) return;
     const res = pendingMove;
+    const player = players[currentPlayerIndex];
 
     if (res.type === "branch") {
       // 分岐に到達：駒は fork で停止。通過コインを反映し選択待ちへ（DESIGN 4.5）
@@ -273,11 +305,30 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
+    // クイズ駅: プレイヤーの教科別難易度に応じて出題（DESIGN 7.3）。
+    // 「ふつう」は駅の themed クイズ、やさしい/むずかしいはバンクから（無ければ themed にフォールバック）。
+    let activeQuiz = patch.activeQuiz;
+    if (patch.phase === "quiz" && activeQuiz) {
+      const themed = activeQuiz.quiz;
+      const level = diffLevel(get().diff, player.userId, themed.subject);
+      const quiz =
+        level === "normal"
+          ? themed
+          : pickQuiz(
+              `${seed}-q-${turn}-${currentPlayerIndex}-${landed.id}`,
+              themed.subject,
+              level,
+              themed,
+            );
+      activeQuiz = { quiz, station: activeQuiz.station };
+    }
+
     set({
       lastGainedCoin: res.passCoin,
       pendingMove: null,
       animPath: [],
       ...patch,
+      activeQuiz,
     });
   },
 
@@ -317,7 +368,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   answer: (selected) => {
-    const { activeQuiz, players, currentPlayerIndex, map } = get();
+    const { activeQuiz, players, currentPlayerIndex, map, diff } = get();
     if (!activeQuiz) return;
     const { quiz, station } = activeQuiz;
     const property = station.property!;
@@ -334,15 +385,41 @@ export const useGameStore = create<GameState>((set, get) => ({
       return { ...next, score: calcScore(next, map) };
     });
 
+    // 動的難易度（DESIGN 7.3.2）: クイズ正答のみを教科別に反映（カード/災難は対象外）。
+    const subj = quiz.subject;
+    const prevState = diff[player.userId]?.[subj] ?? initDiff();
+    const nextState = recordAnswer(prevState, result.correct, DEFAULT_CAPS);
+    const nextDiff: DiffMap = {
+      ...diff,
+      [player.userId]: { ...diff[player.userId], [subj]: nextState },
+    };
+
     set({
       players: updated,
       phase: "result",
       lastAnswerCorrect: result.correct,
+      diff: nextDiff,
+      lastSubject: subj,
       message: result.correct
         ? result.acquiredPropertyId
           ? `せいかい！${property.name.base}を手に入れた！`
           : "せいかい！でもコインがたりなかった…"
         : `ざんねん…ヒント: ${quiz.hint.base}`,
+    });
+  },
+
+  adjustDifficulty: (dir) => {
+    const { diff, lastSubject, players, currentPlayerIndex } = get();
+    if (!lastSubject) return;
+    const userId = players[currentPlayerIndex].userId;
+    const prevState = diff[userId]?.[lastSubject] ?? initDiff();
+    const nextState = manualAdjust(prevState, dir, DEFAULT_CAPS);
+    set({
+      diff: { ...diff, [userId]: { ...diff[userId], [lastSubject]: nextState } },
+      message:
+        dir === 1
+          ? "🔥 もっと がんばるモードに したよ！"
+          : "😌 ゆっくり モードに したよ。あせらなくて だいじょうぶ",
     });
   },
 

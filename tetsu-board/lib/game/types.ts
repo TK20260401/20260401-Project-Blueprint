@@ -50,16 +50,24 @@ export type Property = {
   quiz: Quiz;
 };
 
+/** 教科（DESIGN 7.2 教科×駅）。将来 情報・家庭 等を足しても他に波及しないよう型を分離 */
+export type Subject = "geography" | "economics" | "civics" | "math";
+
 /** クイズ（DESIGN 12.3 quizzes）。3択固定（WF2 / ChoiceButton A/B/C） */
 export type Quiz = {
   id: string;
-  subject: "geography" | "economics" | "civics" | "math"; // 教科横断
+  subject: Subject; // 教科横断
+  /** 難易度（DESIGN 7.3 E-24 動的難易度。未指定は "normal"＝ふつう） */
+  difficulty?: Difficulty;
   question: RubyText;
   choices: { key: "A" | "B" | "C"; text: RubyText }[];
   answer: "A" | "B" | "C";
   /** 不正解時のヒント（DESIGN 15.3.3 視覚+関連語） */
   hint: RubyText;
 };
+
+/** 動的難易度の3段階（DESIGN 7.3.2）。児童には段階名を見せず感情ベースで表現する（7.3.1） */
+export type Difficulty = "easy" | "normal" | "hard";
 
 /** 経路の種別（DESIGN 4.5） */
 export type RouteKind = "short" | "long"; // 近道 / 遠回り
