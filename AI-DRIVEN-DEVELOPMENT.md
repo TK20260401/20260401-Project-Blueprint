@@ -155,17 +155,22 @@
 - **テスト**: `tetsu-board/lib/game/engine.test.ts`（vitest）に、純関数 `walk` / `continueFromBranch` / `judgeAnswer` / `calcScore` / `shortestDistance` / `shortestPath` / `destinationCandidates` / `pickDestination` の回帰テストが存在することを直接確認（テスト総数の集計は未実施）。
 - **要件定義**: `logic-riichi` / `otetsudai-bank` / `otetsudai-quest-mobile` / `tetsu-board` 等に `docs/requirements.md`（To-be、最終更新2026-06-19）を確認。
 
-### 6-2. Git履歴の集計（**要実行 — 本書作成環境では未取得**）
-> 下表は発表前に各自で埋めること。本書作成時はシェル実行が不可だったため空欄。
-| リポジトリ | コミット数 | 初回コミット | 最終コミット |
-|---|---|---|---|
-| ipas-master | （要集計） | （要集計） | （要集計） |
-| logic-riichi | （要集計） | （要集計） | （要集計） |
-| otetsudai-bank | （要集計） | （要集計） | （要集計） |
-| otetsudai-quest-mobile | （要集計） | （要集計） | （要集計） |
-| report-hub | （要集計） | （要集計） | （要集計） |
-| roi-simulator | （要集計） | （要集計） | （要集計） |
-| tetsu-board（親リポ管理） | （要集計） | （要集計） | （要集計） |
+### 6-2. Git履歴の集計（2026-06-19 集計）
+
+> 各リポジトリの `git rev-list --count HEAD` 等で集計。**注意**: 開発初期は親モノレポ側で履歴を積み、後に独立リポへ分離した経緯があり、独立リポのコミット数はREADMEのバージョン（例: Logic-Riichi v30, IPAS-Master v9）と一致しない（実イテレーションの多くは親リポ側に存在）。親リポと独立リポでdual-trackしていた期間は重複もあるため、単純合算はしない。
+| リポジトリ | コミット数 | 初回 | 最終 | 備考 |
+|---|---|---|---|---|
+| otetsudai-quest-mobile | 370 | 2026-04-10 | 2026-06-19 | もっとも活発。ネイティブRPGリブランド進行中 |
+| otetsudai-bank | 96 | 2026-04-07 | 2026-06-19 | Web版。v0.4＋以降 |
+| tetsu-board（親リポ管理） | 34 | 2026-05-11 | 2026-06-19 | 独立リポを持たず親で管理 |
+| roi-simulator | 17 | 2026-04-06 | 2026-04-07 | 独立リポ |
+| ipas-master | 11 | 2026-04-03 | 2026-04-03 | 独立リポ（主履歴は親側） |
+| logic-riichi | 3 | 2026-04-03 | 2026-06-19 | 独立リポ（v30の主履歴は親側） |
+| report-hub | 3 | 2026-04-06 | 2026-04-06 | 独立リポ |
+| ai-strategy-agent | 1 | 2026-04-06 | 2026-04-06 | 独立リポ |
+| **親モノレポ（Blueprint）** | **430** | **2026-04-01** | **2026-06-19** | 全プロダクトの初期〜統合履歴を保持 |
+
+※ 全期間 **2026-04-01〜2026-06-19（約2.5か月）** で上記の規模。AI駆動開発の実装速度の定量的傍証だが、dual-trackによる重複を含むため厳密なユニーク総数ではない。
 
 **集計コマンド（要 Bash 権限）**:
 ```bash
