@@ -15,7 +15,16 @@ next-env.d.ts
 **/.DS_Store
 
 # 独自 git リポを持つサブプロジェクト（親モノレポでは追跡しない）
+# 二重管理事故（コンフリクトマーカー混入等）防止のため、独立リポは親で追跡しない。
+# 各プロジェクトは各自の GitHub リポで管理する。
 vialy/
+ai-strategy-agent/
+ipas-master/
+logic-riichi/
+otetsudai-bank/
+otetsudai-quest-mobile/
+report-hub/
+roi-simulator/
 
 # Qwen ローカル作業領域（private-cowork-lite は独自リポ。親では管理しない）
 Qwen/
