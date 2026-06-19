@@ -6,11 +6,7 @@
 お手伝い＝クエストを通じて「クエスト・ストック・冒険・ショップ」を体験できる子供向け教育フィンテックアプリ。
 Web版（Next.js）と同じ Supabase バックエンドを共用し、iOS / Android の両プラットフォームで動作する。
 
-<<<<<<< Updated upstream
 > **ブランドガイドライン**: 表記ルール・ロゴ・タグラインの統一方針は [BRAND.md](./BRAND.md) を参照（両版共通の公式ガイドライン）。
-=======
-> **ブランドガイドライン**: 表記ルール・ロゴ・タグラインの統一方針は [BRAND.md](./BRAND.md) を参照(両版共通の公式ガイドライン)。
->>>>>>> Stashed changes
 
 ## 技術スタック
 
@@ -110,90 +106,6 @@ npx expo start --tunnel
 
 ## 実装済み機能（Phase 1〜8）
 
-<<<<<<< Updated upstream
-### Phase 1: プロジェクト初期設定 + ログイン
-- Expo + TypeScript プロジェクト作成
-- Supabase 接続（Web版と同じDB共用）
-- セッション管理（AsyncStorage）
-- ログイン画面
-  - 家族選択 → メンバー選択 → PIN入力（3ステップ）
-  - 管理者ログイン（メール + パスワード）
-- 画面遷移（React Navigation）
-- 常にログイン画面から開始する設定
-
-### Phase 2: 子どもダッシュボード + クエスト完了
-- レベル表示（ランク名 + 進捗バー + 次レベルまでの残額）
-- おやからのメッセージ（承認スタンプ + メッセージ 直近5件）
-- 宝箱（ショップ/ストック/冒険 3分割表示、色分け）
-- バッジ一覧（獲得済みバッジ表示）
-- クエスト一覧（タスクアイコン + 報酬 + 「クリア！」ボタン）
-- 冒険ログ（直近20件の取引履歴、タブ切替）
-- プルダウンで更新（スワイプリロード）
-- バッジ自動判定（クエスト完了時）
-
-### Phase 3: 親ダッシュボード + クエスト承認・管理
-- 3タブ構成（承認 / クエスト / 子ども）
-- 承認キュー
-  - クエスト完了の承認/却下（スタンプ8種 + メッセージ入力）
-  - ショップリクエストの承認/却下
-  - 宝箱3分割計算（save_ratio / invest_ratio に基づく自動分配）
-  - 取引履歴の自動記録
-  - 却下時の理由選択（4種類）
-- クエスト管理
-  - 新規作成（名前・報酬・繰り返し・担当者選択）
-  - 編集・削除・有効/無効切替
-- こども一覧（ウォレット残高 + 分割比率表示）
-- 管理者ログイン時は全家族のデータを横断表示
-- キーボード回避対応（KeyboardAvoidingView）
-
-### Phase 3.5: ★特別クエストシステム（モンハン風イベントクエスト）
-- 通常クエストとは別枠の期間限定・高報酬クエスト
-- 子ども画面
-  - 金枠 + ★マーク + 残り日数カウントダウン表示
-  - 難易度表示（★〜★★★）
-  - 通常クエストの上に優先表示
-  - 期間外の特別クエストは自動非表示
-  - 家族設定に基づく表示/非表示制御
-- 親画面
-  - 「+ ★特別」ボタンでワンタッチ作成
-  - 難易度（★1〜3）選択
-  - カレンダーによる開始日・終了日選択
-  - 最低報酬 50円バリデーション
-  - 特別クエストは「繰り返し」設定不要（自動で1回）
-  - タスク一覧で金色背景で視覚区別
-  - **特別クエスト設定パネル**: 全体ON/OFF + 難易度別（★/★★/★★★）ON/OFFトグル
-    - OFFにした難易度のクエストは親画面でグレーアウト、子ども画面で非表示
-- DB変更:
-  - `otetsudai_tasks` に `is_special`, `special_difficulty`, `start_date`, `end_date` カラム追加
-  - `otetsudai_family_settings` テーブル新規作成（家族単位の設定）
-
-| 比較 | 通常クエスト | ★特別クエスト |
-|------|------------|--------------|
-| 報酬 | 10円〜 | 50円〜（上限なし） |
-| 期間 | 常設 / daily / weekly | 期限つき（開始日・終了日） |
-| 表示 | 通常リスト | 金枠 + ★ + カウントダウン |
-| 難易度 | なし | ★〜★★★ |
-| 例 | おさらあらい、ゴミだし | 年末大掃除、お庭の草むしり |
-
-### デザインリニューアル（Phase 1-3完了）
-- **Phase 1**: 全画面ルビ（振り仮名）対応。Alert.alertをカスタムモーダル+AutoRubyTextに置換
-- **Phase 2**: CUD（カラーユニバーサルデザイン）準拠パレット3案設計。朱赤/青/青緑ウォレット色統一
-- **Phase 3**: テーマシステム（ThemeProvider+useTheme）。3パレット（そよかぜ/やさしい森/わくわく冒険）切替対応
-
-### UI/UX/CXブラッシュアップ
-- タッチターゲット48pt+、AnimatedButton（スケール+haptics）
-- アクセシビリティ（accessibilityLabel/Role全画面付与）
-- useReducedMotion（OS設定連動アニメーション制御）
-- BadgeUnlockModal（バッジ獲得演出）
-- クエストクリア確認ダイアログ
-- 全画面ローディング演出、タブアイコン、空状態カード改善
-- 宝箱「ショップ」ショートカット、装備カウント表示、金額読み上げ対応
-- ウェルカムボーナス（初回100円付与）
-- 週次サマリーカード（クエスト完了数・稼いだ金額）
-- 連続ストリーク🔥表示（連続クエスト日数）
-- テーマ切替UI（ヘッダー3色ボタン、AsyncStorage永続化）
-- ログインエラー表示改善（カード形式）
-=======
 | Phase | 内容 |
 |-------|------|
 | **Phase 1**<br>プロジェクト初期設定 + ログイン | <ul><li>Expo + TypeScript プロジェクト作成</li><li>Supabase 接続（Web版と同じDB共用）</li><li>セッション管理（AsyncStorage）</li><li>ログイン画面: 家族選択 → メンバー選択 → PIN入力（3ステップ）/ 管理者ログイン（メール + パスワード）</li><li>画面遷移（React Navigation）</li><li>常にログイン画面から開始する設定</li></ul> |
@@ -207,7 +119,6 @@ npx expo start --tunnel
 | **Phase 8**<br>管理者画面 + ストア公開準備<br>（v0.14.0 / v0.25.0） | <ul><li>AdminScreen（全家族/ユーザー一覧、なりすましテストログイン、ウォレットリセット、ユーザー/家族削除）</li><li>admin用RLSポリシー7テーブル追加、<code>otetsudai_is_admin()</code> SECURITY DEFINER化</li><li>TestFlight配布（Bundle ID: <code>com.tk20260401.otetsudaiquest</code>）</li><li>App Store Connect登録（「Job Saga - マネー冒険」、外部テスト Beta App Review 審査済み）</li></ul> |
 | **デザインリニューアル**<br>（Phase 1-3 完了） | <ul><li>Phase 1: 全画面ルビ（振り仮名）対応。Alert.alertをカスタムモーダル+AutoRubyTextに置換</li><li>Phase 2: CUD（カラーユニバーサルデザイン）準拠パレット3案設計。朱赤/青/青緑ウォレット色統一</li><li>Phase 3: テーマシステム（ThemeProvider+useTheme）。3パレット（そよかぜ/やさしい森/わくわく冒険）切替対応</li></ul> |
 | **UI/UX/CX**<br>ブラッシュアップ | <ul><li>タッチターゲット48pt+、AnimatedButton（スケール+haptics）</li><li>アクセシビリティ（accessibilityLabel/Role 全画面付与）</li><li>useReducedMotion（OS 設定連動アニメーション制御）</li><li>BadgeUnlockModal（バッジ獲得演出）</li><li>クエストクリア確認ダイアログ</li><li>全画面ローディング演出、タブアイコン、空状態カード改善</li><li>宝箱「ショップ」ショートカット、装備カウント表示、金額読み上げ対応</li><li>ウェルカムボーナス（初回100円付与）</li><li>週次サマリーカード（クエスト完了数・稼いだ金額）</li><li>連続ストリーク🔥表示（連続クエスト日数）</li><li>テーマ切替UI（ヘッダー3色ボタン、AsyncStorage永続化）</li><li>ログインエラー表示改善（カード形式）</li></ul> |
->>>>>>> Stashed changes
 
 ## TestFlight配布
 
@@ -216,19 +127,6 @@ npx expo start --tunnel
 - EAS Build → Transporter → TestFlightの手動フロー
 - 内部テスト即利用可、外部テストBeta App Review審査済み
 
-<<<<<<< Updated upstream
-## 未実装（Phase 4〜8 予定）
-
-| Phase | 内容 |
-|-------|------|
-| Phase 4 | 宝箱詳細 + ショップリクエスト |
-| Phase 5 | お宝マップ + バッジ・レベル詳細 |
-| Phase 6 | 冒険ショップ |
-| Phase 7 | AIチャット（コインくん） |
-| Phase 8 | 管理者画面 + ストア公開準備 |
-
-=======
->>>>>>> Stashed changes
 ## 変更履歴
 
 | バージョン | 日付 | 内容 |
@@ -275,19 +173,7 @@ npx expo start --tunnel
 | v0.28.1 | 2026-04-30 | 午後作業: Yahoo Finance API 切替＋InvestScreen 大量改良＋ルビ辞書増強（18 コミット）<ul><li>**Yahoo Finance API 切替（Web 版 Edge Function）**: Alpha Vantage 無料枠の JP 銘柄(.T) 取得失敗を解消。Yahoo /v8/finance/chart で JP/US 一律取得、Promise.all 並列化で 12.5s × N の sleep 撤廃</li><li>**Stooq フォールバック追加**: ^TPX (TOPIX 指数) 等 Yahoo 未対応シンボルを Stooq CSV API で取得。fetchQuote() でシンボル別ルーティング</li><li>**TOPIX 指数本体に切替**: 江戸全部盛り 1306.T (ETF, 394円) → ^TPX (指数本体, 3,722等)。「投信ではなく指数本体を表示」のユーザー要望に対応</li><li>**NTT(9432.T) に symbol 変更**: 大通信塔の symbol を 9984.T (SBG) → 9432.T (NTT) に。実機検証で本来の NTT を表示</li><li>**通貨ラベル USD/JPY 分岐**: USD 銘柄は `$516` 原価表示、JPY 銘柄は `78,416 コロ` 換算後表示。ドル建ては「海の向こうのコロ(ドル)」、円建ては「サムライタウンのコロ(円)」サブラベル</li><li>**銘柄名/説明文 改行ロジック**: splitGeoPrefix() で地域名プレフィックス境界で 2 行分割。「サムライタウンの精鋭225」→「サムライタウンの／精鋭225」。短文(≤8字)・地域名なし・「ゲームや音楽の商会」等の助詞「の」は分割対象外</li><li>**銘柄リネーム + typo 修正**: 検索エンジン→検索／銀行→黄金商会／大金庫→大宝庫／箸れ→走れ／稲妻の馬車→稲妻の車</li><li>**ロゴ NTT 関連調整**: 9984.T(SBG) のままで「電話の塔」表示が混在していた問題を解消（symbol を 9432.T に統一）</li><li>**フォントサイズ階層化**: stockName rf(15)→rf(13)→rf(12)、stockDesc 12→10、stockSymbol 10→9、stockPrice 12→11、stockChange 10→9。文字>数字 の視覚的階層を維持</li><li>**ルビ辞書 大量追加（30 語以上）**: 宝箱/宝/欲/大冒険/江戸/精鋭/商会/勇者/魔法陣/錬成/気/団長/海/向/魔術師/王国/王/神殿/車王/金貨/金庫/錬金術/物知/大図鑑/電話/塔/通信/交換/鉄道/黄金/大宝庫/宝庫/主人/大繁盛/急/手放/仕入/稲妻/果物/魔法/世界/森/旅/巨人/探検/頭脳/甘/飲/味</li><li>**ルビ過剰マッチ修正**: 「団長」が「団 + 長(なが)」に分解される誤読を ["団長", "だんちょう"] エントリで解消。同様に錬金術/金貨/金庫等も最長一致優先で配置</li><li>**いくら→何コロ**: 投資画面の入力ラベル「いくら錬成する？(コロ)」→「何(なん)コロ錬成する？」(コロ重複削除)</li><li>**通貨単位ラベルに ふりがな**: 海(うみ)/向(む)/円(えん) 等</li><li>**rebase 復旧作業**: otetsudai-bank の 14 ファイル混在 rebase 状態を abort + reset で整理し、Edge Function 単独コミットを安全に push</li><li>**保留継続**: 補強説明文 1 文字インデント揃え／絵文字 → SVG 一括変換</li></ul> |
 | v0.28.0 | 2026-04-30 | 大規模世界観統一＋やりとりタップでクリア機構＋ヘッダー UI 階層化（19 コミット）<ul><li>**親→冒険団長／団長 全画面統一**: ChildDashboard/ChildReactionModal/InvestScreen/LandingScreen/LoginScreen。「クエストマスター」とのマスター衝突回避のため「団長」短縮を採用</li><li>**4 カード旧用語 → 取引/金庫/錬成 全画面統一**: 使う/つかう→取引、貯める/ためる→金庫、増やす/ふやす→錬成。SpendRequest/WalletDetail/ParentDashboard/InvestScreen/ShopModal 全件</li><li>**冒険ログ改革**: タップで非表示化（dismissed_at 列追加）、表示を「名詞 / 承認＋動詞」の 2 行構成に分割。「ふりかえ」→「移す」、「貯金目標」→「お宝マップ」、「履歴」→「冒険ログ」</li><li>**InvestScreen 復活＋強化**: 4/24 確定の世界観命名（よくばり / サムライタウン / ロケットシティ / トレジャーハント / 冒険ショップ / 冒険資金）を Blueprint マージから復活。ドル建てに「海の向こうのコロ」補強表示。文字>数字の階層化、銘柄リスト ルビ復活</li><li>**ヘッダー UI 階層化**: タイトル rf(28) bold 900 + 絶対中央配置、戻るボタン 10pt + コンパクト padding。「もどる」文言統一、(TOPへ)/(まえへ) 補助行廃止</li><li>**LandingScreen 刷新**: ロゴ Job Saga → JOB SAGA、タグライン「金貨をかせごう」→「コロを集めよう」、3 カード命名と補助文を 4 カードと統一＋モチベ強化（夢を叶える宝箱 等）</li><li>**WalletDetail ヘッダー再構成**: 金庫=絶対中央／もどる=左／505コロ=右、505コロ サイズを backText+2pt に</li><li>**バッジ「貯金マスター」→「お宝コレクター」**: クエストマスターと「マスター」が重複する語感問題を解消</li><li>**やりとりタップでクリア機構**: task_logs.child_dismissed_at / family_messages.dismissed_by_recipient_at / transactions.dismissed_at の 3 列追加。子供がタップで非表示化 → 親側でも同期（ParentDashboard クエリにも反映）</li><li>**DB 一括 UPDATE マイグレーション SQL 3 本追加**: 旧用語(貯める/使う/振替/移しかえ等)→新用語、銘柄(東京→江戸 / 日本→サムライタウン / アメリカ→ロケットシティ / 株→お宝 / 会社→商会)</li><li>**残「円」→「コロ」一掃**: 子画面・WalletDetail・SpendRequest 全件、エラー文・SpendRequest 表示・クエスト報酬・プロポーザル含む</li><li>**4 カードルビ視認性改善**: rgba(255,255,200,0.7) → #fff 純白、濃色背景上で読みやすく</li><li>**PetDisplay 名前/種別ラベルに下線**: タップ可能性のアフォーダンス</li><li>**Lv バッジ重なり修正**: GameStatusHeader を絶対配置→垂直スタック化、キャラと非接触</li><li>**バグ修正**: AutoRubyText 過剰マッチで「まだお宝はないよ」が「まだお宝花いよ」に化けるバグを RubyText 明示パーツで回避。otetsudai_transactions に child_id 列が無い誤フィルタを撤回</li><li>**保留**: 補強説明文の 1 文字インデント揃え／絵文字 → SVG 一括変換／JP 銘柄の Yahoo Finance API 切替（Edge Function）</li></ul> |
 
-<<<<<<< Updated upstream
-| v0.27.2 | 2026-04-27 | **dungeon→forest テーマ切替（ダーク→ライトをデフォルト化）**: ThemeContext/App.tsx/palettes.ts のデフォルト初期値を `dungeon`（深紫+ゴールド）→ `forest`（cream+green）に変更。**意図**: (1) **WCAGコントラスト**: dungeon の border #4a3a5e は surface #2a1a3e 比 1.8:1 で AA 基準（3:1）未達、枠が事実上不可視で「カード」の概念が機能していなかった。(2) **子供向けの認知負荷**: 暗い紫背景は不安/疲労を誘発しやすく、明るい cream+green の方が安全感・集中持続に有利（金融教育で長時間使うアプリのため）。(3) **金融教育メタファーとの整合**: 通帳・銀行・紙幣など金融の文化的アンカーは紙白イメージが強く、ダーク UI は乖離していた。(4) **ハイコントラスト機能との役割分離**: `monochrome` トグルで既に grayscale 強化が任意で可能なため、ダークをデフォルトにする必然性はなく、コントラスト強化は明示的なオプション機能とする方が UI の意図がクリアになる。**併せてラベル変更**: TOP アクセシビリティトグル「白黒 ON/OFF」→「ハイコントラスト ON/OFF」（機能不変、視覚障害ユーザー向けの正式用語に統一）。**ボーダー第A段**: ハードコード HEX → palette トークン置換 3 件（ChildDashboardScreen `#FFD700` → `p.goldBorder` / AdminScreen `#E74C3C` → `p.red`+`p.redLight` / SavingGoalModal `#dc2626` → `p.red`） |
-| v0.27.1 | 2026-04-27 | **視覚的ノイズ排除・ボーダー統一**: 全画面のカード/行/モーダルからbackgroundColor(surface/surfaceMuted/accentLight/goldLight/primaryLight等)・shadow・elevation一括削除、borderWidth:1.5・borderColor:palette.borderに統一。対象: ChildDashboardScreen/ParentDashboardScreen/WalletDetailScreen/InvestScreen/ShopModal/PetManagementModal/PriceRequestModal/ChildReactionModal/RpgCard/QuestCardFrame/FamilyChallengeCard/GameStatusHeader。FamilyChallengeCardメンバーアイコン絵文字→CharacterSvg化 |
-| v0.27.0 | 2026-04-27 | **子供向け直感UI改善＋自動ログアウト復活＋漢字+ルビ全面化**。**旧用語「ギルド」全排除**: InvestScreen/SpendRequestScreen/WalletDetailScreen の戻るボタン文言を「ギルドに戻る」→「← 戻る」+PixelHouseIcon に統一、AutoRubyText化。**漢字+ルビ全面化（10画面以上）**: ShopModal（買う/装備/コロ不足/購入したよ/称号を外す/閉じる）、SpendRequestScreen（確認/使う金額/何に/残り/次へ/送っているよ）、PetManagementModal（ペット図鑑/卵/赤ちゃん/子ども/大人/名前を付けよう/孵る/幸せ/1匹だけ）、ParentDashboardScreen（12箇所ひらがな→漢字化）、PresetQuestModal（16件subLabel漢字化: お風呂掃除/食器洗い/洗濯物畳み等）、CATEGORY_LABELS漢字化、ChildReactionModal/PriceRequestModal/FamilyStampSendModal/LevelUpModal/BadgeUnlockModal/CoinKunChat/DailyLoginModal/TrophyCaseModal/RewardSequence の残ルビ漏れ一掃。**Ruby辞書19語追加**: 購入/称号/図鑑/卵/孵/幸/匹/赤/残/許可/台所/磨/覚/保/詳/進化/上手/閉 等。**InvestScreen子供語化**: 「投資」→「お金の冒険」、「投資する」→「冒険する」、「投資家」→「冒険者」。**ChildDashboardアイコン補強**: クエスト/冒険ログタブにPixelアイコン追加、accessibilityLabel漢字化5箇所、「保有銘柄」セクションヘッダーにPixelBarChartIcon。**ボタン補助テキスト追加**: PetModal「アクティブにする」→「ホーム画面で一緒に冒険するよ」、ShopModal「買って装備すると、名前の横に称号がつくよ」、WalletDetail 3ポケット（買い物に使う/目標まで貯める/株でお金を増やす）。**自動ログアウト全画面リセット**: App.tsxのonStartShouldSetResponderCaptureでタッチ検知→touchActivity()呼出、30分無操作タイマーが全画面のタッチで正しくリセットされるように修正（従来はAppState変化のみで不完全）。**辞書追加**: 残・購入・称号・図鑑・卵・孵・幸・匹・赤・許可・台所・磨・覚・保・詳・進化・上手・閉 |
-| v0.26.1 | 2026-04-24 | **宝箱画面UI調整**: 「買いたい！」→「オーダー！」に統一、SpendRequestタイトル「使いたい！」→「オーダー！」、冒険ログフィルタータブ「全部・クエスト・ショップ・ストック・冒険」表記統一（・区切り＋fontSize 8＋adjustsFontSizeToFit＋コンテンツ幅タブ） |
-| v0.26.0 | 2026-04-24 | **冒険世界観全面統一＋UI品質向上**。**通貨**: 円→コロに全面置換（金融教育の単位として維持しつつ世界観に統合）。**宝箱画面（旧お財布）**: ヘッダー「お財布→宝箱」、「全部のお金→全部のコイン」、ポケットカード「稼ぐ/使う/貯める/増やす→クエスト/ショップ/ストック/冒険」、「増やすの木→冒険の木」、「貯金目標→お宝マップ」、「履歴→冒険ログ」、「使いたい！→オーダー！」「増やす！→冒険！」、履歴フィルタータブから各画面へ遷移可能に。**冒険ショップ（旧投資）**: 「いくら投資する→いくら冒険する」「100円から投資できるよ→100コロから冒険できるよ」「買いたい株がない→冒険したいお宝がない」。**お宝マップモーダル（旧貯金目標）**: 「貯金目標を作る→お宝マップを作る」「何を買いたい→何を手に入れたい」「いくら貯める→いくら集める」「金額→コイン」「やめる→撤退」。**戻るボタン統一**: 全画面「ギルドに戻る」fontSize 8pt＋PixelHouseIcon 12px＋padding調整、タイトルとのベースライン揃え（SVG marginTop:12＋親View marginTop:-4）。**クエストカード1行表示**: questTitle/specialQuestTitle fontSize 13＋noWrap、PresetQuestModal adjustsFontSizeToFit（最小70%縮小）。**クエストデプロイモーダル**: ScrollView maxHeight:85%でボタン枠内収め。**DB**: 山田家サンプルクエスト名をカイロソフト風に更新（お風呂掃除→泡モンスター討伐作戦、食器洗い→油汚れドラゴン討伐作戦） |
-| v0.25.1 | 2026-04-24 | **UI一貫性改善＋親画面ルビ除去**。Lv.1 greeting「冒険、始めるよ！」→「冒険者の強さ」にステータス見出し化、セリフ括弧「」→【】に変更。ParentDashboardScreenの全RubyText/AutoRubyTextをプレーンTextに置換（読み込み中/画面タイトル/サブタイトル/タブ6箇所）、未使用Ruby import削除 |
-| v0.25.0 | 2026-04-22 | **Edge Function SHA-256移行＋Admin画面＋復旧画面＋漢字ルビ全面化**。**Edge Function**: create-child-account/verify-pin/recover-account 3本をbcrypt→SHA-256（Worker is not defined対策）＋verify_jwt=false再デプロイ。**AdminScreen新規**: 全家族/ユーザー一覧、なりすましテストログイン、ウォレットリセット、ユーザー/家族削除。admin用RLSポリシー7テーブル追加、otetsudai_is_admin() SECURITY DEFINER化。**RecoverAccountScreen新規**: バックアップ合言葉3語入力＋新PIN設定→ダッシュボード復旧。**InviteParentScreen改善**: 共有ボタン5種（LINE/メール/SMS/コピー/他）、テンプレ3トーン（やさしい/ていねい/シンプル）、編集可能プレビュー、合言葉カード表示専用化。**LoginScreen改善**: 子供モード家族選択スキップ（家族1つなら自動）、親ログイン→直接ダッシュボード（家族管理スキップ）、PIN説明文修正。**漢字＋ルビ全面化**: オンボーディング全画面（Nickname/PinSetup/BackupWords/Welcome）、LoginScreen、DailyLoginModal。「とじる」ひらがな統一。NicknameScreen入力文字色修正（白背景対策）。LandingScreenタグライン「金貨」＋onLayoutレスポンシブ改行 |
-| v0.24.0 | 2026-04-22 | **ジョブサガ（Job Saga）リブランド＋章立てシステム＋親招待画面**。**リブランド**: 全画面「おこづかいクエスト」→「ジョブサガ」統一、TOP画面は英語「Job Saga」表記、コピーライト「© 2026 Snafty inc.」。**LandingScreen B案**: 金ボタン「はじめてのひと」（新規→Welcome）＋銀ボタン「つづきから」（ChildLogin）の2分離、親モードはテキストリンク維持。**InviteParentScreen新規**: あいことば表示＋QRコード（react-native-qrcode-svg）＋テンプレメッセージ3トーン（カジュアル/ていねい/おもしろ）＋OSシェアシート連携、BackupWords→InviteParent→ChildDashboardフロー。**「ふやす」ロック画面**: has_parent=false時に半透明モーダル表示（PixelShieldIcon＋但し書き＋招待画面誘導）。**7日後ナッジ**: otetsudai_nudge_log連携、作成7日後・親未参加・未表示時のみポップアップ。**DB**: otetsudai_chapters（4章マスタ）＋otetsudai_chapter_unlocks（解放ログ）新規、otetsudai_invite_tokensにtoken_type追加、adminユーザー作成。**Web版同期**: 全ファイルリブランド（layout/login/signup/terms/privacy/chat/manifest/promo/OG） |
-| v0.23.0 | 2026-04-22 | **子供主体オンボーディング＋RLSセキュリティ強化＋Edge Function導入**。**DBスキーマ移行**: otetsudai_usersにauth_id/backup_words/is_anonymous/registered_at追加、otetsudai_familiesにinvite_words/created_by_auth/has_parent追加、otetsudai_invite_tokens/otetsudai_nudge_log新規テーブル作成。**RLS完全刷新**: 全テーブルの旧USING(true)ポリシーを完全排除、auth.uid()ベースのfamily_idフィルタに移行（otetsudai_my_family_id()等ヘルパー関数3本）、adminロール対応（otetsudai_is_admin()）、クロスファミリーアクセス不可をSQLテストで実証。**Edge Function 5本デプロイ**: create-child-account（Anonymous Auth+家族+ウォレット+あいことば一括生成）、join-family（トークン招待）、join-family-by-words（あいことば招待）、recover-account（バックアップあいことば復旧）、verify-pin（bcrypt照合+平文→ハッシュ自動移行）。**オンボーディング画面**: WelcomeScreen/NicknameScreen/PinSetupScreen（2段階確認+shake演出）/BackupWordsScreen（あいことば表示+紙に書いた確認）。**auth.ts全面書き換え**: Edge Function呼び出し対応、signInAnonymously/createChildAccount/joinFamilyByToken/joinFamilyByWords/recoverAccount追加。**Phase 3残件**: 投資画面orderButtonTextの視認性修正（白→黒文字+太字+シャドウ）、「親にお願いしたよ！」→「注文クエスト発動！」リネーム。**Web版同期**: auth.ts/types.ts更新、APIルート5ファイルのSERVICE_ROLE_KEYフォールバック削除（ANON_KEY落ちによるRLSバイパス防止）、遅延初期化getSupabaseAdmin()パターン導入。**テストデータ+auth.usersクリーンアップ実施** |
-=======
 | v0.29.0 | 2026-05-01 | ペット図鑑アニメーション＋forceAnimate＋ルビ改善<ul><li>**ペット図鑑アニメーション**: PetEncyclopediaModal の PetSvg に animated 有効化、全ステージ bob（上下揺れ）に統一</li><li>**ミニキャラアニメーション**: GameStatusHeader の CharacterSvg に animated 追加</li><li>**forceAnimate 機構**: IdleAnimationWrapper に forceAnimate prop 追加。OS「視差効果を減らす」有効時もペット・キャラのアニメーションを維持</li><li>**ペット図鑑ルビ対応**: ペット名表示を Text → AutoRubyText に変更（猫→猫(ねこ)等）</li><li>**PetManagementModal 修正**: 「1匹」のセグメント分割改善</li><li>**Ruby 辞書追加**: 横(よこ)/持ち物(もちもの)</li></ul> |
->>>>>>> Stashed changes
 
 ## Web版との関係
 

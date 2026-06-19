@@ -214,7 +214,12 @@ export default function WalletDetailScreen({
     <SafeAreaView style={styles.container}>
       {/* Header — 金庫=中央(絶対配置)、もどる=左、505コロ=右 */}
       <View style={styles.header}>
-<<<<<<< Updated upstream
+        <View style={styles.headerCenter} pointerEvents="none">
+          <View style={{ width: 28, height: 28, alignItems: "center", justifyContent: "center" }}>
+            <PixelCoinIcon size={28} />
+          </View>
+          <RubyText style={styles.headerTitle} parts={[["金", "きん"], ["庫", "こ"]]} rubySize={9} />
+        </View>
         <TouchableOpacity
           onPress={() => navigation.navigate("ChildDashboard", { childId })}
           style={styles.backButton}
@@ -226,39 +231,6 @@ export default function WalletDetailScreen({
               <Text style={styles.backText}>もどる</Text>
               <Text style={styles.backHint}>(TOPへ)</Text>
             </View>
-          </View>
-        </TouchableOpacity>
-        <View style={styles.headerTitleGroup}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <View style={{ width: 22, height: 22, alignItems: "center", justifyContent: "center" }}>
-              <PixelCoinIcon size={22} />
-            </View>
-            <RubyText style={styles.headerTitle} parts={[["金", "きん"], ["庫", "こ"]]} rubySize={7} />
-          </View>
-          <Text
-            style={styles.headerTotalAmount}
-            adjustsFontSizeToFit
-            numberOfLines={1}
-            accessibilityLabel={`ぜんぶで ${total.toLocaleString()}えん`}
-          >
-            {total.toLocaleString()}円
-          </Text>
-=======
-        <View style={styles.headerCenter} pointerEvents="none">
-          <View style={{ width: 28, height: 28, alignItems: "center", justifyContent: "center" }}>
-            <PixelCoinIcon size={28} />
-          </View>
-          <RubyText style={styles.headerTitle} parts={[["金", "きん"], ["庫", "こ"]]} rubySize={9} />
->>>>>>> Stashed changes
-        </View>
-        <TouchableOpacity
-          onPress={() => navigation.navigate("ChildDashboard", { childId })}
-          style={styles.backButton}
-          accessibilityLabel="おうちに もどる"
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
-            <PixelHouseIcon size={12} />
-            <Text style={styles.backText}>もどる</Text>
           </View>
         </TouchableOpacity>
         <View style={{ flex: 1 }} />
@@ -303,11 +275,7 @@ export default function WalletDetailScreen({
             <View style={styles.pocketIconBox}><PixelCartIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
-<<<<<<< Updated upstream
               parts={[["取", "とり"], ["引", "ひき"]]}
-=======
-              parts={[["取引", "とりひき"]]}
->>>>>>> Stashed changes
               rubySize={7}
             />
             <Text
@@ -315,16 +283,12 @@ export default function WalletDetailScreen({
             >
               {spending.toLocaleString()}
             </Text>
-<<<<<<< Updated upstream
-            <Text style={styles.pocketHint}>しょうにんと とりひき</Text>
-=======
             <RubyText
               style={styles.pocketHint}
               parts={[["商人", "しょうにん"], "と", ["取引", "とりひき"]]}
               rubySize={6}
               noWrap
             />
->>>>>>> Stashed changes
           </TouchableOpacity>
 
           {/* ためる → 貯金目標セクション */}
@@ -342,11 +306,7 @@ export default function WalletDetailScreen({
             <View style={styles.pocketIconBox}><PixelPiggyIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
-<<<<<<< Updated upstream
               parts={[["金", "きん"], ["庫", "こ"]]}
-=======
-              parts={[["金庫", "きんこ"]]}
->>>>>>> Stashed changes
               rubySize={7}
             />
             <Text
@@ -354,16 +314,12 @@ export default function WalletDetailScreen({
             >
               {saving.toLocaleString()}
             </Text>
-<<<<<<< Updated upstream
-            <Text style={styles.pocketHint}>たからを しまう</Text>
-=======
             <RubyText
               style={styles.pocketHint}
               parts={[["宝", "たから"], "をしまう"]}
               rubySize={6}
               noWrap
             />
->>>>>>> Stashed changes
           </TouchableOpacity>
 
           {/* ふやす → Invest */}
@@ -384,11 +340,7 @@ export default function WalletDetailScreen({
             <View style={styles.pocketIconBox}><PixelChartIcon size={20} /></View>
             <RubyText
               style={styles.pocketLabel}
-<<<<<<< Updated upstream
               parts={[["錬", "れん"], ["成", "せい"]]}
-=======
-              parts={[["錬成", "れんせい"]]}
->>>>>>> Stashed changes
               rubySize={7}
             />
             <Text
@@ -396,16 +348,12 @@ export default function WalletDetailScreen({
             >
               {invest.toLocaleString()}
             </Text>
-<<<<<<< Updated upstream
-            <Text style={styles.pocketHint}>お金を そだてる</Text>
-=======
             <RubyText
               style={styles.pocketHint}
               parts={["コロを", ["育", "そだ"], "てる"]}
               rubySize={6}
               noWrap
             />
->>>>>>> Stashed changes
           </TouchableOpacity>
         </View>
 
@@ -743,24 +691,15 @@ function createStyles(p: Palette) {
     backButton: {
       flexDirection: "row",
       alignItems: "center",
-<<<<<<< Updated upstream
       gap: 6,
       paddingHorizontal: 14,
       paddingVertical: 8,
       borderRadius: 8,
       borderWidth: 1.5,
-=======
-      gap: 3,
-      paddingHorizontal: 7,
-      paddingVertical: 3,
-      borderRadius: 5,
-      borderWidth: 1,
->>>>>>> Stashed changes
       borderColor: p.primary,
       backgroundColor: p.background,
     },
     backText: {
-<<<<<<< Updated upstream
       fontSize: 14,
       fontWeight: "bold",
       color: p.textMuted,
@@ -772,27 +711,11 @@ function createStyles(p: Palette) {
       opacity: 0.7,
       marginTop: -1,
     },
-=======
-      fontSize: 11,
-      fontWeight: "bold",
-      color: p.textMuted,
-    },
->>>>>>> Stashed changes
     headerTitleGroup: {
       flexDirection: "row",
       alignItems: "center",
       gap: 10,
       flexShrink: 1,
-<<<<<<< Updated upstream
-    },
-    headerTotalAmount: {
-      fontSize: rf(22),
-      fontWeight: "bold",
-      color: p.accent,
-    },
-    headerTitle: {
-      fontSize: rf(18),
-=======
       flex: 1,
       justifyContent: "center",
     },
@@ -808,8 +731,7 @@ function createStyles(p: Palette) {
       gap: 8,
     },
     headerTotalAmount: {
-      fontSize: 12,
->>>>>>> Stashed changes
+      fontSize: rf(22),
       fontWeight: "bold",
       color: p.accent,
     },
@@ -878,12 +800,8 @@ function createStyles(p: Palette) {
     pocketHint: {
       fontSize: 9,
       color: p.textMuted,
-<<<<<<< Updated upstream
-      marginTop: 4,
-=======
       // 上のラベル/数字とルビが被らないように余白増
       marginTop: 10,
->>>>>>> Stashed changes
       textAlign: "center",
     },
     // 3SVGアイコンの寸法差を 20×20 固定枠で吸収

@@ -10,10 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-<<<<<<< Updated upstream
-  PanResponder,
-=======
->>>>>>> Stashed changes
   Animated,
   Dimensions,
 } from "react-native";
@@ -60,34 +56,6 @@ export default function CoinKunChat({ role }: { role: Role }) {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
-<<<<<<< Updated upstream
-  // ドラッグ移動用
-  const { width: screenW, height: screenH } = Dimensions.get("window");
-  const fabSize = 56;
-  const pan = useRef(new Animated.ValueXY({ x: screenW - fabSize - 16, y: screenH - fabSize - 20 - (insets.bottom || 0) })).current;
-  const isDragging = useRef(false);
-
-  const panResponder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5,
-    onPanResponderGrant: () => {
-      isDragging.current = false;
-      pan.extractOffset();
-    },
-    onPanResponderMove: (_, gs) => {
-      if (Math.abs(gs.dx) > 5 || Math.abs(gs.dy) > 5) {
-        isDragging.current = true;
-      }
-      Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false })(_, gs);
-    },
-    onPanResponderRelease: () => {
-      pan.flattenOffset();
-      if (!isDragging.current) {
-        setOpen(true);
-      }
-    },
-  }), [pan]);
-=======
   // ドラッグ移動用 — react-native-gesture-handler でネイティブレベルの
   // ジェスチャー優先順位を確保。iOS UIScrollView の canCancelContentTouches
   // (vertical scroll に強制で touch を奪う仕様) を回避するため、
@@ -149,7 +117,6 @@ export default function CoinKunChat({ role }: { role: Role }) {
     () => Gesture.Race(dragGesture, tapGesture),
     [dragGesture, tapGesture]
   );
->>>>>>> Stashed changes
 
   const isChild = role === "child";
   const suggestions =
@@ -196,22 +163,6 @@ export default function CoinKunChat({ role }: { role: Role }) {
   return (
     <>
       {/* フローティングボタン（ドラッグ移動可能） */}
-<<<<<<< Updated upstream
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.fab,
-          {
-            backgroundColor: accentColor,
-            transform: pan.getTranslateTransform(),
-          },
-        ]}
-        accessibilityLabel="AIアシスタント"
-        accessibilityRole="button"
-      >
-        {isChild ? <PixelCoinIcon size={26} /> : <PixelChatIcon size={26} />}
-      </Animated.View>
-=======
       <GestureDetector gesture={composedGesture}>
         <Animated.View
           style={[
@@ -228,7 +179,6 @@ export default function CoinKunChat({ role }: { role: Role }) {
           {isChild ? <PixelCoinIcon size={28} /> : <PixelChatIcon size={28} />}
         </Animated.View>
       </GestureDetector>
->>>>>>> Stashed changes
 
       {/* チャットモーダル */}
       <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
@@ -351,15 +301,9 @@ function createStyles(p: Palette) {
       position: "absolute",
       top: 0,
       left: 0,
-<<<<<<< Updated upstream
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-=======
       width: 58,
       height: 58,
       borderRadius: 29,
->>>>>>> Stashed changes
       alignItems: "center",
       justifyContent: "center",
       shadowColor: p.black,

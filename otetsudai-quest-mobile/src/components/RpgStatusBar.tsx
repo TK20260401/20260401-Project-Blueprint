@@ -101,19 +101,8 @@ function GaugeIcon({ type }: { type: "heart" | "magic" | "sword" }) {
   );
 }
 
-<<<<<<< Updated upstream
-const styles = StyleSheet.create({
-  container: {
-    borderRadius: 10,
-    padding: 8,
-    gap: 4,
-    borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.15)",
-  },
-=======
 // ゲージ内部スタイルはpalette非依存（RPG固有色）
 const gaugeStyles = StyleSheet.create({
->>>>>>> Stashed changes
   row: {
     flexDirection: "row",
     alignItems: "center",

@@ -56,15 +56,9 @@ export default function GameStatusHeader({
 
       <View style={styles.row}>
         {onBack ? (
-<<<<<<< Updated upstream
-          <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityLabel="戻る">
-            <PixelHouseIcon size={12} />
-            <Text style={styles.backText}>戻る</Text>
-=======
           <TouchableOpacity onPress={onBack} style={styles.backBtn} accessibilityLabel="もどる">
             <PixelHouseIcon size={12} />
             <Text style={styles.backText}>もどる</Text>
->>>>>>> Stashed changes
           </TouchableOpacity>
         ) : null}
 
@@ -181,11 +175,7 @@ function createStyles(palette: Palette) {
       borderColor: palette.primary,
     },
     backText: {
-<<<<<<< Updated upstream
-      fontSize: 8,
-=======
       fontSize: 11,
->>>>>>> Stashed changes
       fontWeight: "bold",
       color: palette.textMuted,
     },
@@ -203,12 +193,6 @@ function createStyles(palette: Palette) {
       justifyContent: "center",
     },
     lvBadge: {
-<<<<<<< Updated upstream
-      position: "absolute",
-      bottom: -4,
-      right: -4,
-=======
->>>>>>> Stashed changes
       borderRadius: 6,
       paddingHorizontal: 6,
       paddingVertical: 1,

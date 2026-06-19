@@ -363,24 +363,12 @@ useEffect(() => {
           accessibilityLabel="おうちにもどる"
           accessibilityRole="button"
         >
-<<<<<<< Updated upstream
           <PixelHouseIcon size={16} />
           <View style={{ alignItems: "center" }}>
             <Text style={styles.backText}>もどる</Text>
             <Text style={styles.backHint}>(TOPへ)</Text>
           </View>
         </TouchableOpacity>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
-          <View style={{ width: 18, height: 18, alignItems: "center", justifyContent: "center" }}>
-            <PixelSeedlingIcon size={18} />
-          </View>
-          <RubyText style={styles.headerTitle} parts={[["錬", "れん"], ["成", "せい"]]} rubySize={6} />
-        </View>
-=======
-          <PixelHouseIcon size={12} />
-          <Text style={styles.backText}>もどる</Text>
-        </TouchableOpacity>
->>>>>>> Stashed changes
       </View>
 
       <ScrollView
@@ -452,11 +440,7 @@ useEffect(() => {
               <PixelBarChartIcon size={16} />
               <RubyText
                 style={styles.sectionTitle}
-<<<<<<< Updated upstream
-                parts={[["保有", "ほゆう"], ["銘柄", "めいがら"]]}
-=======
                 parts={[["手持", "ても"], "ちのお", ["宝", "たから"]]}
->>>>>>> Stashed changes
                 rubySize={5}
               />
             </View>
@@ -541,14 +525,10 @@ useEffect(() => {
               >
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6, justifyContent: "center" }}>
                   <PixelDoorIcon size={14} />
-<<<<<<< Updated upstream
                   <View style={{ alignItems: "center" }}>
                     <Text style={styles.lockBackText}>もどる</Text>
                     <Text style={styles.backHint}>(まえへ)</Text>
                   </View>
-=======
-                  <Text style={styles.lockBackText}>もどる</Text>
->>>>>>> Stashed changes
                 </View>
               </TouchableOpacity>
             </View>
@@ -580,11 +560,7 @@ useEffect(() => {
                 accessibilityRole="button"
               >
                 <PixelHouseIcon size={16} />
-<<<<<<< Updated upstream
-                <Text style={styles.backText}>とじる</Text>
-=======
                 <Text style={styles.backText}>もどる</Text>
->>>>>>> Stashed changes
               </TouchableOpacity>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flex: 1, justifyContent: "center" }}>
                 <PixelSeedlingIcon size={18} />
@@ -673,11 +649,6 @@ useEffect(() => {
                       <Text style={styles.stockIcon}>{stock.icon}</Text>
                       <View style={styles.flex1}>
                         <View style={{ flexDirection: "column", gap: 2 }}>
-<<<<<<< Updated upstream
-                          <Text style={styles.stockName}>
-                            {stock.name_ja || stock.name}
-                          </Text>
-=======
                           {(() => {
                             const { line1, line2 } = splitGeoPrefix(stock.name_ja || stock.name);
                             return (
@@ -689,7 +660,6 @@ useEffect(() => {
                               </>
                             );
                           })()}
->>>>>>> Stashed changes
                           <Text style={styles.stockSymbol}>{stock.symbol}</Text>
                         </View>
                         {(() => {
@@ -737,11 +707,7 @@ useEffect(() => {
                     </TouchableOpacity>
                   ))}
                   {filteredStocks.length === 0 && (
-<<<<<<< Updated upstream
-                    <AutoRubyText text="このカテゴリの銘柄はありません" style={styles.emptyStockText} rubySize={5} />
-=======
                     <AutoRubyText text="この冒険先にはお宝がないよ" style={styles.emptyStockText} rubySize={5} />
->>>>>>> Stashed changes
                   )}
 
                   {/* Amount input */}
@@ -1028,15 +994,9 @@ function createStyles(p: Palette) {
       borderWidth: 1,
       borderColor: p.primary,
     },
-<<<<<<< Updated upstream
     backText: { fontSize: 14, fontWeight: "bold", color: p.textMuted },
     backHint: { fontSize: 9, fontWeight: "600", color: p.textMuted, opacity: 0.7, marginTop: -1 },
-    headerTitle: { fontSize: rf(18), fontWeight: "bold", color: p.primaryDark, flexShrink: 1 },
-=======
-    backText: { fontSize: 11, fontWeight: "bold", color: p.textMuted },
-    backHint: { fontSize: 9, fontWeight: "600", color: p.textMuted, opacity: 0.7, marginTop: -1 },
     headerTitle: { fontSize: rf(28), fontWeight: "900", color: p.primaryDark, flexShrink: 1, textAlign: "center" as const },
->>>>>>> Stashed changes
 
     scrollContent: { padding: 16, paddingBottom: 140 },
 
@@ -1217,8 +1177,6 @@ function createStyles(p: Palette) {
       paddingHorizontal: 12,
       alignItems: "center",
       marginTop: 16,
-<<<<<<< Updated upstream
-=======
     },
     orderButtonInner: {
       flexDirection: "row" as const,
@@ -1226,7 +1184,6 @@ function createStyles(p: Palette) {
       justifyContent: "center" as const,
       gap: 4,
       flexShrink: 1,
->>>>>>> Stashed changes
     },
     orderButtonDisabled: { opacity: 0.5 },
     orderButtonText: {

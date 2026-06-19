@@ -614,11 +614,7 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
                 <>
                   {/* 冒険団メンバー管理画面 */}
                   <TouchableOpacity style={styles.backButton} onPress={() => { setManagingFamily(null); setFamilyMembers([]); }}>
-<<<<<<< Updated upstream
-                    <PixelDoorIcon size={14} /><Text style={styles.backText}>冒険団一覧に戻る</Text>
-=======
                     <PixelDoorIcon size={12} /><Text style={styles.backText}>もどる</Text>
->>>>>>> Stashed changes
                   </TouchableOpacity>
                   <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 6, marginTop: 8, marginBottom: 12 }}>
                     <PixelHouseIcon size={18} />
@@ -971,16 +967,11 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-<<<<<<< Updated upstream
                 <PixelDoorIcon size={14} />
                 <View style={{ alignItems: "center" }}>
                   <Text style={styles.backText}>もどる</Text>
                   <Text style={styles.backHint}>(まえへ)</Text>
                 </View>
-=======
-                <PixelDoorIcon size={12} />
-                <Text style={styles.backText}>もどる</Text>
->>>>>>> Stashed changes
               </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={[["冒険団", "ぼうけんだん"], "を", ["選", "えら"], "んでね"]} rubySize={6} />
@@ -1002,16 +993,11 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-<<<<<<< Updated upstream
                 <PixelDoorIcon size={14} />
                 <View style={{ alignItems: "center" }}>
                   <Text style={styles.backText}>{selectedFamily?.name}</Text>
                   <Text style={styles.backHint}>(まえへ)</Text>
                 </View>
-=======
-                <PixelDoorIcon size={12} />
-                <Text style={styles.backText}>{selectedFamily?.name}</Text>
->>>>>>> Stashed changes
               </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={[["冒険者", "ぼうけんしゃ"], "を", ["選", "えら"], "びます"]} rubySize={6} />
@@ -1043,16 +1029,11 @@ export default function LoginScreen({ onLoginSuccess, mode, onBack, onRecover }:
           <>
             <TouchableOpacity style={styles.backButton} onPress={goBack}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-<<<<<<< Updated upstream
                 <PixelDoorIcon size={14} />
                 <View style={{ alignItems: "center" }}>
                   <Text style={styles.backText}>{selectedUser?.name}</Text>
                   <Text style={styles.backHint}>(まえへ)</Text>
                 </View>
-=======
-                <PixelDoorIcon size={12} />
-                <Text style={styles.backText}>{selectedUser?.name}</Text>
->>>>>>> Stashed changes
               </View>
             </TouchableOpacity>
             <RubyText style={styles.label} parts={["PINを", ["入", "い"], "れてね 🔑"]} rubySize={6} />
@@ -1350,14 +1331,8 @@ function createStyles(p: Palette) {
       paddingVertical: 8,
     },
     recoverText: {
-<<<<<<< Updated upstream
-      fontSize: 13,
-      color: p.primary,
-      textDecorationLine: "underline",
-=======
       ...linkStyles(p).linkText,
       fontSize: 13,
->>>>>>> Stashed changes
     },
     legalRow: {
       flexDirection: "row",

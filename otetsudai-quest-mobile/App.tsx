@@ -1,10 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
-import { View } from "react-native";
-<<<<<<< Updated upstream
-=======
 import { GestureHandlerRootView } from "react-native-gesture-handler";
->>>>>>> Stashed changes
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { AppAlertProvider } from "./src/components/AppAlert";
@@ -14,20 +10,12 @@ import {
   loadSavedAccessibility,
   applyGlobalTextScaling,
 } from "./src/accessibility";
-import { touchActivity } from "./src/lib/auto-logout";
 
 applyGlobalTextScaling();
 
 export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [initial, setInitial] = useState<Parameters<typeof AccessibilityProvider>[0]["initial"]>({});
-
-  // タッチイベントをキャプチャして自動ログアウトタイマーをリセット
-  // onStartShouldSetResponderCapture は false を返すので子要素の操作を妨げない
-  const handleTouch = useCallback(() => {
-    touchActivity();
-    return false;
-  }, []);
 
   useEffect(() => {
     loadSavedAccessibility().then((saved) => {
@@ -38,17 +26,12 @@ export default function App() {
 
   if (!loaded) return null;
 
-<<<<<<< Updated upstream
-  return (
-    <View style={{ flex: 1 }} onStartShouldSetResponderCapture={handleTouch}>
-=======
   // 注: onStartShouldSetResponderCapture を root に置くと
   // GestureHandlerRootView 配下の TouchableOpacity の onPress が発火しなくなる
   // ケースがある。AccessibilityToggle のボタンが効かなくなる原因。
   // 自動ログアウトのタッチ検知は AppNavigator 側に委譲するため、ここでは外す。
   return (
-    <GestureHandlerRootView style={{ flex: 1 }} onStartShouldSetResponderCapture={handleTouch}>
->>>>>>> Stashed changes
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <AccessibilityProvider initial={initial}>
           <ThemeProvider initial="forest">
@@ -59,10 +42,6 @@ export default function App() {
           </ThemeProvider>
         </AccessibilityProvider>
       </SafeAreaProvider>
-<<<<<<< Updated upstream
-    </View>
-=======
     </GestureHandlerRootView>
->>>>>>> Stashed changes
   );
 }

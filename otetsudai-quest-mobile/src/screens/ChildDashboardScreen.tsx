@@ -16,11 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import { getSession, clearSession } from "../lib/session";
-<<<<<<< Updated upstream
-import { useTheme, type Palette } from "../theme";
-=======
 import { useTheme, type Palette, linkStyles } from "../theme";
->>>>>>> Stashed changes
 import { palettes, type PaletteName } from "../theme/palettes";
 import { rf } from "../lib/responsive";
 import { getTaskIcon } from "../lib/task-icons";
@@ -66,11 +62,8 @@ import { useReducedMotion } from "../lib/useReducedMotion";
 import { PixelSwordIcon, PixelScrollIcon, PixelChestOpenIcon, PixelShieldIcon, PixelStarIcon, PixelCrossedSwordsIcon, PixelPotionIcon, PixelFlameIcon, PixelLetterIcon, PixelCoinIcon, PixelCartIcon, PixelPiggyIcon, PixelChartIcon, PixelDoorIcon, PixelBarChartIcon, PixelHourglassIcon, PixelCheckIcon, PixelCrossIcon, PixelMapIcon, PixelLightbulbIcon, PixelBookIcon, PixelTargetIcon, PixelChatIcon, PixelRefreshIcon, PixelConfettiIcon, PixelShopIcon, PixelPencilIcon } from "../components/PixelIcons";
 import StampSvg from "../components/StampSvg";
 import WalletTransferModal, { type PotType } from "../components/WalletTransferModal";
-<<<<<<< Updated upstream
-=======
 import PresetQuestModal from "../components/PresetQuestModal";
 import type { PresetQuest } from "../data/presetQuests";
->>>>>>> Stashed changes
 import QuestCardFrame from "../components/QuestCardFrame";
 import TaskIconSvg from "../components/TaskIconSvg";
 import RpgStatusBar from "../components/RpgStatusBar";
@@ -524,13 +517,6 @@ export default function ChildDashboardScreen({
     setTimeout(() => setRefreshDoneAt(null), 1500);
   }
 
-<<<<<<< Updated upstream
-  // 3pot 間の振替（銀行/証券の入出金モデル）
-  async function handleTransfer(from: PotType, to: PotType, amount: number) {
-    if (!wallet) throw new Error("ウォレットが ありません");
-    if (from === to) throw new Error("おなじ ところには ふりかえできません");
-    if (amount <= 0) throw new Error("0円より おおきく");
-=======
   // 団長とのやりとり（task_log 返信済）をタップでクリア — 楽観的UI更新後にDB更新
   async function dismissRepliedMessage(logId: string) {
     setRepliedMessages((prev) => prev.filter((m: any) => m.id !== logId));
@@ -577,18 +563,13 @@ export default function ChildDashboardScreen({
     if (!wallet) throw new Error("ウォレットが ありません");
     if (from === to) throw new Error("同じところには移せません");
     if (amount <= 0) throw new Error("0コロより おおきく");
->>>>>>> Stashed changes
 
     const balanceMap = {
       spending: wallet.spending_balance,
       saving: wallet.saving_balance,
       invest: wallet.invest_balance,
     };
-<<<<<<< Updated upstream
-    if (amount > balanceMap[from]) throw new Error(`${balanceMap[from].toLocaleString()}円までだよ`);
-=======
     if (amount > balanceMap[from]) throw new Error(`${balanceMap[from].toLocaleString()}コロまでだよ`);
->>>>>>> Stashed changes
 
     const next = { ...balanceMap, [from]: balanceMap[from] - amount, [to]: balanceMap[to] + amount };
     const { error: walletErr } = await supabase
@@ -601,21 +582,13 @@ export default function ChildDashboardScreen({
       .eq("id", wallet.id);
     if (walletErr) throw walletErr;
 
-<<<<<<< Updated upstream
-    const labelMap = { spending: "つかう", saving: "ためる", invest: "ふやす" } as const;
-=======
     const labelMap = { spending: "取引", saving: "金庫", invest: "錬成" } as const;
->>>>>>> Stashed changes
     const txTypeMap = { spending: "spend", saving: "save", invest: "invest" } as const;
     await supabase.from("otetsudai_transactions").insert({
       wallet_id: wallet.id,
       type: txTypeMap[to],
       amount,
-<<<<<<< Updated upstream
-      description: `${labelMap[from]} → ${labelMap[to]} ふりかえ`,
-=======
       description: `${labelMap[from]} → ${labelMap[to]} 移す`,
->>>>>>> Stashed changes
     });
 
     await loadData();
@@ -857,11 +830,7 @@ export default function ChildDashboardScreen({
             rubyColor="#fff"
           />
           <Text style={styles.quickNavSub} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>クエストへ</Text>
-<<<<<<< Updated upstream
-          <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>クエストに ちょうせん</Text>
-=======
           <RubyText style={styles.quickNavHint} parts={["クエストに", ["挑戦", "ちょうせん"]]} rubySize={4} noWrap rubyColor="rgba(255,255,255,0.85)" />
->>>>>>> Stashed changes
         </TouchableOpacity>
 
         {/* つかう */}
@@ -885,15 +854,9 @@ export default function ChildDashboardScreen({
             rubyColor="#fff"
           />
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-<<<<<<< Updated upstream
-            {(wallet?.spending_balance ?? 0).toLocaleString()}円
-          </Text>
-          <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>しょうにんと とりひき</Text>
-=======
             {(wallet?.spending_balance ?? 0).toLocaleString()}コロ
           </Text>
           <RubyText style={styles.quickNavHint} parts={[["商人", "しょうにん"], "と", ["取引", "とりひき"]]} rubySize={4} noWrap rubyColor="rgba(255,255,255,0.85)" />
->>>>>>> Stashed changes
         </TouchableOpacity>
 
         {/* 金庫 */}
@@ -917,15 +880,9 @@ export default function ChildDashboardScreen({
             rubyColor="#fff"
           />
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-<<<<<<< Updated upstream
-            {(wallet?.saving_balance ?? 0).toLocaleString()}円
-          </Text>
-          <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>たからを しまう</Text>
-=======
             {(wallet?.saving_balance ?? 0).toLocaleString()}コロ
           </Text>
           <RubyText style={styles.quickNavHint} parts={[["宝", "たから"], "をしまう"]} rubySize={4} noWrap rubyColor="rgba(255,255,255,0.85)" />
->>>>>>> Stashed changes
         </TouchableOpacity>
 
         {/* 錬成 */}
@@ -949,15 +906,9 @@ export default function ChildDashboardScreen({
             rubyColor="#fff"
           />
           <Text style={styles.quickNavAmount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
-<<<<<<< Updated upstream
-            {(wallet?.invest_balance ?? 0).toLocaleString()}円
-          </Text>
-          <Text style={styles.quickNavHint} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>お金を そだてる</Text>
-=======
             {(wallet?.invest_balance ?? 0).toLocaleString()}コロ
           </Text>
           <RubyText style={styles.quickNavHint} parts={["コロを", ["育", "そだ"], "てる"]} rubySize={4} noWrap rubyColor="rgba(255,255,255,0.85)" />
->>>>>>> Stashed changes
         </TouchableOpacity>
       </View>
 
@@ -983,11 +934,7 @@ export default function ChildDashboardScreen({
             <RubyText
               style={styles.refreshBtnLabel}
               parts={refreshing
-<<<<<<< Updated upstream
-                ? [["点検", "てんけん"], "ちゅう..."]
-=======
                 ? [["点検中", "てんけんちゅう"], "..."]
->>>>>>> Stashed changes
                 : refreshDoneAt
                 ? [["点検", "てんけん"], "しました ✨"]
                 : [["点検", "てんけん"]]}
@@ -995,14 +942,6 @@ export default function ChildDashboardScreen({
               noWrap
             />
             {!refreshing && !refreshDoneAt && (
-<<<<<<< Updated upstream
-              <RubyText
-                style={styles.refreshBtnHint}
-                parts={["（", ["最新", "さいしん"], "の", ["持", "も"], "ちものに する）"]}
-                rubySize={5}
-                noWrap
-              />
-=======
               <View style={styles.refreshBtnHintWrap}>
                 <RubyText
                   style={styles.refreshBtnHint}
@@ -1011,7 +950,6 @@ export default function ChildDashboardScreen({
                   noWrap
                 />
               </View>
->>>>>>> Stashed changes
             )}
           </View>
         </TouchableOpacity>
@@ -1021,26 +959,16 @@ export default function ChildDashboardScreen({
           onPress={() => setTransferVisible(true)}
           disabled={!wallet}
           activeOpacity={0.7}
-<<<<<<< Updated upstream
-          accessibilityLabel="おかねを うつす"
-          accessibilityRole="button"
-          accessibilityHint="つかう・ためる・ふやすの あいだで おかねを うつします"
-=======
           accessibilityLabel="コロを移す"
           accessibilityRole="button"
           accessibilityHint="取引・金庫・錬成の間でコロを移します"
->>>>>>> Stashed changes
         >
           <PixelCoinIcon size={18} />
           <View style={{ flex: 1 }}>
             <RubyText style={styles.refreshBtnLabel} parts={[["移", "うつ"], "す"]} rubySize={6} noWrap />
-<<<<<<< Updated upstream
-            <RubyText style={styles.refreshBtnHint} parts={["（おかねを ", ["移動", "いどう"], "する）"]} rubySize={5} noWrap />
-=======
             <View style={styles.refreshBtnHintWrap}>
               <RubyText style={styles.refreshBtnHint} parts={["（コロを", ["移動", "いどう"], "する）"]} rubySize={5} noWrap />
             </View>
->>>>>>> Stashed changes
           </View>
         </TouchableOpacity>
       </View>
@@ -1096,20 +1024,6 @@ export default function ChildDashboardScreen({
               }}
               onManage={() => setPetManageVisible(true)}
             />
-<<<<<<< Updated upstream
-            <View style={{ flexDirection: "row", gap: 6, marginTop: 4 }}>
-              <TouchableOpacity onPress={() => setShopVisible(true)} style={styles.shopBtn}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <PixelShopIcon size={14} />
-                  <Text style={styles.shopBtnText}>ショップ</Text>
-                </View>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => setPetEncyclopediaVisible(true)} style={styles.shopBtn}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                  <PixelStarIcon size={14} />
-                  <RubyText style={styles.shopBtnText} parts={[["図鑑", "ずかん"]]} rubySize={4} noWrap />
-                </View>
-=======
             <View style={{ flexDirection: "column", gap: 6, marginTop: 4 }}>
               <TouchableOpacity onPress={() => setPetEncyclopediaVisible(true)} style={styles.shopBtn}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
@@ -1124,7 +1038,6 @@ export default function ChildDashboardScreen({
                   <RubyText style={styles.shopBtnText} parts={["ショップ"]} rubySize={5} noWrap />
                 </View>
                 <RubyText style={styles.shopBtnHint} parts={[["称号", "しょうごう"], "を", ["授", "さず"], "かる"]} rubySize={4} noWrap />
->>>>>>> Stashed changes
               </TouchableOpacity>
             </View>
           </View>
@@ -1254,11 +1167,7 @@ export default function ChildDashboardScreen({
 
         {/* ファミリースタンプリレー */}
         <View style={{ marginHorizontal: 12, marginBottom: 12 }}>
-<<<<<<< Updated upstream
-          <FamilyMessageCard messages={familyMessages} currentUserId={childId} />
-=======
           <FamilyMessageCard messages={familyMessages} currentUserId={childId} onDismiss={dismissFamilyMessage} />
->>>>>>> Stashed changes
           <AnimatedButton
             onPress={() => setStampSendVisible(true)}
             style={styles.stampRelayBtn}
@@ -1565,11 +1474,7 @@ export default function ChildDashboardScreen({
               <View style={styles.emptyCard}>
                 <PixelMapIcon size={40} />
                 <AutoRubyText text="クエストが まだないよ" style={[styles.emptyText, { paddingVertical: 0, fontWeight: "bold" }]} rubySize={7} />
-<<<<<<< Updated upstream
-                <AutoRubyText text="親に たのんで クエストを つくってもらおう！" style={styles.emptyHint} rubySize={6} />
-=======
                 <AutoRubyText text="冒険団長に頼んでクエストを作ってもらおう！" style={styles.emptyHint} rubySize={6} />
->>>>>>> Stashed changes
               </View>
             )}
 
@@ -1950,11 +1855,7 @@ export default function ChildDashboardScreen({
             showsVerticalScrollIndicator
           >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}><PixelLightbulbIcon size={20} /><RubyText style={styles.proposalModalTitle} parts={[["自分", "じぶん"], "でクエストを ", ["作", "つく"], "る"]} rubySize={6} /></View>
-<<<<<<< Updated upstream
-            <RubyText style={[styles.proposalModalSub, { marginBottom: 0 }]} parts={[["親", "おや"], "に"]} rubySize={5} />
-=======
             <RubyText style={[styles.proposalModalSub, { marginBottom: 0 }]} parts={[["団長", "だんちょう"], "に"]} rubySize={5} />
->>>>>>> Stashed changes
             <RubyText style={styles.proposalModalSub} parts={[["新", "あたら"], "しいクエストを", ["出", "だ"], "そう！"]} rubySize={5} />
 
             <RubyText
@@ -1992,11 +1893,7 @@ export default function ChildDashboardScreen({
 
             <RubyText
               style={styles.proposalLabel}
-<<<<<<< Updated upstream
-              parts={[["報酬", "ほうしゅう"], "リクエスト（", "円", "）"]}
-=======
               parts={[["報酬", "ほうしゅう"], "リクエスト（コロ）"]}
->>>>>>> Stashed changes
               rubySize={5}
               noWrap
             />
@@ -2172,11 +2069,7 @@ function createStyles(p: Palette) {
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.border,
   },
   walletTitleRow: {
@@ -2269,20 +2162,12 @@ function createStyles(p: Palette) {
     fontWeight: "700" as const,
     color: p.textBase,
   },
-<<<<<<< Updated upstream
-  refreshBtnHint: {
-    fontSize: 6,
-    color: p.textMuted,
-    marginTop: 2,
-    lineHeight: 9,
-=======
   refreshBtnHintWrap: {
     marginTop: 2,
   },
   refreshBtnHint: {
     fontSize: 6,
     color: p.textMuted,
->>>>>>> Stashed changes
   },
   quickNavBtn: {
     flexBasis: "23%" as any,
@@ -2419,11 +2304,7 @@ function createStyles(p: Palette) {
     borderRadius: 10,
     padding: 10,
     gap: 8,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.border,
   },
   spendStatusIcon: { width: 24, alignItems: "center" as const, justifyContent: "center" as const },
@@ -2462,11 +2343,7 @@ function createStyles(p: Palette) {
     borderRadius: 10,
     padding: 10,
     marginBottom: 6,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.border,
   },
   stampNotifEmoji: { fontSize: 32, marginRight: 10 },
@@ -2486,11 +2363,7 @@ function createStyles(p: Palette) {
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.border,
   },
   sectionTitleRow: {
@@ -2565,8 +2438,6 @@ function createStyles(p: Palette) {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     gap: 6,
-<<<<<<< Updated upstream
-=======
   },
   screenTitleBarQuest: {
     borderWidth: 1.5,
@@ -2574,7 +2445,6 @@ function createStyles(p: Palette) {
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 10,
->>>>>>> Stashed changes
   },
   screenTitleAccent: {
     width: 3,
@@ -2604,11 +2474,7 @@ function createStyles(p: Palette) {
     marginBottom: 8,
   },
   specialQuestCard: {
-<<<<<<< Updated upstream
-    borderWidth: 2,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.goldBorder,
     padding: 14,
     borderRadius: 14,
@@ -2667,11 +2533,7 @@ function createStyles(p: Palette) {
     padding: 14,
     borderRadius: 12,
     marginBottom: 8,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.border,
   },
   questInfo: { flexDirection: "row", alignItems: "center", flex: 1 },
@@ -2732,11 +2594,7 @@ function createStyles(p: Palette) {
     padding: 12,
     borderRadius: 10,
     marginBottom: 6,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.border,
   },
   historyType: { marginRight: 10, width: 28, alignItems: "center" as const, justifyContent: "center" as const },
@@ -2757,11 +2615,7 @@ function createStyles(p: Palette) {
     borderRadius: 12,
     padding: 24,
     marginBottom: 8,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.border,
   },
   emptyHint: {
@@ -2773,15 +2627,8 @@ function createStyles(p: Palette) {
   trophyHint: {
     ...linkStyles(p).linkText,
     textAlign: "center",
-<<<<<<< Updated upstream
-    color: p.primary,
     fontSize: 10,
     marginTop: 8,
-    textDecorationLine: "underline",
-=======
-    fontSize: 10,
-    marginTop: 8,
->>>>>>> Stashed changes
   },
   titleBadge: {
     paddingHorizontal: 6,
@@ -2844,11 +2691,7 @@ function createStyles(p: Palette) {
     marginBottom: 6,
     borderLeftWidth: 3,
     borderLeftColor: p.primary,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.border,
   },
   repliedTaskName: {
@@ -2893,11 +2736,7 @@ function createStyles(p: Palette) {
     borderRadius: 16,
     padding: 12,
     gap: 10,
-<<<<<<< Updated upstream
-    borderWidth: 2,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.goldBorder,
   },
   questClearBubble: {
@@ -2951,11 +2790,7 @@ function createStyles(p: Palette) {
     marginBottom: 0,
     padding: 14,
     borderRadius: 12,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.accent,
     alignItems: "center" as const,
     minHeight: 48,
@@ -2972,11 +2807,7 @@ function createStyles(p: Palette) {
     margin: 12,
     padding: 14,
     borderRadius: 12,
-<<<<<<< Updated upstream
-    borderWidth: 1,
-=======
     borderWidth: 1.5,
->>>>>>> Stashed changes
     borderColor: p.primary,
     alignItems: "center" as const,
     minHeight: 48,

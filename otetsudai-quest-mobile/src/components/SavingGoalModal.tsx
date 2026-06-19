@@ -143,10 +143,7 @@ export default function SavingGoalModal({ visible, childId, onClose, onCreated }
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-<<<<<<< Updated upstream
-=======
       <CoinKunChat role="child" />
->>>>>>> Stashed changes
     </Modal>
   );
 }

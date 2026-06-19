@@ -21,13 +21,8 @@ import {
 import RpgButton from "./RpgButton";
 import CoinKunChat from "./CoinKunChat";
 import { PixelShopIcon } from "./PixelIcons";
-<<<<<<< Updated upstream
-import { AutoRubyText } from "./Ruby";
-import { useTheme, type Palette } from "../theme";
-=======
 import { AutoRubyText, RubyText } from "./Ruby";
 import { useTheme, type Palette, linkStyles } from "../theme";
->>>>>>> Stashed changes
 
 type Props = {
   visible: boolean;
@@ -124,18 +119,6 @@ export default function ShopModal({
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
         </View>
-<<<<<<< Updated upstream
-        <AutoRubyText
-          text={`「使う」のお金: ${spendingBalance.toLocaleString()}コロ`}
-          style={styles.subtitle}
-          rubySize={6}
-        />
-        <AutoRubyText
-          text="買って装備すると、名前の横に称号がつくよ"
-          style={styles.shopHint}
-          rubySize={5}
-        />
-=======
         {/* WalletDetail.pocketHint と同じパターン:
             親 View で中央寄せ + Text style はテキスト系のみ
             (paddingHorizontal を Text に流すと各 segment に padding が入って巨大隙間が出る) */}
@@ -165,7 +148,6 @@ export default function ShopModal({
             rubySize={5}
           />
         </View>
->>>>>>> Stashed changes
 
         {toast && (
           <View
@@ -225,11 +207,7 @@ export default function ShopModal({
                       <AutoRubyText style={[styles.itemLabel, { color: rc.text }]} text={item.label} rubySize={5} noWrap />
                       <AutoRubyText style={styles.itemDesc} text={item.description} rubySize={4} noWrap />
                       <Text style={[styles.itemMeta, { color: rc.text }]}>
-<<<<<<< Updated upstream
-                        {item.rarity.toUpperCase()} ・ {item.price}コロ
-=======
                         {item.rarity.toUpperCase()}{"\n"}{item.price}コロ
->>>>>>> Stashed changes
                       </Text>
                     </View>
                     <View style={styles.itemAction}>
@@ -251,11 +229,7 @@ export default function ShopModal({
                           onPress={() => handleBuy(item.id, item.price)}
                           disabled={busy === item.id || !canAfford || !walletId}
                         >
-<<<<<<< Updated upstream
-                          {busy === item.id ? "..." : canAfford ? "買う" : "コロ不足"}
-=======
                           {busy === item.id ? "..." : canAfford ? <RubyText parts={[["買", "か"], "う"]} rubySize={5} noWrap /> : <RubyText parts={["コロ", ["不足", "ふそく"]]} rubySize={5} noWrap />}
->>>>>>> Stashed changes
                         </RpgButton>
                       )}
                     </View>
@@ -323,22 +297,11 @@ function createStyles(p: Palette) {
     shopHintWrap: {
       alignItems: "center",
       paddingHorizontal: 16,
-<<<<<<< Updated upstream
-      paddingTop: 8,
-      paddingBottom: 2,
-=======
       paddingBottom: 8,
->>>>>>> Stashed changes
     },
     shopHint: {
       fontSize: 10,
       color: p.textMuted,
-<<<<<<< Updated upstream
-      textAlign: "center",
-      paddingHorizontal: 16,
-      paddingBottom: 8,
-=======
->>>>>>> Stashed changes
     },
     toast: {
       marginHorizontal: 12,
